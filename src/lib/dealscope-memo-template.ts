@@ -573,7 +573,7 @@ function renderYieldJustification(d: MemoData): string {
         <div class="score-detail">
           ${d.yearBuilt ? "Built " + d.yearBuilt + ". " : ""}
           ${d.epcData?.meesRisk ? "MEES: " + escHtml(d.epcData.meesRisk) + ". " : "EPC compliant. "}
-          ${rLet ? "Est. void: " + rLet.voidPeriod.months + " months." : ""}
+          ${rLet?.voidPeriod ? "Est. void: " + rLet.voidPeriod.months + " months." : ""}
         </div>
       </div>
     </div>
@@ -616,23 +616,25 @@ function renderTenantLease(d: MemoData): string {
     ${rLet ? `
     <h2>Rental Analysis</h2>
     <div class="metrics-grid">
+      ${rLet.marketRent ? `
       <div class="metric-box">
         <div class="metric-label">Market Rent (PSF)</div>
-        <div class="metric-value">£${rLet.marketRent.psfMid.toFixed(2)}</div>
-        <div class="metric-sub">Range: £${rLet.marketRent.psfLow.toFixed(2)} – £${rLet.marketRent.psfHigh.toFixed(2)}</div>
-      </div>
+        <div class="metric-value">£${rLet.marketRent.psfMid?.toFixed(2) || "—"}</div>
+        <div class="metric-sub">Range: £${rLet.marketRent.psfLow?.toFixed(2) || "—"} – £${rLet.marketRent.psfHigh?.toFixed(2) || "—"}</div>
+      </div>` : ""}
+      ${rLet.voidPeriod ? `
       <div class="metric-box">
         <div class="metric-label">Void Period</div>
-        <div class="metric-value">${rLet.voidPeriod.months} months</div>
-        <div class="metric-sub">${escHtml(rLet.voidPeriod.reasoning)}</div>
-      </div>
+        <div class="metric-value">${rLet.voidPeriod.months || 0} months</div>
+        <div class="metric-sub">${escHtml(rLet.voidPeriod.reasoning || "")}</div>
+      </div>` : ""}
       <div class="metric-box">
         <div class="metric-label">Carry Cost</div>
-        <div class="metric-value">${fmt(rLet.totalCarryCost)}</div>
-        <div class="metric-sub">${rLet.totalMonthsToStabilise} months to stabilise</div>
+        <div class="metric-value">${rLet.totalCarryCost != null ? fmt(rLet.totalCarryCost) : "—"}</div>
+        <div class="metric-sub">${rLet.totalMonthsToStabilise || "—"} months to stabilise</div>
       </div>
     </div>
-    ${rLet.rentFreeMonths > 0 ? `<p>Rent free: ${rLet.rentFreeMonths} months. Agent fee: ${fmt(rLet.agentFee)}. Legal: ${fmt(rLet.legalCosts)}.</p>` : ""}
+    ${rLet.rentFreeMonths > 0 ? `<p>Rent free: ${rLet.rentFreeMonths} months. Agent fee: ${fmt(rLet.agentFee || 0)}. Legal: ${fmt(rLet.legalCosts || 0)}.</p>` : ""}
     ` : ""}
 
     ${accom && Array.isArray(accom) && accom.length > 0 ? `
@@ -686,10 +688,10 @@ function renderRiskProfile(d: MemoData): string {
         ${covenant?.companyStatus ? "Status: " + escHtml(covenant.companyStatus) + "." : "No data available."}</p>
       </div>
 
-      <div class="risk-card ${rLet && rLet.voidPeriod.months <= 6 ? "risk-low-card" : rLet && rLet.voidPeriod.months <= 12 ? "risk-medium-card" : "risk-high-card"}">
+      <div class="risk-card ${rLet?.voidPeriod && rLet.voidPeriod.months <= 6 ? "risk-low-card" : rLet?.voidPeriod && rLet.voidPeriod.months <= 12 ? "risk-medium-card" : "risk-high-card"}">
         <div class="risk-label">Void / Reletting</div>
-        <p><strong>${rLet ? rLet.voidPeriod.months + " month void expected" : "Unknown"}</strong><br/>
-        ${rLet ? escHtml(rLet.voidPeriod.reasoning) : "No letting analysis available."}</p>
+        <p><strong>${rLet?.voidPeriod ? rLet.voidPeriod.months + " month void expected" : "Unknown"}</strong><br/>
+        ${rLet?.voidPeriod ? escHtml(rLet.voidPeriod.reasoning || "") : "No letting analysis available."}</p>
       </div>
 
       <div class="risk-card ${d.condition?.toLowerCase() === "good" || d.condition?.toLowerCase() === "excellent" ? "risk-low-card" : "risk-medium-card"}">
@@ -765,15 +767,16 @@ function renderMarketContext(d: MemoData): string {
     <div class="market-commentary">
       <div class="commentary-item">
         <div class="commentary-label">Market Benchmarks</div>
-        <p>Market cap rate: ${fmtPct(market.capRate * 100)}. Market ERV: £${market.ervPsf?.toFixed(2)}/sqft/yr.
-        Lending rate: ${fmtPct(market.financing?.annualRate * 100)} (${market.financing?.termYears}yr term, ${fmtPct(market.financing?.ltvPct * 100)} LTV).</p>
+        <p>Market cap rate: ${market.capRate != null ? fmtPct(market.capRate * 100) : "—"}. Market ERV: ${market.ervPsf != null ? `£${market.ervPsf.toFixed(2)}/sqft/yr` : "—"}.
+        ${market.financing ? `Lending rate: ${fmtPct((market.financing.annualRate || 0) * 100)} (${market.financing.termYears || 25}yr term, ${fmtPct((market.financing.ltvPct || 0) * 100)} LTV).` : ""}</p>
       </div>
+      ${market.financing ? `
       <div class="commentary-item">
         <div class="commentary-label">Financing</div>
-        <p>At ${fmtPct(market.financing?.ltvPct * 100)} LTV, debt of ${fmt(price * (market.financing?.ltvPct || 0.65))}
-        at ${fmtPct(market.financing?.annualRate * 100)} over ${market.financing?.termYears || 25} years.
+        <p>At ${fmtPct((market.financing.ltvPct || 0.65) * 100)} LTV, debt of ${fmt(price * (market.financing.ltvPct || 0.65))}
+        at ${fmtPct((market.financing.annualRate || 0) * 100)} over ${market.financing.termYears || 25} years.
         ${market.dscr ? ` DSCR: ${market.dscr}×.` : ""}</p>
-      </div>
+      </div>` : ""}
     </div>` : ""}
 
     ${comps.length > 0 ? `
@@ -812,7 +815,7 @@ function renderMarketContext(d: MemoData): string {
     </table>
     ${rVal ? `
     <p style="font-size: 8px; color: #666; margin-top: 4px;">
-      RICS adjusted average: £${rVal.adjustedAvgPsf}/sqft. Value range: ${fmt(rVal.valueLow)} – ${fmt(rVal.valueHigh)} (${rVal.confidence} confidence).
+      RICS adjusted average: £${rVal.adjustedAvgPsf || "—"}/sqft. Value range: ${rVal.valueLow ? fmt(rVal.valueLow) : "—"} – ${rVal.valueHigh ? fmt(rVal.valueHigh) : "—"} (${rVal.confidence || "low"} confidence).
     </p>` : ""}` : `<p>No comparable sales data available for this location.</p>`}
 
     ${d.planningApps.length > 0 ? `

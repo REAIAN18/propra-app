@@ -26,14 +26,10 @@ export async function GET(req: NextRequest) {
     }
 
     const ds = (deal.dataSources as any) || {};
-    const analysis = ds.ricsAnalysis || ds.dealAnalysis;
+    const analysis = ds.ricsAnalysis || ds.dealAnalysis || null;
     const assumptions = ds.assumptions || {};
     const ai = ds.ai || {};
     const listing = ds.listing || {};
-
-    if (!analysis) {
-      return NextResponse.json({ error: "Property has not been fully analysed yet" }, { status: 400 });
-    }
 
     // Build MemoData from stored deal + analysis
     const memoData: MemoData = {
