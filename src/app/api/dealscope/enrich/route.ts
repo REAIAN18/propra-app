@@ -28,6 +28,9 @@ import {
   analyseProperty, quickFilter,
   type RICSAnalysis, type AnalysisInput, type ComparableSale,
 } from "@/lib/dealscope-deal-analysis";
+import { checkCovenantUK } from "@/lib/covenant-check";
+import { getCompanyOwner, findPropertiesByCompany } from "@/lib/dealscope-ccod";
+import { classifyDevPotential } from "@/lib/dev-potential";
 
 // ── Address extraction from URL slug ──
 function extractAddressFromUrl(url: string): string | null {
@@ -479,18 +482,42 @@ export async function POST(req: NextRequest) {
       streetViewUrl = buildStreetViewUrl(geo.lat, geo.lng);
     }
 
-    // ── PARALLEL ENRICHMENT: EPC, Comps, Planning, Flood ──
+    // ── PARALLEL ENRICHMENT: EPC, Comps, Planning, Flood, Ownership, Covenant ──
+    const postcodeMatch = address?.match(/\b([A-Z]{1,2}\d{1,2}[A-Z]?\s?\d[A-Z]{2})\b/i);
+    const postcode = postcodeMatch?.[1] || "";
+    const primaryTenant = aiData?.tenantNames?.[0] || null;
+
     const results = await Promise.allSettled([
       lookupEPCByAddress(address!),
       findComps(address!, aiData?.propertyType || "Mixed", aiData?.size_sqft || undefined, 24),
       fetchUKPlanningApplications(address!),
       geo ? fetchFloodRisk(geo.lat, geo.lng) : Promise.resolve(null),
+      postcode ? getCompanyOwner(address!, postcode) : Promise.resolve(null),
+      primaryTenant ? checkCovenantUK(primaryTenant, "UK") : Promise.resolve(null),
     ]);
 
     const epcData = results[0].status === "fulfilled" ? results[0].value : null;
     const comparableSales = results[1].status === "fulfilled" ? results[1].value : [];
     const planningApps = results[2].status === "fulfilled" ? results[2].value : [];
     const floodData = results[3].status === "fulfilled" ? results[3].value : null;
+    const companyOwner = results[4].status === "fulfilled" ? results[4].value : null;
+    const covenantResult = results[5].status === "fulfilled" ? results[5].value : null;
+
+    // ── SECONDARY: Owner portfolio + Dev potential (need primary results) ──
+    let ownerPortfolio: any[] = [];
+    if (companyOwner?.companyNumber) {
+      try { ownerPortfolio = await findPropertiesByCompany(companyOwner.companyNumber, postcode?.slice(0, 4)); }
+      catch (e) { console.warn("[enrich] Portfolio lookup failed:", e); }
+    }
+
+    let devPotential: any = null;
+    try {
+      devPotential = await classifyDevPotential({
+        id: "enrich", name: address || "Unknown",
+        assetType: aiData?.propertyType || "Mixed",
+        location: address || "Unknown", sqft: aiData?.size_sqft || null, country: "UK",
+      });
+    } catch (e) { console.warn("[enrich] Dev potential failed:", e); }
 
     // ── DETERMINE ASSET TYPE + REGION ──
     const assetType = aiData?.propertyType || "Mixed";
@@ -823,6 +850,10 @@ export async function POST(req: NextRequest) {
           },
           dealAnalysis: dealAnalysis || null,
           ricsAnalysis: ricsAnalysis || null,
+          covenant: covenantResult || null,
+          companyOwner: companyOwner || null,
+          ownerPortfolio: ownerPortfolio.length > 0 ? ownerPortfolio : null,
+          devPotential: devPotential || null,
         } as any,
         currency: "GBP",
         status: "enriched",

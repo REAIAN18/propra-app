@@ -207,11 +207,14 @@ function AddInfoModal({ propertyId, onClose, onSaved }: { propertyId: string; on
       if (res.ok) {
         const data = await res.json();
         if (data.document?.id) {
+          // Link doc to deal
           await fetch(`/api/dealscope/properties/${propertyId}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ additionalDocId: data.document.id }),
           });
+          // Auto-extract lease terms in background
+          fetch(`/api/documents/${data.document.id}/extract`, { method: "POST" }).catch(() => {});
           onSaved();
         }
       }
@@ -408,20 +411,35 @@ function PropertyTab({ p, onRefresh }: { p: PropertyData; onRefresh: () => void 
    ══════════════════════════════════════════════════════════════════════════ */
 function PlanningTab({ p }: { p: PropertyData }) {
   const planningApps = p.dataSources?.planning || [];
+  const dev = p.dataSources?.devPotential;
   return (
-    <div className={s.card}>
-      <div className={s.cardTitle}>Planning history</div>
-      {planningApps.length > 0 ? planningApps.map((app: any, i: number) => (
-        <PlanRow
-          key={i}
-          ref_={app.reference || `APP-${i}`}
-          desc={app.description || app.title || "Planning application"}
-          status={app.status || "Unknown"}
-          color={app.status?.toLowerCase().includes("approved") ? "green" : app.status?.toLowerCase().includes("refused") ? "red" : "amber"}
-          date={app.date ? new Date(app.date).toLocaleDateString("en-US", { year: "numeric", month: "short" }) : "Unknown"}
-        />
-      )) : <NoData label="planning" />}
-    </div>
+    <>
+      {dev && (
+        <div className={s.card}>
+          <div className={s.cardTitle}>Development potential</div>
+          {dev.siteCoveragePct != null && <Row l="Site coverage" v={`${dev.siteCoveragePct}%`} mono />}
+          <Row l="PD rights" v={dev.pdRights || "Unknown"} color={dev.pdRights === "Yes" ? "green" : dev.pdRights === "Possibly" ? "amber" : undefined} />
+          {dev.pdRightsDetail && <div style={{ fontSize: 11, color: "var(--tx3)", padding: "2px 0 6px 0" }}>{dev.pdRightsDetail}</div>}
+          <Row l="Change of use" v={dev.changeOfUsePotential || "Unknown"} color={dev.changeOfUsePotential === "High" ? "green" : dev.changeOfUsePotential === "Medium" ? "amber" : undefined} />
+          {dev.changeOfUseDetail && <div style={{ fontSize: 11, color: "var(--tx3)", padding: "2px 0 6px 0" }}>{dev.changeOfUseDetail}</div>}
+          <Row l="Air rights" v={dev.airRightsPotential || "Unknown"} color={dev.airRightsPotential === "High" ? "green" : dev.airRightsPotential === "Medium" ? "amber" : undefined} />
+          {dev.airRightsDetail && <div style={{ fontSize: 11, color: "var(--tx3)", padding: "2px 0 6px 0" }}>{dev.airRightsDetail}</div>}
+        </div>
+      )}
+      <div className={s.card}>
+        <div className={s.cardTitle}>Planning history</div>
+        {planningApps.length > 0 ? planningApps.map((app: any, i: number) => (
+          <PlanRow
+            key={i}
+            ref_={app.reference || `APP-${i}`}
+            desc={app.description || app.title || "Planning application"}
+            status={app.status || "Unknown"}
+            color={app.status?.toLowerCase().includes("approved") ? "green" : app.status?.toLowerCase().includes("refused") ? "red" : "amber"}
+            date={app.date ? new Date(app.date).toLocaleDateString("en-US", { year: "numeric", month: "short" }) : "Unknown"}
+          />
+        )) : <NoData label="planning" />}
+      </div>
+    </>
   );
 }
 
@@ -433,9 +451,31 @@ function TitleLegalTab({ p }: { p: PropertyData }) {
   const ai = p.dataSources?.ai;
   const gazette = p.dataSources?.gazette || [];
   const tenure = p.tenure || listing?.tenure || ai?.tenure;
+  const owner = p.dataSources?.companyOwner;
+  const portfolio = p.dataSources?.ownerPortfolio;
 
   return (
     <>
+      {owner && (
+        <div className={s.card}>
+          <div className={s.cardTitle}>Registered owner (Land Registry)</div>
+          <Row l="Company" v={owner.companyName || "Unknown"} />
+          {owner.companyNumber && <Row l="Company number" v={owner.companyNumber} mono />}
+          {portfolio && portfolio.length > 0 && (
+            <>
+              <div style={{ fontSize: 11, color: "var(--tx3)", margin: "10px 0 6px" }}>Other properties held by this owner ({portfolio.length})</div>
+              <div style={{ maxHeight: 200, overflowY: "auto" }}>
+                {portfolio.slice(0, 20).map((prop: any, i: number) => (
+                  <div key={i} style={{ fontSize: 11, color: "var(--tx)", padding: "3px 0", borderBottom: "1px solid var(--s2)" }}>
+                    {prop.propertyAddress || prop.address || `Property ${i + 1}`}
+                    {prop.tenure && <span style={{ marginLeft: 8, color: "var(--tx3)", fontSize: 10 }}>{prop.tenure}</span>}
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
       <div className={s.card}>
         <div className={s.cardTitle}>Title information</div>
         {tenure ? <Row l="Tenure" v={tenure} /> : <Row l="Tenure" v="Unknown" est />}
@@ -565,6 +605,7 @@ function OwnershipTab({ p }: { p: PropertyData }) {
   const ds = p.dataSources || {};
   const company = ds.company;
   const ai = ds.ai;
+  const covenant = ds.covenant;
 
   return (
     <>
@@ -576,6 +617,17 @@ function OwnershipTab({ p }: { p: PropertyData }) {
         {company?.companyNumber && <Row l="Company number" v={company.companyNumber} mono />}
         {company?.companyStatus && <Row l="Status" v={company.companyStatus} color={company.companyStatus.toLowerCase() === "active" ? "green" : "red"} />}
       </div>
+      {covenant && (
+        <div className={s.card}>
+          <div className={s.cardTitle}>Tenant covenant strength</div>
+          <Row l="Grade" v={covenant.grade || "Unrated"} color={covenant.grade === "A" || covenant.grade === "B" ? "green" : covenant.grade === "C" ? "amber" : "red"} />
+          {covenant.score != null && <Row l="Score" v={`${covenant.score}/100`} mono />}
+          {covenant.companyName && <Row l="Tenant company" v={covenant.companyName} />}
+          {covenant.companyNo && <Row l="Company no." v={covenant.companyNo} mono />}
+          {covenant.companyStatus && <Row l="Company status" v={covenant.companyStatus} color={covenant.companyStatus.toLowerCase() === "active" ? "green" : "red"} />}
+          {covenant.lastAccountsDate && <Row l="Last accounts" v={new Date(covenant.lastAccountsDate).toLocaleDateString("en-GB")} mono />}
+        </div>
+      )}
       {ai?.tenantNames && ai.tenantNames.length > 0 && (
         <div className={s.card}>
           <div className={s.cardTitle}>Tenants</div>
