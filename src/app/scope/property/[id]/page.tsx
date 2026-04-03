@@ -412,6 +412,20 @@ function PropertyTab({ p, onRefresh }: { p: PropertyData; onRefresh: () => void 
 function PlanningTab({ p }: { p: PropertyData }) {
   const planningApps = p.dataSources?.planning || [];
   const dev = p.dataSources?.devPotential;
+
+  // Separate planning apps: this property vs nearby
+  const addr = (p.address || "").toLowerCase();
+  const thisProperty: any[] = [];
+  const nearby: any[] = [];
+  planningApps.forEach((app: any) => {
+    const siteAddr = (app["site-address"] || app.address || app.description || "").toLowerCase();
+    if (siteAddr && addr && (siteAddr.includes(addr.split(",")[0]?.trim()) || addr.includes(siteAddr.split(",")[0]?.trim()))) {
+      thisProperty.push(app);
+    } else {
+      nearby.push(app);
+    }
+  });
+
   return (
     <>
       {dev && (
@@ -426,18 +440,33 @@ function PlanningTab({ p }: { p: PropertyData }) {
           {dev.airRightsDetail && <div style={{ fontSize: 11, color: "var(--tx3)", padding: "2px 0 6px 0" }}>{dev.airRightsDetail}</div>}
         </div>
       )}
+      {thisProperty.length > 0 && (
+        <div className={s.card}>
+          <div className={s.cardTitle}>Planning history — this property ({thisProperty.length})</div>
+          {thisProperty.map((app: any, i: number) => (
+            <PlanRow
+              key={i}
+              ref_={app.reference || `APP-${i}`}
+              desc={app.description || app.title || "Planning application"}
+              status={app.status || "Unknown"}
+              color={app.status?.toLowerCase().includes("approved") ? "green" : app.status?.toLowerCase().includes("refused") ? "red" : "amber"}
+              date={app.date || app["start-date"] ? new Date(app.date || app["start-date"]).toLocaleDateString("en-US", { year: "numeric", month: "short" }) : "Unknown"}
+            />
+          ))}
+        </div>
+      )}
       <div className={s.card}>
-        <div className={s.cardTitle}>Planning history</div>
-        {planningApps.length > 0 ? planningApps.map((app: any, i: number) => (
+        <div className={s.cardTitle}>Nearby planning applications ({nearby.length || planningApps.length})</div>
+        {(nearby.length > 0 ? nearby : planningApps).length > 0 ? (nearby.length > 0 ? nearby : planningApps).map((app: any, i: number) => (
           <PlanRow
             key={i}
             ref_={app.reference || `APP-${i}`}
-            desc={app.description || app.title || "Planning application"}
+            desc={`${app["site-address"] ? app["site-address"] + " — " : ""}${app.description || app.title || "Planning application"}`}
             status={app.status || "Unknown"}
             color={app.status?.toLowerCase().includes("approved") ? "green" : app.status?.toLowerCase().includes("refused") ? "red" : "amber"}
-            date={app.date ? new Date(app.date).toLocaleDateString("en-US", { year: "numeric", month: "short" }) : "Unknown"}
+            date={app.date || app["start-date"] ? new Date(app.date || app["start-date"]).toLocaleDateString("en-US", { year: "numeric", month: "short" }) : "Unknown"}
           />
-        )) : <NoData label="planning" />}
+        )) : <NoData label="nearby planning" />}
       </div>
     </>
   );
@@ -763,12 +792,29 @@ function FinancialsTab({ p, onRefresh }: { p: PropertyData; onRefresh: () => voi
       {rVal && (
         <div className={s.card}>
           <div className={s.cardTitle}>Valuations (RICS-aligned)</div>
-          {/* Reconciled */}
+          {/* Current market value — comps-based if available */}
           <div className={s.statRow} style={{ marginBottom: 10 }}>
-            <div className={s.statBox}><div className={s.statLabel}>Low</div><div className={s.statVal}>£{rVal.reconciled.low.toLocaleString()}</div></div>
-            <div className={s.statBox} style={{ borderColor: "var(--acc)" }}><div className={s.statLabel}>Mid (Reconciled)</div><div className={s.statVal} style={{ color: "var(--acc)" }}>£{rVal.reconciled.mid.toLocaleString()}</div></div>
-            <div className={s.statBox}><div className={s.statLabel}>High</div><div className={s.statVal}>£{rVal.reconciled.high.toLocaleString()}</div></div>
+            {rVal.market ? (
+              <>
+                <div className={s.statBox}><div className={s.statLabel}>Comps low</div><div className={s.statVal}>£{rVal.market.valueLow.toLocaleString()}</div></div>
+                <div className={s.statBox} style={{ borderColor: "var(--acc)" }}><div className={s.statLabel}>Market value</div><div className={s.statVal} style={{ color: "var(--acc)" }}>£{rVal.market.valueMid.toLocaleString()}</div></div>
+                <div className={s.statBox}><div className={s.statLabel}>Comps high</div><div className={s.statVal}>£{rVal.market.valueHigh.toLocaleString()}</div></div>
+              </>
+            ) : (
+              <>
+                <div className={s.statBox}><div className={s.statLabel}>Income cap</div><div className={s.statVal}>£{rVal.income.capitalisation.incomeCapValue.toLocaleString()}</div></div>
+                <div className={s.statBox} style={{ borderColor: "var(--acc)" }}><div className={s.statLabel}>Current value</div><div className={s.statVal} style={{ color: "var(--acc)" }}>£{rVal.income.capitalisation.incomeCapValue.toLocaleString()}</div></div>
+                <div className={s.statBox}><div className={s.statLabel}>DCF</div><div className={s.statVal}>£{rVal.income.dcfValue.toLocaleString()}</div></div>
+              </>
+            )}
           </div>
+          {rVal.market && <div style={{ fontSize: 9, color: "var(--tx3)", marginBottom: 4 }}>Based on {rVal.market.comps.length} comparable sales ({rVal.market.confidence} confidence)</div>}
+          {/* Reconciled range across all methods — for reference */}
+          {rVal.reconciled.variance > 10 && (
+            <div style={{ fontSize: 10, color: "var(--amb)", marginBottom: 4 }}>
+              All methods range: £{rVal.reconciled.low.toLocaleString()} – £{rVal.reconciled.high.toLocaleString()} ({rVal.reconciled.variance.toFixed(0)}% variance)
+            </div>
+          )}
           <div style={{ fontSize: 10, color: "var(--tx3)", marginBottom: 8 }}>{rVal.reconciled.opinion}</div>
 
           {/* Market approach — comps table */}
@@ -1563,7 +1609,7 @@ export default function DossierPage() {
                 ))}
               </div>
               <div className={s.actions}>
-                <button className={s.btnP} onClick={() => setActiveTab(7)}>Approach Owner</button>
+                <button className={s.btnP} onClick={() => setActiveTab(7)}>{ds.listing?.agentContact || property.brokerName ? "Contact Agent" : "Approach Owner"}</button>
                 <button className={s.btnG}>+ Pipeline</button>
                 <button className={`${s.btnS} ${watched ? s.btnWatched : ""}`} onClick={handleWatch} disabled={watchLoading}>
                   {watchLoading ? "..." : watched ? "Watching" : "Watch"}
@@ -1582,7 +1628,13 @@ export default function DossierPage() {
                   </div>
                 </div>
               </div>
-              {score?.opportunity && (
+              {ds.ricsAnalysis?.verdict?.reasoning && (
+                <div className={s.ai} style={{ marginBottom: 8 }}>
+                  <div className={s.aiLabel}>AI summary</div>
+                  <div style={{ fontSize: 11, color: "var(--tx2)", lineHeight: 1.5 }}>{ds.ricsAnalysis.verdict.reasoning}</div>
+                </div>
+              )}
+              {!ds.ricsAnalysis?.verdict?.reasoning && score?.opportunity && (
                 <div style={{ fontSize: 10, color: "var(--tx2)", marginBottom: 6 }}>{score.opportunity.summary}</div>
               )}
               {(property.askingPrice || property.guidePrice) && <Row l={property.askingPrice ? "Asking price" : "Guide price"} v={`£${(property.askingPrice || property.guidePrice)!.toLocaleString()}`} mono />}
@@ -1648,7 +1700,7 @@ export default function DossierPage() {
           <aside className={s.sideCol}>
             <div className={s.sideCard}>
               <div className={s.cardTitle}>Actions</div>
-              <button className={`${s.btnP} ${s.btnFull}`} onClick={() => setActiveTab(7)}>Approach owner</button>
+              <button className={`${s.btnP} ${s.btnFull}`} onClick={() => setActiveTab(7)}>{ds.listing?.agentContact || property.brokerName ? "Contact agent" : "Approach owner"}</button>
               <button className={`${s.btnG} ${s.btnFull}`}>+ Add to pipeline</button>
               <button className={`${s.btnP} ${s.btnFull}`} onClick={() => setShowAddInfo(true)}>+ Add information</button>
               <button className={`${s.btnS} ${s.btnFull}`} onClick={handleExportPDF} disabled={exporting === "pdf"}>{exporting === "pdf" ? "Exporting..." : "Export memo (PDF)"}</button>
