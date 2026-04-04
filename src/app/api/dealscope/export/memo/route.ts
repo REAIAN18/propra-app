@@ -90,13 +90,19 @@ export async function GET(req: NextRequest) {
       dealId: deal.id,
     };
 
-    const html = renderMemoHTML(memoData);
+    let html: string;
+    try {
+      html = renderMemoHTML(memoData);
+    } catch (renderErr: any) {
+      console.error("[export/memo] renderMemoHTML crashed:", renderErr?.message, renderErr?.stack);
+      return NextResponse.json({ error: `Memo render failed: ${renderErr?.message || "unknown"}` }, { status: 500 });
+    }
 
     return new NextResponse(html, {
       headers: { "Content-Type": "text/html" },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("[export/memo]", error);
-    return NextResponse.json({ error: "Failed to generate memo" }, { status: 500 });
+    return NextResponse.json({ error: `Failed to generate memo: ${error?.message || "unknown"}` }, { status: 500 });
   }
 }
