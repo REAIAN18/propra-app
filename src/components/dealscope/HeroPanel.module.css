@@ -1,0 +1,185 @@
+/* ═══════════════════════════════════════════════════
+   HeroPanel — DealScope property dossier hero
+   Dark theme only: uses global CSS vars from CLAUDE.md
+   ═══════════════════════════════════════════════════ */
+
+.heroPanel {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: linear-gradient(180deg, #09090b 0%, #0d0d0f 100%);
+  border-bottom: 1px solid #27272a;
+  padding: 16px 24px 14px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
+}
+
+/* ── Property header ── */
+.propertyHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.propertyTitle h1 {
+  font-size: 18px;
+  font-weight: 500;
+  color: #fafafa;
+  line-height: 1.3;
+  margin: 0 0 4px;
+  font-family: var(--serif, 'Instrument Serif', serif);
+  letter-spacing: -0.2px;
+}
+
+.propertyMeta {
+  display: flex;
+  gap: 10px;
+  font-size: 12px;
+  color: #a0a0ab;
+  flex-wrap: wrap;
+}
+
+.propertyMeta span::before {
+  content: "·";
+  margin-right: 10px;
+  opacity: 0.4;
+}
+
+.propertyMeta span:first-child::before {
+  content: none;
+}
+
+.backBtn {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: #71717a;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 0;
+  font-family: var(--sans, 'DM Sans', sans-serif);
+  transition: color 0.15s;
+}
+
+.backBtn:hover {
+  color: #a899ff;
+}
+
+/* ── Metrics grid ── */
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.verdictCell {
+  grid-column: span 2;
+  background: var(--verdictBg, rgba(124, 106, 240, 0.06));
+  border: 1px solid var(--verdictBorder, rgba(124, 106, 240, 0.2));
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  justify-content: center;
+}
+
+.verdictTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #e4e4ec;
+  margin: 0;
+}
+
+.verdictSubtitle {
+  font-size: 12px;
+  color: #a0a0ab;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* ── Action bar ── */
+.actionBar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btnPrimary {
+  padding: 7px 14px;
+  background: #7c6af0;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: var(--sans, 'DM Sans', sans-serif);
+  transition: background 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.btnPrimary:hover {
+  background: #9d8aff;
+}
+
+.btnSecondary {
+  padding: 7px 14px;
+  background: #18181f;
+  color: #e4e4ec;
+  border: 1px solid #25252d;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: var(--sans, 'DM Sans', sans-serif);
+  transition: background 0.15s, border-color 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.btnSecondary:hover {
+  background: #25252d;
+  border-color: #3f3f46;
+}
+
+.btnActive {
+  background: rgba(124, 106, 240, 0.15);
+  border-color: rgba(124, 106, 240, 0.4);
+  color: #a899ff;
+}
+
+.btnDisabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Responsive ── */
+@media (max-width: 800px) {
+  .metricsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .verdictCell {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 480px) {
+  .heroPanel {
+    padding: 12px 16px;
+  }
+
+  .propertyTitle h1 {
+    font-size: 15px;
+  }
+
+  .metricsGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
