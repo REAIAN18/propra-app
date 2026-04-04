@@ -1144,7 +1144,7 @@ function buildCAPEX(epcRating: string | null, assetType: string, sqft: number, y
   const measures: EPCMeasure[] = [];
   let epcCost = 0;
   const currentRating = epcRating || "D";
-  let targetRating = "B";
+  const targetRating = "B";
 
   if (epcRating) {
     const r = epcRating.toUpperCase();

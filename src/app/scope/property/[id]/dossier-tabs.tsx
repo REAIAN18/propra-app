@@ -185,7 +185,7 @@ export function OwnershipTab() {
       <div className={s.card}>
         <div className={s.cardTitle}>London Gazette notices</div>
         <div className={s.gazetteRow}><div className={s.gazDot} style={{ background: "var(--red)" }} /><div><div className={s.gazRef}>18 Mar 2026</div><div className={s.gazDesc}>Notice of appointment of administrator — Begbies Traynor</div></div></div>
-        <div className={s.gazetteRow}><div className={s.gazDot} style={{ background: "var(--amb)" }} /><div><div className={s.gazRef}>22 Mar 2026</div><div className={s.gazDesc}>Statement of administrator's proposals — creditors' meeting 15 Apr</div></div></div>
+        <div className={s.gazetteRow}><div className={s.gazDot} style={{ background: "var(--amb)" }} /><div><div className={s.gazRef}>22 Mar 2026</div><div className={s.gazDesc}>Statement of administrator&apos;s proposals — creditors&apos; meeting 15 Apr</div></div></div>
       </div>
 
       <div className={s.card}>
