@@ -485,6 +485,30 @@ function renderExecSummary(d: MemoData): string {
       </div>
     </div>
 
+    <h2>CAPEX Summary</h2>
+    <div class="metrics-grid" style="grid-template-columns: repeat(4, 1fr);">
+      <div class="metric-box${d.analysis?.capex?.total === 0 ? " highlight" : ""}">
+        <div class="metric-label">Total CAPEX</div>
+        <div class="metric-value">${d.analysis?.capex != null ? fmt(d.analysis.capex.total) : "—"}</div>
+        <div class="metric-sub">${d.analysis?.capex?.total === 0 ? "No works required" : "Required investment"}</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Refurbishment</div>
+        <div class="metric-value">${d.analysis?.capex?.refurb != null ? fmt(d.analysis.capex.refurb.cost) : "—"}</div>
+        <div class="metric-sub">${escHtml(d.analysis?.capex?.refurb?.scope || "")}</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">EPC Upgrade</div>
+        <div class="metric-value">${d.analysis?.capex?.epcUpgrade != null ? fmt(d.analysis.capex.epcUpgrade.cost) : "—"}</div>
+        <div class="metric-sub">${d.analysis?.capex?.epcUpgrade ? escHtml(d.analysis.capex.epcUpgrade.currentRating + "→" + d.analysis.capex.epcUpgrade.targetRating) : ""}</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Total Cost In</div>
+        <div class="metric-value">${r?.totalCostIn != null ? fmt(r.totalCostIn) : "—"}</div>
+        <div class="metric-sub">Acquisition + CAPEX + carry</div>
+      </div>
+    </div>
+
     ${v?.targetOfferRange ? `
     <div style="margin-top: 12px; padding: 10px 14px; background: #e8f0ff; border: 1px solid #0066CC;">
       <strong style="font-size: 10px;">Target Offer Range:</strong>
