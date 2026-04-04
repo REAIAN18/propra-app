@@ -820,7 +820,7 @@ export function analyseProperty(input: AnalysisInput): RICSAnalysis {
   // ══════════════════════════════════════════════════════════════════════════
   // CAPEX ANALYSIS
   // ══════════════════════════════════════════════════════════════════════════
-  const capex = buildCAPEX(epcRating, assetType, sqft, yearBuilt, condition);
+  const capex = buildCAPEX(epcRating, assetType, sqft, yearBuilt, condition, listingDescription);
 
   // ══════════════════════════════════════════════════════════════════════════
   // FULL ACQUISITION COST
@@ -972,8 +972,74 @@ function buildVoidReasoning(assetType: string, location: LocationGrade, sqft: nu
   return parts.join(", ");
 }
 
-function buildCAPEX(epcRating: string | null, assetType: string, sqft: number, yearBuilt: number | null, condition: string | null): CAPEXAnalysis {
+const RECENT_REFURB_PATTERNS = [
+  /refurb(?:ished)?\s+(?:in\s+)?(?:20[2-9]\d)/i,  // "refurbished in 2020+"
+  /new(?:ly)?\s+refurb/i,
+  /recently\s+refurb/i,
+  /comprehensively\s+refurb/i,
+  /cat\s*[ab]\s+fit\s*out/i,
+];
+
+const REFURB_YEAR_RE = /refurb(?:ished)?\s+(?:in\s+)?(20[2-9]\d)/i;
+
+function detectRecentRefurb(text: string | null): { isRecent: boolean; year?: number } {
+  if (!text) return { isRecent: false };
+  const yearMatch = REFURB_YEAR_RE.exec(text);
+  if (yearMatch) {
+    const year = parseInt(yearMatch[1], 10);
+    const currentYear = new Date().getFullYear();
+    if (year >= currentYear - 3) return { isRecent: true, year };
+    return { isRecent: false, year };
+  }
+  for (const pattern of RECENT_REFURB_PATTERNS) {
+    if (pattern.test(text)) return { isRecent: true };
+  }
+  return { isRecent: false };
+}
+
+function buildCAPEX(epcRating: string | null, assetType: string, sqft: number, yearBuilt: number | null, condition: string | null, listingText: string | null = null): CAPEXAnalysis {
   const type = assetType.toLowerCase();
+
+  // If recently refurbished, skip refurb cost entirely
+  const refurbDetection = detectRecentRefurb(listingText);
+  if (refurbDetection.isRecent) {
+    const measures: EPCMeasure[] = [];
+    let epcCost = 0;
+    const currentRating = epcRating || "D";
+    const targetRating = "B";
+    if (epcRating) {
+      const r = epcRating.toUpperCase();
+      if (r === "G" || r === "F") {
+        measures.push({ measure: "LED lighting throughout", cost: Math.round(sqft * 1.5), annualSaving: Math.round(sqft * 0.5), paybackYears: 3 });
+        measures.push({ measure: "Roof/wall insulation", cost: Math.round(sqft * 3), annualSaving: Math.round(sqft * 0.8), paybackYears: 4 });
+        measures.push({ measure: "Heating system upgrade", cost: Math.round(Math.min(sqft * 4, 50000)), annualSaving: Math.round(sqft * 0.6), paybackYears: 5 });
+        if (/office/.test(type)) {
+          measures.push({ measure: "Double glazing replacement", cost: Math.round(sqft * 5), annualSaving: Math.round(sqft * 0.4), paybackYears: 8 });
+        }
+      } else if (r === "E") {
+        measures.push({ measure: "LED lighting throughout", cost: Math.round(sqft * 1.5), annualSaving: Math.round(sqft * 0.5), paybackYears: 3 });
+        measures.push({ measure: "Insulation improvements", cost: Math.round(sqft * 2), annualSaving: Math.round(sqft * 0.6), paybackYears: 4 });
+      } else if (r === "D") {
+        measures.push({ measure: "LED lighting upgrade", cost: Math.round(sqft * 1), annualSaving: Math.round(sqft * 0.3), paybackYears: 3 });
+      }
+      epcCost = measures.reduce((s, m) => s + m.cost, 0);
+    }
+    const yearNote = refurbDetection.year ? ` (${refurbDetection.year})` : "";
+    const reasons: string[] = [`Recently refurbished${yearNote} — no refurb CAPEX required`];
+    if (epcCost > 0) reasons.push(`EPC ${currentRating}→${targetRating} upgrade £${epcCost.toLocaleString()}`);
+    const contingencyCost = Math.round(epcCost * 0.1);
+    const profFees = Math.round(epcCost * 0.12);
+    const total = epcCost + contingencyCost + profFees;
+    return {
+      epcUpgrade: { cost: epcCost, measures, currentRating, targetRating },
+      refurb: { cost: 0, psfRate: 0, scope: `Recently refurbished${yearNote} — no works required` },
+      contingency: { cost: contingencyCost, pct: 10, reasoning: "10% contingency — standard allowance" },
+      professionalFees: { cost: profFees, pct: 12 },
+      asbestos: { cost: 0, applicable: false, reasoning: "Recently refurbished — asbestos works already addressed" },
+      total,
+      reasoning: reasons.join(". "),
+    };
+  }
 
   // EPC measures
   const measures: EPCMeasure[] = [];
