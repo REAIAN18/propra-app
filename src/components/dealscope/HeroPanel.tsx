@@ -99,9 +99,9 @@ export function HeroPanel({
   const irr = returns?.irr != null ? returns.irr : null;
   const em = returns?.equityMultiple != null ? returns.equityMultiple : null;
 
-  // CAPEX: try ricsAnalysis, then assumptions
+  // CAPEX: use .total from ricsAnalysis (it's a CAPEXAnalysis object, not a number)
   const capexRaw: number | null =
-    ra?.capex ?? assumptions?.capex?.value ?? null;
+    ra?.capex?.total ?? assumptions?.capex?.value ?? null;
 
   const metrics: Array<{
     label: string;
