@@ -381,6 +381,96 @@ function calcIRR(cashflows: number[], guess: number = 0.1, maxIter: number = 100
   return rate;
 }
 
+// ── Correct IRR calculation ───────────────────────────────────────────────────
+
+export interface HoldPeriodAssumptions {
+  entryPrice: number;
+  size: number;               // sq ft
+  sdlt: number;
+  legalFees: number;
+  surveyFees: number;
+  voidMonths: number;
+  monthlyCarryCost: number;
+  ervPSF: number;
+  lettingFeesPercent: number;
+  rentFreeMonths: number;
+  tenantImprovementsPSF: number;
+  opex: number;               // fraction of ERV (e.g. 0.18 = 18%)
+  exitYield: number;          // decimal (e.g. 0.08 = 8%)
+  rentGrowthPA: number;       // decimal (e.g. 0.02 = 2% p.a.)
+  holdYears: number;
+  agentFeesPercent: number;   // decimal percent (e.g. 1.5)
+  legalFeesExit: number;
+}
+
+/**
+ * Unlevered IRR using annual cash flows and Newton-Raphson.
+ *
+ * Cash flow model:
+ *   Year 0   : -(entryPrice + sdlt + legalFees + surveyFees)
+ *   Void yrs : -(monthly carry × 12) per year; letting costs added in final void year
+ *   RF year  : 0  (tenant in occupation, no rent)
+ *   Income   : ERV_at_letting × growth × (1 − opex) per year
+ *   Exit yr  : income + (ERV_at_exit / exitYield) − agent fees − legal
+ *
+ * Returns IRR as a percentage (e.g. 5.3 means 5.3%).
+ */
+export function calculateCorrectIRR(a: HoldPeriodAssumptions): number {
+  const erv = a.ervPSF * a.size;
+
+  // Number of whole void years (rounded up)
+  const voidYears = a.voidMonths > 0 ? Math.ceil(a.voidMonths / 12) : 0;
+  // Number of whole rent-free years (rounded up, minimum 0)
+  const rfYears = a.rentFreeMonths > 0 ? Math.ceil(a.rentFreeMonths / 12) : 0;
+  // First year in which rent is received (1-indexed from acquisition = Year 0)
+  const firstIncomeYear = voidYears + rfYears + 1;
+
+  // ERV at the time the lease is signed (end of void period)
+  const ervAtLetting = erv * Math.pow(1 + a.rentGrowthPA, voidYears);
+
+  // Year 0: acquisition outlay
+  const cashflows: number[] = [-(a.entryPrice + a.sdlt + a.legalFees + a.surveyFees)];
+
+  for (let yr = 1; yr <= a.holdYears; yr++) {
+    let cf = 0;
+
+    if (yr <= voidYears) {
+      // Void period: landlord bears carry costs
+      const monthsThisYear = yr < voidYears ? 12 : a.voidMonths - (voidYears - 1) * 12;
+      cf = -(monthsThisYear * a.monthlyCarryCost);
+
+      // Letting costs land at end of final void year
+      if (yr === voidYears) {
+        const lettingFee = ervAtLetting * (a.lettingFeesPercent / 100);
+        const tis = a.tenantImprovementsPSF * a.size;
+        cf -= lettingFee + tis;
+      }
+    } else if (yr < firstIncomeYear) {
+      // Rent-free: tenant in situ, landlord receives nothing
+      cf = 0;
+    } else {
+      // Stabilised income: ERV at letting, grown each income year
+      const incomeYearIndex = yr - firstIncomeYear; // 0 in first income year
+      const rent = ervAtLetting * Math.pow(1 + a.rentGrowthPA, incomeYearIndex);
+      cf = rent * (1 - a.opex);
+    }
+
+    // Exit proceeds added to final year cash flow
+    if (yr === a.holdYears) {
+      const exitErv = erv * Math.pow(1 + a.rentGrowthPA, a.holdYears);
+      const exitGross = exitErv / a.exitYield;
+      const agentFees = exitGross * (a.agentFeesPercent / 100);
+      cf += exitGross - agentFees - a.legalFeesExit;
+    }
+
+    cashflows.push(cf);
+  }
+
+  const irrDecimal = calcIRR(cashflows);
+  const irrPct = irrDecimal * 100;
+  return isFinite(irrPct) && !isNaN(irrPct) ? parseFloat(irrPct.toFixed(1)) : 0;
+}
+
 // ══════════════════════════════════════════════════════════════════════════════
 // QUICK FILTER (Level 1)
 // ══════════════════════════════════════════════════════════════════════════════
@@ -557,9 +647,14 @@ export function analyseProperty(input: AnalysisInput): RICSAnalysis {
   // ══════════════════════════════════════════════════════════════════════════
   methodology.push("Income approach (capitalisation + DCF)");
 
+  // Purchaser's costs needed for NIY denominator (RICS standard: NIY must reflect total cost)
+  const sdlt = calculateSDLT(askingPrice);
+  const legalFee = askingPrice < 500000 ? 4000 : askingPrice < 2000000 ? 5500 : 8000;
+
   const effectiveIncome = isVacant ? erv * 0.85 : noi > 0 ? noi : passingRent * 0.85;
   const incomeCapValue = mktCapRate > 0 ? Math.round(effectiveIncome / mktCapRate) : 0;
-  const netInitialYield = askingPrice > 0 ? (effectiveIncome / askingPrice) * 100 : 0;
+  // NIY denominator includes purchaser's costs (SDLT + legal) per RICS convention
+  const netInitialYield = askingPrice > 0 ? (effectiveIncome / (askingPrice + sdlt + legalFee)) * 100 : 0;
 
   // Term & Reversion for under/over-rented
   let termReversion: IncomeValuation["termReversion"] = null;
@@ -663,7 +758,6 @@ export function analyseProperty(input: AnalysisInput): RICSAnalysis {
   if (!isFinite(dcfIRR) || isNaN(dcfIRR)) dcfIRR = 0;
   const dcfNPV = dcfCashflows.reduce((sum, cf, t) => sum + cf / Math.pow(1 + discountRate, t), 0);
   const totalCashReturned = years.reduce((s, y) => s + y.cashFlow, 0) + exitEquity;
-  const dcfEquityMultiple = equity > 0 ? totalCashReturned / equity : 0;
 
   const dcfValue = Math.round(dcfNPV + loanAmount);
 
@@ -820,13 +914,12 @@ export function analyseProperty(input: AnalysisInput): RICSAnalysis {
   // ══════════════════════════════════════════════════════════════════════════
   // CAPEX ANALYSIS
   // ══════════════════════════════════════════════════════════════════════════
-  const capex = buildCAPEX(epcRating, assetType, sqft, yearBuilt, condition);
+  const capex = buildCAPEX(epcRating, assetType, sqft, yearBuilt, condition, listingDescription);
 
   // ══════════════════════════════════════════════════════════════════════════
   // FULL ACQUISITION COST
   // ══════════════════════════════════════════════════════════════════════════
-  const sdlt = calculateSDLT(askingPrice);
-  const legalFee = askingPrice < 500000 ? 4000 : askingPrice < 2000000 ? 5500 : 8000;
+  // sdlt and legalFee already computed above (used in NIY calculation)
   const surveyFee = askingPrice < 500000 ? 1500 : askingPrice < 2000000 ? 2500 : 4000;
   const agentFeeBuyer = 0; // typically nil at auction / direct
   const financeArrangement = Math.round(loanAmount * 0.015);
@@ -835,6 +928,12 @@ export function analyseProperty(input: AnalysisInput): RICSAnalysis {
   const carryCosts = lettingAnalysis?.totalCarryCost || 0;
   const lettingCosts = lettingAnalysis ? (lettingAnalysis.agentFee + lettingAnalysis.legalCosts + lettingAnalysis.fittingOutContribution) : 0;
   const totalCostIn = subtotalAcquisition + capex.total + carryCosts + lettingCosts;
+
+  // Equity multiple: unlevered total return / total cost in (gives 1.0–1.5× for typical hold)
+  // Using total NOI over hold + terminal value divided by all-in cost (not just down payment)
+  const dcfEquityMultiple = totalCostIn > 0
+    ? (years.reduce((s, y) => s + y.netIncome, 0) + terminalValue) / totalCostIn
+    : 0;
 
   const acquisitionCost: AcquisitionCost = {
     purchasePrice: askingPrice,
@@ -972,8 +1071,74 @@ function buildVoidReasoning(assetType: string, location: LocationGrade, sqft: nu
   return parts.join(", ");
 }
 
-function buildCAPEX(epcRating: string | null, assetType: string, sqft: number, yearBuilt: number | null, condition: string | null): CAPEXAnalysis {
+const RECENT_REFURB_PATTERNS = [
+  /refurb(?:ished)?\s+(?:in\s+)?(?:20[2-9]\d)/i,  // "refurbished in 2020+"
+  /new(?:ly)?\s+refurb/i,
+  /recently\s+refurb/i,
+  /comprehensively\s+refurb/i,
+  /cat\s*[ab]\s+fit\s*out/i,
+];
+
+const REFURB_YEAR_RE = /refurb(?:ished)?\s+(?:in\s+)?(20[2-9]\d)/i;
+
+function detectRecentRefurb(text: string | null): { isRecent: boolean; year?: number } {
+  if (!text) return { isRecent: false };
+  const yearMatch = REFURB_YEAR_RE.exec(text);
+  if (yearMatch) {
+    const year = parseInt(yearMatch[1], 10);
+    const currentYear = new Date().getFullYear();
+    if (year >= currentYear - 3) return { isRecent: true, year };
+    return { isRecent: false, year };
+  }
+  for (const pattern of RECENT_REFURB_PATTERNS) {
+    if (pattern.test(text)) return { isRecent: true };
+  }
+  return { isRecent: false };
+}
+
+function buildCAPEX(epcRating: string | null, assetType: string, sqft: number, yearBuilt: number | null, condition: string | null, listingText: string | null = null): CAPEXAnalysis {
   const type = assetType.toLowerCase();
+
+  // If recently refurbished, skip refurb cost entirely
+  const refurbDetection = detectRecentRefurb(listingText);
+  if (refurbDetection.isRecent) {
+    const measures: EPCMeasure[] = [];
+    let epcCost = 0;
+    const currentRating = epcRating || "D";
+    const targetRating = "B";
+    if (epcRating) {
+      const r = epcRating.toUpperCase();
+      if (r === "G" || r === "F") {
+        measures.push({ measure: "LED lighting throughout", cost: Math.round(sqft * 1.5), annualSaving: Math.round(sqft * 0.5), paybackYears: 3 });
+        measures.push({ measure: "Roof/wall insulation", cost: Math.round(sqft * 3), annualSaving: Math.round(sqft * 0.8), paybackYears: 4 });
+        measures.push({ measure: "Heating system upgrade", cost: Math.round(Math.min(sqft * 4, 50000)), annualSaving: Math.round(sqft * 0.6), paybackYears: 5 });
+        if (/office/.test(type)) {
+          measures.push({ measure: "Double glazing replacement", cost: Math.round(sqft * 5), annualSaving: Math.round(sqft * 0.4), paybackYears: 8 });
+        }
+      } else if (r === "E") {
+        measures.push({ measure: "LED lighting throughout", cost: Math.round(sqft * 1.5), annualSaving: Math.round(sqft * 0.5), paybackYears: 3 });
+        measures.push({ measure: "Insulation improvements", cost: Math.round(sqft * 2), annualSaving: Math.round(sqft * 0.6), paybackYears: 4 });
+      } else if (r === "D") {
+        measures.push({ measure: "LED lighting upgrade", cost: Math.round(sqft * 1), annualSaving: Math.round(sqft * 0.3), paybackYears: 3 });
+      }
+      epcCost = measures.reduce((s, m) => s + m.cost, 0);
+    }
+    const yearNote = refurbDetection.year ? ` (${refurbDetection.year})` : "";
+    const reasons: string[] = [`Recently refurbished${yearNote} — no refurb CAPEX required`];
+    if (epcCost > 0) reasons.push(`EPC ${currentRating}→${targetRating} upgrade £${epcCost.toLocaleString()}`);
+    const contingencyCost = Math.round(epcCost * 0.1);
+    const profFees = Math.round(epcCost * 0.12);
+    const total = epcCost + contingencyCost + profFees;
+    return {
+      epcUpgrade: { cost: epcCost, measures, currentRating, targetRating },
+      refurb: { cost: 0, psfRate: 0, scope: `Recently refurbished${yearNote} — no works required` },
+      contingency: { cost: contingencyCost, pct: 10, reasoning: "10% contingency — standard allowance" },
+      professionalFees: { cost: profFees, pct: 12 },
+      asbestos: { cost: 0, applicable: false, reasoning: "Recently refurbished — asbestos works already addressed" },
+      total,
+      reasoning: reasons.join(". "),
+    };
+  }
 
   // EPC measures
   const measures: EPCMeasure[] = [];
@@ -1069,20 +1234,26 @@ function buildSensitivityRow(
   const totalCost = price + sdlt + 5000 + 2000 + capex + (annualDebtService / 12 * voidMonths);
   const yieldPct = totalCost > 0 ? (stabilised / totalCost) * 100 : 0;
 
-  // Simple IRR proxy — use Newton-Raphson on 5yr cashflows
-  const equity = price - loanAmount;
-  const annualCF = stabilised - annualDebtService;
-  const exitCapRate = Math.max(0.04, costOfDebt / 100 * 0.8); // floor at 4%
-  const exitVal = stabilised / exitCapRate;
-  const exitEquity = exitVal - loanAmount * 0.7;
-  const totalReturn = annualCF * 5 + exitEquity;
-  let irrProxy = 0;
-  if (equity > 0 && totalReturn > 0) {
-    irrProxy = (Math.pow(totalReturn / equity, 1 / 5) - 1) * 100;
-  } else if (equity > 0) {
-    irrProxy = -10; // negative return
-  }
-  if (!isFinite(irrProxy) || isNaN(irrProxy)) irrProxy = 0;
+  // Unlevered IRR via Newton-Raphson on annual cash flows
+  const irrProxy = calculateCorrectIRR({
+    entryPrice: price,
+    size: 1,                          // size=1 so ERV = ervPSF (absolute £)
+    sdlt,
+    legalFees: 5000,
+    surveyFees: 2000,
+    voidMonths,
+    monthlyCarryCost: stabilised * 0.30 / 12,  // ~30% of ERV as annual void carry
+    ervPSF: stabilised / 0.82,        // gross ERV back-calculated from net stabilised
+    lettingFeesPercent: 12,
+    rentFreeMonths: Math.min(12, Math.round(voidMonths / 2)),
+    tenantImprovementsPSF: capex,     // absolute £ (size=1)
+    opex: 0.18,
+    exitYield: 0.08,
+    rentGrowthPA: 0.025,
+    holdYears: 5,
+    agentFeesPercent: 1.5,
+    legalFeesExit: 15000,
+  });
 
   let verdict: string;
   if (irrProxy >= 15) verdict = "Strong buy";

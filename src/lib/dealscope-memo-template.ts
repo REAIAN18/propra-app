@@ -88,13 +88,15 @@ export interface MemoData {
 // FORMATTERS
 // ══════════════════════════════════════════════════════════════════════════════
 
-function fmt(v: number): string {
+function fmt(v: number | null | undefined): string {
+  if (v == null || isNaN(v)) return "—";
   if (v >= 1_000_000) return `£${(v / 1_000_000).toFixed(2)}M`;
   if (v >= 1_000) return `£${Math.round(v).toLocaleString()}`;
   return `£${v.toLocaleString()}`;
 }
 
-function fmtK(v: number): string {
+function fmtK(v: number | null | undefined): string {
+  if (v == null || isNaN(v)) return "—";
   if (v >= 1_000_000) return `£${(v / 1_000_000).toFixed(1)}M`;
   if (v >= 1_000) return `£${Math.round(v / 1_000)}k`;
   return `£${v.toLocaleString()}`;
@@ -483,6 +485,30 @@ function renderExecSummary(d: MemoData): string {
       </div>
     </div>
 
+    <h2>CAPEX Summary</h2>
+    <div class="metrics-grid" style="grid-template-columns: repeat(4, 1fr);">
+      <div class="metric-box${d.analysis?.capex?.total === 0 ? " highlight" : ""}">
+        <div class="metric-label">Total CAPEX</div>
+        <div class="metric-value">${d.analysis?.capex != null ? fmt(d.analysis.capex.total) : "—"}</div>
+        <div class="metric-sub">${d.analysis?.capex?.total === 0 ? "No works required" : "Required investment"}</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Refurbishment</div>
+        <div class="metric-value">${d.analysis?.capex?.refurb != null ? fmt(d.analysis.capex.refurb.cost) : "—"}</div>
+        <div class="metric-sub">${escHtml(d.analysis?.capex?.refurb?.scope || "")}</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">EPC Upgrade</div>
+        <div class="metric-value">${d.analysis?.capex?.epcUpgrade != null ? fmt(d.analysis.capex.epcUpgrade.cost) : "—"}</div>
+        <div class="metric-sub">${d.analysis?.capex?.epcUpgrade ? escHtml(d.analysis.capex.epcUpgrade.currentRating + "→" + d.analysis.capex.epcUpgrade.targetRating) : ""}</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Total Cost In</div>
+        <div class="metric-value">${r?.totalCostIn != null ? fmt(r.totalCostIn) : "—"}</div>
+        <div class="metric-sub">Acquisition + CAPEX + carry</div>
+      </div>
+    </div>
+
     ${v?.targetOfferRange ? `
     <div style="margin-top: 12px; padding: 10px 14px; background: #e8f0ff; border: 1px solid #0066CC;">
       <strong style="font-size: 10px;">Target Offer Range:</strong>
@@ -718,8 +744,8 @@ function renderRiskProfile(d: MemoData): string {
       <div class="risk-card ${d.analysis?.confidence === "high" ? "risk-low-card" : d.analysis?.confidence === "medium" ? "risk-medium-card" : "risk-high-card"}">
         <div class="risk-label">Data Confidence</div>
         <p><strong>${(d.analysis?.confidence || "low").toUpperCase()}</strong><br/>
-        ${d.analysis?.estimatedFields?.length ? "Estimated: " + d.analysis?.estimatedFields.slice(0, 4).join(", ") + "." : "All key data available."}
-        Methods: ${d.analysis?.methodology?.join(", ") || "Standard"}.</p>
+        ${Array.isArray(d.analysis?.estimatedFields) && d.analysis.estimatedFields.length ? "Estimated: " + d.analysis.estimatedFields.slice(0, 4).join(", ") + "." : "All key data available."}
+        Methods: ${Array.isArray(d.analysis?.methodology) ? d.analysis.methodology.join(", ") : "Standard"}.</p>
       </div>
     </div>
 
@@ -870,7 +896,7 @@ function renderSensitivity(d: MemoData): string {
       <div class="confidence-item">
         <div class="conf-metric">Market Comparables</div>
         <div class="conf-score">${d.comps.length >= 5 ? "85" : d.comps.length >= 3 ? "70" : "50"}</div>
-        <p>${d.comps.length} comparable sales analysed. ${d.analysis?.valuations?.market ? `Adjusted average £${d.analysis?.valuations.market.adjustedAvgPsf}/sqft.` : ""} ${d.analysis?.valuations?.market?.confidence || "Low"} confidence in valuation.</p>
+        <p>${d.comps.length} comparable sales analysed. ${d.analysis?.valuations?.market?.adjustedAvgPsf ? `Adjusted average £${d.analysis.valuations.market.adjustedAvgPsf}/sqft.` : ""} ${d.analysis?.valuations?.market?.confidence || "Low"} confidence in valuation.</p>
       </div>
       <div class="confidence-item">
         <div class="conf-metric">Tenant Quality</div>
@@ -880,7 +906,7 @@ function renderSensitivity(d: MemoData): string {
       <div class="confidence-item">
         <div class="conf-metric">Income Sustainability</div>
         <div class="conf-score">${d.analysis?.confidence === "high" ? "85" : d.analysis?.confidence === "medium" ? "70" : "55"}</div>
-        <p>${d.analysis?.estimatedFields?.length || 0} fields estimated. ${d.analysis?.confidence} overall confidence. Methods: ${d.analysis?.methodology?.join(", ") || "standard"}.</p>
+        <p>${d.analysis?.estimatedFields?.length || 0} fields estimated. ${d.analysis?.confidence || "low"} overall confidence. Methods: ${Array.isArray(d.analysis?.methodology) ? d.analysis.methodology.join(", ") : "standard"}.</p>
       </div>
     </div>
 
@@ -922,6 +948,14 @@ function renderSensitivity(d: MemoData): string {
 // MAIN RENDER
 // ══════════════════════════════════════════════════════════════════════════════
 
+function safePage(name: string, fn: () => string): string {
+  try {
+    return fn();
+  } catch (e: any) {
+    return `<div class="page"><h1 style="color:red">Error rendering ${name}: ${e?.message || "unknown"}</h1></div>`;
+  }
+}
+
 export function renderMemoHTML(d: MemoData): string {
   return `<!DOCTYPE html>
 <html lang="en">
@@ -932,13 +966,13 @@ export function renderMemoHTML(d: MemoData): string {
   <style>${STYLES}</style>
 </head>
 <body>
-  ${renderCover(d)}
-  ${renderExecSummary(d)}
-  ${renderYieldJustification(d)}
-  ${renderTenantLease(d)}
-  ${renderRiskProfile(d)}
-  ${renderMarketContext(d)}
-  ${renderSensitivity(d)}
+  ${safePage("Cover", () => renderCover(d))}
+  ${safePage("Executive Summary", () => renderExecSummary(d))}
+  ${safePage("Yield Justification", () => renderYieldJustification(d))}
+  ${safePage("Tenant & Lease", () => renderTenantLease(d))}
+  ${safePage("Risk Profile", () => renderRiskProfile(d))}
+  ${safePage("Market Context", () => renderMarketContext(d))}
+  ${safePage("Sensitivity", () => renderSensitivity(d))}
 </body>
 </html>`;
 }
