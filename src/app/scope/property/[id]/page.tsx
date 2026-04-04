@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
+import { HeroPanel } from "@/components/dealscope/HeroPanel";
 import s from "./dossier.module.css";
 
 const TABS = ["Property", "Planning", "Title & Legal", "Environmental", "Ownership", "Financials", "Market", "Approach"];
@@ -1636,37 +1637,17 @@ export default function DossierPage() {
           </div>
         </div>
 
-        {/* ═══ VERDICT BOX (above tabs) ═══ */}
-        {(() => {
-          const ds2 = property.dataSources || {};
-          const ra2 = ds2.ricsAnalysis;
-          const da2 = ds2.dealAnalysis;
-          const v2 = ra2?.verdict || da2?.verdict;
-          if (!v2) return null;
-          const vColor = v2.rating === "strong_buy" || v2.rating === "buy" || v2.rating === "good" ? "var(--grn)" : v2.rating === "marginal" ? "var(--amb)" : "var(--red)";
-          const vBg = v2.rating === "strong_buy" || v2.rating === "buy" || v2.rating === "good" ? "rgba(52,211,153,.06)" : v2.rating === "marginal" ? "rgba(251,191,36,.06)" : "rgba(248,113,113,.06)";
-          const vBorder = v2.rating === "strong_buy" || v2.rating === "buy" || v2.rating === "good" ? "rgba(52,211,153,.25)" : v2.rating === "marginal" ? "rgba(251,191,36,.25)" : "rgba(248,113,113,.25)";
-          const vLabel = v2.rating === "strong_buy" ? "STRONG BUY" : v2.rating === "buy" ? "BUY" : v2.rating === "marginal" ? "MARGINAL" : v2.rating === "good" ? "GOOD DEAL" : v2.rating === "bad" ? "BELOW THRESHOLD" : "AVOID";
-          const metrics = ra2?.returns || da2;
-          return (
-            <div className={`${s.anim} ${s.a3}`} style={{ background: vBg, border: `1px solid ${vBorder}`, borderRadius: 10, padding: "16px 20px", marginBottom: 16 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
-                <span style={{ background: vColor, color: "#000", fontWeight: 700, fontSize: 11, padding: "3px 10px", borderRadius: 4, letterSpacing: 1 }}>{vLabel}</span>
-                {(ra2?.verdict as any)?.play && <span style={{ fontSize: 12, color: "var(--tx2)" }}>{(ra2.verdict as any).play}</span>}
-              </div>
-              <div style={{ fontSize: 13, color: "var(--tx)", lineHeight: 1.6, marginBottom: 10 }}>{v2.summary}</div>
-              <div style={{ display: "flex", gap: 20, flexWrap: "wrap", fontSize: 12 }}>
-                {metrics?.niy != null && <span style={{ color: "var(--tx2)" }}>NIY <strong style={{ color: "var(--tx)" }}>{(metrics.niy * 100).toFixed(1)}%</strong></span>}
-                {metrics?.irr != null && <span style={{ color: "var(--tx2)" }}>IRR <strong style={{ color: "var(--tx)" }}>{(metrics.irr * 100).toFixed(1)}%</strong></span>}
-                {metrics?.equityMultiple != null && <span style={{ color: "var(--tx2)" }}>Equity ×<strong style={{ color: "var(--tx)" }}>{metrics.equityMultiple.toFixed(2)}</strong></span>}
-                {metrics?.dscr != null && <span style={{ color: "var(--tx2)" }}>DSCR <strong style={{ color: "var(--tx)" }}>{metrics.dscr.toFixed(2)}</strong></span>}
-                {(ra2?.verdict as any)?.targetOfferRange && (
-                  <span style={{ color: "var(--tx2)" }}>Target offer: <strong style={{ color: vColor }}>£{(ra2.verdict as any).targetOfferRange.low.toLocaleString()} – £{(ra2.verdict as any).targetOfferRange.high.toLocaleString()}</strong></span>
-                )}
-              </div>
-            </div>
-          );
-        })()}
+        {/* ═══ HERO PANEL (verdict + metrics + AI summary, sticky) ═══ */}
+        <HeroPanel
+          property={property}
+          watched={watched}
+          exporting={exporting}
+          onExportMemo={handleExportPDF}
+          onAddToPipeline={() => {}}
+          onWatch={handleWatch}
+          onContact={() => setActiveTab(7)}
+          onAddInfo={() => setShowAddInfo(true)}
+        />
 
         {/* ═══ BODY ═══ */}
         <div className={`${s.body} ${s.anim} ${s.a4}`}>

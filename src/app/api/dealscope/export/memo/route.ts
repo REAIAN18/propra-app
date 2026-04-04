@@ -7,6 +7,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { renderMemoHTML, type MemoData } from "@/lib/dealscope-memo-template";
+import { analyseProperty, type AnalysisInput, type ComparableSale } from "@/lib/dealscope-deal-analysis";
+import { normaliseRegion, normaliseAssetType } from "@/lib/data/scout-benchmarks";
 
 export const maxDuration = 30;
 
@@ -25,10 +27,68 @@ export async function GET(req: NextRequest) {
     }
 
     const ds = (deal.dataSources as any) || {};
-    const analysis = ds.ricsAnalysis || ds.dealAnalysis || null;
     const assumptions = ds.assumptions || {};
     const ai = ds.ai || {};
     const listing = ds.listing || {};
+
+    // Re-run RICS analysis at export time so it uses the latest fixed calculation
+    // functions (IRR, NIY, CAPEX) rather than stale cached values.
+    let analysis = ds.ricsAnalysis || ds.dealAnalysis || null;
+    try {
+      const asmp = assumptions;
+      const normAsset = normaliseAssetType(deal.assetType || "commercial");
+      const normRegion = normaliseRegion(deal.address || "");
+      const ricsComps: ComparableSale[] = (ds.comps || []).slice(0, 12).map((c: any) => ({
+        address: c.address || "Comparable",
+        price: c.price || 0,
+        sqft: c.sqft || c.floorArea || 0,
+        pricePerSqft: c.pricePerSqft || (c.price && (c.sqft || c.floorArea) ? Math.round(c.price / (c.sqft || c.floorArea)) : 0),
+        date: c.date || null,
+        source: c.source || "Market",
+        assetType: c.assetType || normAsset,
+        condition: c.condition || null,
+        tenure: c.tenure || null,
+        adjustmentPct: 0,
+        adjustmentReason: null,
+      }));
+      const ricsInput: AnalysisInput = {
+        address: deal.address,
+        assetType: normAsset,
+        region: normRegion,
+        askingPrice: deal.askingPrice || deal.guidePrice || 0,
+        sqft: asmp.sqft?.value || deal.buildingSizeSqft || 0,
+        sqftSource: asmp.sqft?.source || "stored",
+        passingRent: asmp.passingRent?.value || 0,
+        passingRentSource: asmp.passingRent?.source || "stored",
+        erv: asmp.erv?.value || 0,
+        ervSource: asmp.erv?.source || "stored",
+        epcRating: asmp.epcRating?.value || deal.epcRating || null,
+        yearBuilt: asmp.yearBuilt?.value || deal.yearBuilt || null,
+        occupancyPct: asmp.occupancy?.value ?? 0,
+        occupancySource: asmp.occupancy?.source || "stored",
+        listingDescription: listing.description || ai.description || null,
+        aiVacancy: ai.vacancy || null,
+        comps: ricsComps,
+        noi: asmp.noi?.value || 0,
+        tenure: deal.tenure || ai.tenure || listing.tenure || null,
+        condition: ai.condition || null,
+        numberOfUnits: ai.numberOfUnits || null,
+        leaseExpiry: ai.leaseExpiry || null,
+        breakDates: ai.breakDates
+          ? (Array.isArray(ai.breakDates) ? ai.breakDates.join(", ") : ai.breakDates)
+          : null,
+        rentReviewType: null,
+        tenantNames: ai.tenantNames
+          ? (Array.isArray(ai.tenantNames) ? ai.tenantNames.join(", ") : ai.tenantNames)
+          : null,
+        developmentPotential: false,
+        isSpecialist: false,
+      };
+      analysis = analyseProperty(ricsInput);
+    } catch (e) {
+      console.warn("[export/memo] Re-analysis failed, using cached:", (e as any)?.message);
+      // Fall back to stored analysis
+    }
 
     // Build MemoData from stored deal + analysis
     const memoData: MemoData = {
