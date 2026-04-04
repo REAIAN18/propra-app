@@ -4,6 +4,16 @@
   "installCommand": "npm install",
   "devCommand": "npm run dev",
   "framework": "nextjs",
+  "git": {
+    "deploymentEnabled": {
+      "main": true,
+      "staging": true
+    }
+  },
+  "github": {
+    "silent": true,
+    "autoJobCancelation": true
+  },
   "crons": [
     {
       "path": "/api/cron/dealscope-alerts",
