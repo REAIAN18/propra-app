@@ -511,7 +511,7 @@ export default function AssetPage() {
           className="flex gap-0.5 p-1 rounded-xl mb-3"
           style={{ backgroundColor: "var(--s1)", border: "0.5px solid var(--bdr)" }}
         >
-          {["overview", "tenants", "financials", "opportunities", "planning", "energy", "insurance", "documents"].map(tab => (
+          {["overview", "tenants", "financials", "opportunities", "planning", "energy", "insurance", "compliance", "documents"].map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
