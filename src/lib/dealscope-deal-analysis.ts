@@ -653,8 +653,10 @@ export function analyseProperty(input: AnalysisInput): RICSAnalysis {
 
   const effectiveIncome = isVacant ? erv * 0.85 : noi > 0 ? noi : passingRent * 0.85;
   const incomeCapValue = mktCapRate > 0 ? Math.round(effectiveIncome / mktCapRate) : 0;
-  // NIY denominator includes purchaser's costs (SDLT + legal) per RICS convention
-  const netInitialYield = askingPrice > 0 ? (effectiveIncome / (askingPrice + sdlt + legalFee)) * 100 : 0;
+  // PRO-887: NIY = passing rent / (purchase price + purchaser's costs), per RICS convention.
+  // Vacant properties have no passing income so NIY is not applicable (0).
+  const niyIncome = !isVacant && passingRent > 0 ? passingRent : 0;
+  const netInitialYield = askingPrice > 0 && niyIncome > 0 ? (niyIncome / (askingPrice + sdlt + legalFee)) * 100 : 0;
 
   // Term & Reversion for under/over-rented
   let termReversion: IncomeValuation["termReversion"] = null;
@@ -1087,7 +1089,8 @@ function detectRecentRefurb(text: string | null): { isRecent: boolean; year?: nu
   if (yearMatch) {
     const year = parseInt(yearMatch[1], 10);
     const currentYear = new Date().getFullYear();
-    if (year >= currentYear - 3) return { isRecent: true, year };
+    // PRO-886: detect refurbs within the last 5 years as "recent" (not just 3)
+    if (year >= currentYear - 5) return { isRecent: true, year };
     return { isRecent: false, year };
   }
   for (const pattern of RECENT_REFURB_PATTERNS) {
@@ -1144,7 +1147,7 @@ function buildCAPEX(epcRating: string | null, assetType: string, sqft: number, y
   const measures: EPCMeasure[] = [];
   let epcCost = 0;
   const currentRating = epcRating || "D";
-  const targetRating = "B";
+  let targetRating = "B";
 
   if (epcRating) {
     const r = epcRating.toUpperCase();
