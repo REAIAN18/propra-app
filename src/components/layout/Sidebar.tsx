@@ -160,6 +160,11 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
           label: "Acquisitions Scout",
           icon: <Ico d="M7 2.5a2.5 2.5 0 100 5 2.5 2.5 0 000-5zM2 13c0-2.8 2.2-5 5-5s5 2.2 5 5" />,
         },
+        {
+          href: "/scope",
+          label: "DealScope",
+          icon: <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="6" cy="6" r="4"/><path d="M9.5 9.5L12 12"/><path d="M4.5 6h3M6 4.5v3"/></svg>,
+        },
       ],
     },
     {
