@@ -41,6 +41,35 @@ export interface AIExtractedData {
   agentContact: string | null;
 }
 
+// Ordered by specificity — most precise first
+const RENT_PATTERNS: { re: RegExp; type: "annual" | "psf" }[] = [
+  // "passing rent of £670,617.50" / "passing rent £670,617"
+  { re: /passing\s+rent(?:\s+of)?\s*[:\-]?\s*£([\d,]+(?:\.\d+)?)/i, type: "annual" },
+  // "£670,617 per annum" / "£670,617 p.a." / "£670,617 pa"
+  { re: /£([\d,]+(?:\.\d+)?)\s*(?:per\s+annum|p\.a\.|pa)\b/i, type: "annual" },
+  // "rent: £670,617" / "income: £670,617" / "rent £670,617"
+  { re: /(?:rent|income)\s*[:\-]?\s*£([\d,]+(?:\.\d+)?)/i, type: "annual" },
+  // "£670,617 per sq ft" / "£670,617 psf" — psf only, caller must multiply by sqft
+  { re: /£([\d,]+(?:\.\d+)?)\s*(?:per\s+sq\s*ft|psf|per\s+sqft)\b/i, type: "psf" },
+];
+
+/**
+ * Extract passing rent from raw listing text using regex patterns.
+ * Returns annual GBP figure, or null if not found.
+ * PSF matches are skipped (caller context needed for sqft multiplication).
+ */
+export function extractPassingRentFallback(text: string): number | null {
+  for (const { re, type } of RENT_PATTERNS) {
+    if (type === "psf") continue; // skip psf — no sqft context here
+    const match = text.match(re);
+    if (match) {
+      const value = parseFloat(match[1].replace(/,/g, ""));
+      if (!isNaN(value) && value > 0) return value;
+    }
+  }
+  return null;
+}
+
 /**
  * Extract structured property data from listing text using Claude Haiku.
  * Returns null if API key missing or extraction fails.
@@ -121,6 +150,15 @@ ${truncated}`,
       .trim();
 
     const extracted: AIExtractedData = JSON.parse(cleaned);
+
+    // Regex fallback: if AI didn't extract passingRent, try patterns against raw text
+    if (!extracted.passingRent) {
+      const regexRent = extractPassingRentFallback(truncated);
+      if (regexRent !== null) {
+        extracted.passingRent = regexRent;
+      }
+    }
+
     return extracted;
   } catch (error) {
     console.error("[dealscope-ai-extract] Extraction failed:", error);

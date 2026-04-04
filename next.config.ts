@@ -11,6 +11,13 @@ const nextConfig: NextConfig = {
     // ESLint is run separately; skip during build
     ignoreDuringBuilds: true,
   },
+  experimental: {
+    optimizePackageImports: ["lucide-react"],
+  },
+  images: {
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 60,
+  },
   webpack(config) {
     // Disable persistent filesystem cache to avoid filling disk on space-constrained machines
     config.cache = false;
