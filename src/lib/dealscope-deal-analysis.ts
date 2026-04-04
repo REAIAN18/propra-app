@@ -649,7 +649,9 @@ export function analyseProperty(input: AnalysisInput): RICSAnalysis {
 
   // Purchaser's costs needed for NIY denominator (RICS standard: NIY must reflect total cost)
   const sdlt = calculateSDLT(askingPrice);
-  const legalFee = askingPrice < 500000 ? 4000 : askingPrice < 2000000 ? 5500 : 8000;
+  // PRO-887: Legal fees scale with deal size — UK commercial solicitors charge ~1% on large deals.
+  // Flat fees (£4k-£8k) are too low for commercial transactions; use 1% for £2m+ deals.
+  const legalFee = askingPrice < 500000 ? 4000 : askingPrice < 2000000 ? 5500 : Math.round(askingPrice * 0.01);
 
   const effectiveIncome = isVacant ? erv * 0.85 : noi > 0 ? noi : passingRent * 0.85;
   const incomeCapValue = mktCapRate > 0 ? Math.round(effectiveIncome / mktCapRate) : 0;

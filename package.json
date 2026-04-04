@@ -9,6 +9,7 @@
     "lint": "next lint",
     "postinstall": "prisma generate",
     "type-check": "tsc --noEmit",
+    "test": "jest",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
@@ -53,13 +54,16 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/jest": "^29.5.14",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "^15.5.13",
+    "jest": "^29.7.0",
     "prettier": "^3.5.3",
     "tailwindcss": "^4",
+    "ts-jest": "^29.4.9",
     "typescript": "^5"
   }
 }
