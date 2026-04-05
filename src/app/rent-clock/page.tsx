@@ -89,6 +89,12 @@ export default function RentClockPage() {
   const breakClauses = reviews.filter((r) => r.breakDate).length;
   const urgentBreak = reviews.find((r) => r.breakDate && r.daysToExpiry < 90);
 
+  // Rent-weighted WAULT (years)
+  const totalRent = reviews.reduce((s, r) => s + r.passingRent, 0);
+  const wault = totalRent > 0
+    ? reviews.reduce((s, r) => s + r.passingRent * Math.max(r.daysToExpiry, 0), 0) / totalRent / 365
+    : 0;
+
   // Find biggest opportunity
   const biggestOpp = reviews.reduce((max, r) =>
     (r.gap && r.gap > (max?.gap || 0)) ? r : max
@@ -196,7 +202,7 @@ export default function RentClockPage() {
                   WAULT
                 </div>
                 <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-0.02em" }}>
-                  —<span style={{ fontFamily: "var(--sans)", fontSize: "10px", color: "var(--tx3)", fontWeight: 400 }}> yrs</span>
+                  {wault > 0 ? wault.toFixed(1) : "—"}<span style={{ fontFamily: "var(--sans)", fontSize: "10px", color: "var(--tx3)", fontWeight: 400 }}> yrs</span>
                 </div>
                 <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
                   weighted avg
@@ -239,6 +245,58 @@ export default function RentClockPage() {
                 </div>
               </div>
             )}
+
+            {/* RENT VS MARKET */}
+            {reviews.some((r) => r.ervLive && r.ervLive > 0) && (() => {
+              const maxRent = Math.max(...reviews.map((r) => Math.max(r.passingRent, r.ervLive ?? 0)));
+              return (
+                <div className="rounded-xl overflow-hidden" style={{ background: "var(--s1)", border: "1px solid var(--bdr)" }}>
+                  <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: "1px solid var(--bdr)" }}>
+                    <div>
+                      <div style={{ font: "500 9px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "2px" }}>
+                        Rent vs Market
+                      </div>
+                      <div style={{ font: "300 11px var(--sans)", color: "var(--tx3)" }}>
+                        Passing rent vs market ERV
+                      </div>
+                    </div>
+                    {totalGap > 0 && (
+                      <div style={{ font: "600 12px var(--sans)", color: "var(--grn)" }}>
+                        Total gap: +{fmt(totalGap)}/yr
+                      </div>
+                    )}
+                  </div>
+                  <div className="px-5 py-3 space-y-3">
+                    {reviews.filter((r) => r.ervLive && r.ervLive > 0).map((r) => (
+                      <div key={r.id}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span style={{ font: "500 11px var(--sans)", color: "var(--tx)" }}>{r.tenantName}</span>
+                          <span style={{ font: "400 10px var(--mono)", color: r.gap && r.gap > 0 ? "var(--grn)" : "var(--tx3)" }}>
+                            {r.gap && r.gap > 0 ? `+${fmt(r.gap)}/yr` : "at market"}
+                          </span>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-2">
+                            <span style={{ font: "400 9px var(--mono)", color: "var(--tx3)", width: 48, textAlign: "right" }}>PASSING</span>
+                            <div className="flex-1 h-2 rounded-sm overflow-hidden" style={{ background: "var(--s3)" }}>
+                              <div style={{ width: `${(r.passingRent / maxRent) * 100}%`, height: "100%", background: "var(--acc)", borderRadius: "2px" }} />
+                            </div>
+                            <span style={{ font: "400 9px var(--mono)", color: "var(--tx2)", width: 52 }}>{fmt(r.passingRent)}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span style={{ font: "400 9px var(--mono)", color: "var(--tx3)", width: 48, textAlign: "right" }}>ERV</span>
+                            <div className="flex-1 h-2 rounded-sm overflow-hidden" style={{ background: "var(--s3)" }}>
+                              <div style={{ width: `${(r.ervLive! / maxRent) * 100}%`, height: "100%", background: "var(--grn)", borderRadius: "2px" }} />
+                            </div>
+                            <span style={{ font: "400 9px var(--mono)", color: "var(--grn)", width: 52 }}>{fmt(r.ervLive!)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* UPCOMING REVIEWS */}
             <div>
