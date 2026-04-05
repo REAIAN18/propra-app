@@ -84,6 +84,47 @@ Before creating any new file, check CODE_INVENTORY.md. If similar exists: import
 
 **RULE:** If a v2 file exists, ALWAYS use it. Never build from the file it supersedes.
 
+## ⚠️ CRITICAL: How to Review Design Files
+
+Design files in `dealscope/designs/` are HTML files meant to be **VIEWED**, not read as code.
+
+**WRONG WAY (What agents currently do):**
+- ❌ Read the `.html` file using the Read tool
+- ❌ Parse CSS variables and hex codes
+- ❌ Try to reconstruct the visual design from HTML/CSS code
+- ❌ Guess what it looks like without seeing it
+
+**RIGHT WAY (What agents MUST do):**
+- ✅ Open the design file in a browser: `file:///Users/ianbaron/Documents/projects/propra-app/dealscope/designs/02-dossier-full.html`
+- ✅ Take a screenshot of the design file
+- ✅ Open the live site in another tab
+- ✅ Take a screenshot of the live site
+- ✅ Compare the two screenshots side-by-side
+- ✅ Verify they match visually
+
+**Example Design Files:**
+- `dealscope/designs/02-dossier-full.html` — Full property analysis page
+- `dealscope/designs/03-list.html` — Property list view
+- `dealscope/designs/04-card.html` — Property card component
+- `dealscope/designs/05-hero.html` — Hero panel design
+- `dealscope/designs/06-tabs.html` — Tab navigation design
+- `dealscope/designs/07-financials.html` — Financials tab design
+- `dealscope/designs/08-planning.html` — Planning tab design
+
+**When Reviewing Tickets:**
+1. Open the design file in browser (use `file://` URL)
+2. Screenshot the design
+3. Open the live site
+4. Screenshot the live implementation
+5. Compare visually — do they match?
+
+**DO NOT:**
+- Read HTML source and try to visualize it
+- Parse CSS and guess colors/spacing
+- Assume what it looks like from code
+
+> **Design files are VISUAL references. LOOK at them, don't READ them.**
+
 ## Architecture — 5 Systems
 
 1. Property Profile — enrich-asset.ts, attom.ts, avm.ts, /api/property/*. Models: UserAsset, AssetValuation
