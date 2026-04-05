@@ -8,12 +8,15 @@ import type { HeroPanelSignal } from "@/components/dealscope/HeroPanel";
 import { DealScore } from "@/components/dealscope/DealScore";
 import { RiskFlags } from "@/components/dealscope/RiskFlags";
 import { ComparablesTable } from "@/components/dealscope/ComparablesTable";
+import { PropertyTab } from "./tabs/PropertyTab";
 import { PlanningTab } from "./tabs/PlanningTab";
+import { FinancialsTab as FinancialsTabV2 } from "./tabs/FinancialsTab";
 import type { Comparable } from "@/components/dealscope/ComparablesTable";
 import { MultipleValuations } from "@/components/dealscope/MultipleValuations";
 import type { ValuationScenario } from "@/components/dealscope/MultipleValuations";
 import { ServiceCharges } from "@/components/dealscope/ServiceCharges";
 import type { ServiceChargeItem } from "@/components/dealscope/ServiceCharges";
+import { LettingScenariosTable } from "@/components/dealscope/LettingScenariosTable";
 import { calculateIRR } from "@/lib/dealscope/calculations/irr";
 import { calculateCAPEX } from "@/lib/dealscope/calculations/capex";
 import { calculateEquityMultiple } from "@/lib/dealscope/calculations/equity";
@@ -45,7 +48,7 @@ type RawDeal = {
   dataSources?: Record<string, unknown>;
 };
 
-const TABS = ["Overview", "Financials", "Comparables", "Planning", "Due Diligence"] as const;
+const TABS = ["Overview", "Property", "Financials", "Comparables", "Planning", "Due Diligence"] as const;
 type Tab = typeof TABS[number];
 
 function fmtCcy(n: number | undefined | null): string {
@@ -235,6 +238,10 @@ function FinancialsTab({ prop }: { prop: Property }) {
       <div className={`${s.card} ${s.anim} ${s.a2}`}>
         <div className={s.cardTitle}>Exit value scenarios (4 scenarios)</div>
         <MultipleValuations scenarios={scenarios} />
+      </div>
+
+      <div className={`${s.card} ${s.anim} ${s.a2}`}>
+        <LettingScenariosTable />
       </div>
     </>
   );
@@ -446,7 +453,8 @@ export default function PropertyDossierPage() {
           </div>
           <div className={s.tabContent} style={{ paddingBottom: 40 }}>
             {activeTab === "Overview"       && <OverviewTab      deal={deal} prop={prop} />}
-            {activeTab === "Financials"     && <FinancialsTab    prop={prop} />}
+            {activeTab === "Property"       && <PropertyTab      deal={deal} onBack={() => router.back()} />}
+            {activeTab === "Financials"     && <FinancialsTabV2  deal={deal} />}
             {activeTab === "Comparables"    && <ComparablesTab   deal={deal} />}
             {activeTab === "Planning"       && <PlanningTab      deal={deal} />}
             {activeTab === "Due Diligence"  && <DueDiligenceTab  deal={deal} />}

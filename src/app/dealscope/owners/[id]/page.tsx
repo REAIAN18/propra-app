@@ -46,7 +46,36 @@ export default function OwnerProfilePage() {
   }, [ownerId]);
 
   if (loading || !owner) {
-    return <AppShell><div>Loading...</div></AppShell>;
+    return (
+      <AppShell>
+        <div className={styles.skeletonPage}>
+          <div>
+            <div className={`${styles.skeleton} ${styles.skeletonTitle}`} />
+            <div className={`${styles.skeleton} ${styles.skeletonSub}`} />
+          </div>
+          <div className={styles.skeletonSection}>
+            <div className={styles.skeletonGrid}>
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className={styles.skeletonItem}>
+                  <div className={`${styles.skeleton} ${styles.skeletonLabel}`} />
+                  <div className={`${styles.skeleton} ${styles.skeletonValue}`} />
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className={styles.skeletonSection}>
+            <div className={styles.skeletonGrid}>
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className={styles.skeletonItem}>
+                  <div className={`${styles.skeleton} ${styles.skeletonLabel}`} />
+                  <div className={`${styles.skeleton} ${styles.skeletonValue}`} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </AppShell>
+    );
   }
 
   return (

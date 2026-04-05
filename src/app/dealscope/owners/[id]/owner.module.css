@@ -225,3 +225,15 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* ── SHIMMER SKELETON ── */
+@keyframes shimmer { from { background-position: -400px 0; } to { background-position: 400px 0; } }
+.skeleton { background: linear-gradient(90deg, var(--s2) 25%, var(--s1) 50%, var(--s2) 75%); background-size: 800px 100%; animation: shimmer 1.5s infinite linear; border-radius: 6px; }
+.skeletonPage { padding: 24px; display: flex; flex-direction: column; gap: 20px; }
+.skeletonTitle { height: 28px; width: 200px; border-radius: 6px; }
+.skeletonSub { height: 14px; width: 280px; border-radius: 4px; margin-top: 8px; }
+.skeletonSection { background: var(--s1); border: 1px solid var(--s2); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+.skeletonLabel { height: 12px; width: 100px; border-radius: 3px; }
+.skeletonValue { height: 16px; width: 60%; border-radius: 4px; margin-top: 4px; }
+.skeletonGrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.skeletonItem { display: flex; flex-direction: column; gap: 6px; }
