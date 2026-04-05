@@ -5,6 +5,8 @@
  * Assembles planning applications and dev potential (T11).
  */
 
+import { PlanningApplications } from "@/lib/dealscope/components";
+import type { PlanningApplication, PlanningStatus } from "@/lib/dealscope/components";
 import type { RawDeal } from "./types";
 import s from "../dossier.module.css";
 
@@ -12,16 +14,27 @@ interface Props {
   deal: RawDeal;
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const lower = status.toLowerCase();
-  const color = lower.includes("approved") ? "var(--grn)"
-    : lower.includes("refused") || lower.includes("rejected") ? "var(--red)"
-    : "var(--amb)";
-  return (
-    <span style={{ fontSize: 9, fontWeight: 600, color, background: `${color}18`, padding: "2px 6px", borderRadius: 4, fontFamily: "var(--mono)" }}>
-      {status}
-    </span>
-  );
+function statusFromString(s: string): PlanningStatus {
+  const lower = s.toLowerCase();
+  if (lower.includes("approved") || lower.includes("granted")) return "approved";
+  if (lower.includes("refused") || lower.includes("rejected") || lower.includes("denied")) return "refused";
+  if (lower.includes("withdrawn")) return "withdrawn";
+  return "pending";
+}
+
+function toApp(app: Record<string, unknown>, i: number, dealAddress: string): PlanningApplication {
+  const ref = (app.reference ?? `APP-${i}`) as string;
+  const siteAddr = (app["site-address"] ?? app.siteAddress ?? "") as string;
+  const addrFirst = dealAddress.toLowerCase().split(",")[0];
+  const isThis = addrFirst && siteAddr.toLowerCase().includes(addrFirst);
+  const proximity = isThis ? "This property" : (app.distance as string | undefined) ?? "Nearby";
+  const description = (app.description ?? app.title ?? "Planning application") as string;
+  const status = statusFromString((app.status ?? "pending") as string);
+  const rawDate = (app.date ?? app["start-date"]) as string | undefined;
+  const decisionDate = rawDate
+    ? new Date(rawDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
+    : undefined;
+  return { ref, proximity, description, status, decisionDate, fullDescription: app.fullDescription as string | undefined };
 }
 
 export function PlanningTab({ deal }: Props) {
@@ -30,36 +43,7 @@ export function PlanningTab({ deal }: Props) {
   const devPotential = ds.devPotential as Record<string, unknown> | undefined;
   const ai = ds.ai as Record<string, unknown> | undefined;
 
-  // Split: this property vs nearby
-  const addrLower = deal.address.toLowerCase();
-  const thisPropertyApps: Record<string, unknown>[] = [];
-  const nearbyApps: Record<string, unknown>[] = [];
-  planningApps.forEach((app) => {
-    const appAddr = ((app["site-address"] ?? app.siteAddress ?? "") as string).toLowerCase();
-    if (appAddr && addrLower.split(",")[0] && appAddr.includes(addrLower.split(",")[0])) {
-      thisPropertyApps.push(app);
-    } else {
-      nearbyApps.push(app);
-    }
-  });
-
-  function PlanRow({ app, i }: { app: Record<string, unknown>; i: number }) {
-    const ref = (app.reference ?? `APP-${i}`) as string;
-    const desc = `${app["site-address"] ? (app["site-address"] as string) + " — " : ""}${(app.description ?? app.title ?? "Planning application") as string}`;
-    const status = (app.status ?? "Unknown") as string;
-    const rawDate = (app.date ?? app["start-date"]) as string | undefined;
-    const dateStr = rawDate ? new Date(rawDate).toLocaleDateString("en-GB", { year: "numeric", month: "short" }) : "Unknown";
-    return (
-      <div style={{ display: "grid", gridTemplateColumns: "80px 1fr 120px 70px", gap: 8, padding: "8px 0", borderBottom: "1px solid var(--s2)", fontSize: 11, alignItems: "start" }}>
-        <span style={{ fontFamily: "var(--mono)", color: "var(--tx3)", fontSize: 9 }}>{ref}</span>
-        <span style={{ color: "var(--tx2)" }}>{desc}</span>
-        <StatusBadge status={status} />
-        <span style={{ color: "var(--tx3)", fontSize: 9 }}>{dateStr}</span>
-      </div>
-    );
-  }
-
-  const hasPlanningData = planningApps.length > 0 || deal.hasPlanningApplication;
+  const apps: PlanningApplication[] = planningApps.map((app, i) => toApp(app, i, deal.address));
 
   return (
     <>
@@ -103,34 +87,19 @@ export function PlanningTab({ deal }: Props) {
         </div>
       )}
 
-      {/* Planning applications — this property */}
+      {/* Planning applications */}
       <div className={s.card}>
         <div className={s.cardTitle}>
-          This property — planning history ({thisPropertyApps.length})
+          Planning history{" "}
+          <span style={{ fontWeight: 400, textTransform: "none" as const, letterSpacing: 0, color: "var(--tx3)" }}>
+            — Source: planning.data.gov.uk
+          </span>
         </div>
-        {thisPropertyApps.length > 0 ? (
-          thisPropertyApps.map((app, i) => <PlanRow key={i} app={app} i={i} />)
-        ) : (
-          <div style={{ fontSize: 11, color: "var(--tx3)", padding: "8px 0" }}>
-            {hasPlanningData ? "No direct applications found for this address." : "No planning data available."}
-          </div>
-        )}
-      </div>
-
-      {/* Planning applications — nearby */}
-      <div className={s.card}>
-        <div className={s.cardTitle}>Nearby applications ({nearbyApps.length})</div>
-        {nearbyApps.length > 0 ? (
-          nearbyApps.slice(0, 10).map((app, i) => <PlanRow key={i} app={app} i={i} />)
-        ) : (
-          <div style={{ fontSize: 11, color: "var(--tx3)", padding: "8px 0" }}>
-            No nearby applications found.
-          </div>
-        )}
+        <PlanningApplications applications={apps} />
       </div>
 
       {/* Planning flag */}
-      {deal.hasPlanningApplication && thisPropertyApps.length === 0 && (
+      {deal.hasPlanningApplication && apps.length === 0 && (
         <div className={s.card} style={{ borderColor: "rgba(251,191,36,.3)", background: "rgba(251,191,36,.04)" }}>
           <div style={{ fontSize: 12, color: "var(--amb)" }}>
             Active or recent planning application flagged for this property.

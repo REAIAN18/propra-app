@@ -36,3 +36,5 @@ export { SalesHistoryTable } from "@/components/dealscope/SalesHistoryTable";
 export type { SaleRecord } from "@/components/dealscope/SalesHistoryTable";
 export { Gallery } from "@/components/dealscope/Gallery";
 export type { GalleryItem } from "@/components/dealscope/Gallery";
+export { PlanningApplications } from "@/components/dealscope/PlanningApplications";
+export type { PlanningApplication, PlanningStatus } from "@/components/dealscope/PlanningApplications";
