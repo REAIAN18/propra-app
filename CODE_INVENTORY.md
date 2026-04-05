@@ -43,7 +43,7 @@ health.ts(22) checkHealth()
 /api/energy/ quotes(GET+POST Octopus)
 /api/quotes/ insurance energy bind refinance(POST) sale-lead(POST)
 /api/user/ 31 sub-routes: assets portfolio insurance-summary insurance-risk energy-summary compliance-summary compliance/renew financing-summary hold-sell-scenarios income-opportunities income-opportunities/activate tenants tenants/actions rent-reviews leases/materialise lease-summary lettings documents noi-bridge monthly-financial financial-budget transactions work-orders contractors planning export ask-context ask requests acquisitions action-queue cash-flow-forecast loans me(GET — session user name/email/id)
-/api/dealscope/ enrich(POST) pipeline(GET) search(GET — demo+LandRegistryPricePaid) alerts(GET/PATCH/DELETE) responses(POST) import/price-paid(POST CSV) import/ccod(POST CSV) test/import-sample(POST) properties/[id]/export/pdf(GET — IC Memo PDF via puppeteer)
+/api/dealscope/ enrich(POST) pipeline(GET) search(GET — demo+LandRegistryPricePaid) alerts(GET/PATCH/DELETE) responses(POST) import/price-paid(POST CSV) import/ccod(POST CSV) test/import-sample(POST) properties/[id]/export/pdf(GET — IC Memo PDF via puppeteer) properties/[id]/export/excel(GET — IC Memo Excel workbook via exceljs)
 /api/macro/ sofr(Federal Reserve)
 /api/dashboard/ summary(KPIs)
 /api/cron/ 8 jobs: compliance-reminders energy-rates octopus-rates planning-monitor rent-review-triggers tenant-engagement-triggers send-emails sofr
