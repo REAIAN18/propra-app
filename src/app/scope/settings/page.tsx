@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import styles from "./settings.module.css";
 
@@ -20,27 +20,26 @@ interface PortfolioItem {
   acquired: string;
 }
 
-const DEMO_PORTFOLIO: PortfolioItem[] = [
-  {
-    id: "1",
-    name: "Meridian Business Park, Unit 7",
-    type: "Industrial",
-    location: "Kent",
-    value: "£480k",
-    acquired: "Sep 2025",
-  },
-  {
-    id: "2",
-    name: "Redfield Manor",
-    type: "Industrial",
-    location: "Surrey",
-    value: "£720k",
-    acquired: "Dec 2025",
-  },
-];
-
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>("criteria");
+  const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
+
+  useEffect(() => {
+    fetch("/api/dealscope/pipeline")
+      .then(r => r.json())
+      .then(data => {
+        const entries = (data.entries ?? []).map((e: any) => ({
+          id: e.id,
+          name: e.propertyId ?? "Property",
+          type: "Commercial",
+          location: "—",
+          value: "—",
+          acquired: e.addedAt ? new Date(e.addedAt).toLocaleDateString("en-GB", { month: "short", year: "numeric" }) : "—",
+        }));
+        setPortfolioItems(entries);
+      })
+      .catch(() => setPortfolioItems([]));
+  }, []);
   const [selectedAssetClasses, setSelectedAssetClasses] = useState<string[]>(["Industrial", "Warehouse"]);
   const [selectedLocations, setSelectedLocations] = useState<string[]>(["South East", "London"]);
   const [selectedSignals, setSelectedSignals] = useState<string[]>(["Administration", "Auction", "MEES risk", "Absent owner"]);
@@ -288,7 +287,9 @@ export default function SettingsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {DEMO_PORTFOLIO.map(item => (
+                    {portfolioItems.length === 0 ? (
+                      <tr><td colSpan={5} style={{ textAlign: "center", color: "var(--tx3)", padding: "20px", fontSize: "12px" }}>No properties added yet. Add properties to your pipeline to see them here.</td></tr>
+                    ) : portfolioItems.map(item => (
                       <tr key={item.id}>
                         <td>{item.name}</td>
                         <td>{item.type}</td>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
@@ -21,16 +21,19 @@ const ASSET_CLASSES = ["Industrial", "Warehouse", "Office", "Retail", "Mixed", "
 const LOCATIONS = ["South East", "London", "Midlands", "North West", "South West", "East", "Scotland", "Wales"];
 const SORTS = ["Relevance", "Score", "Price ↑", "Price ↓", "Newest"];
 
-const DEMO_RESULTS = [
-  { id: "1", address: "Meridian Business Park, Unit 7", location: "Rochester, Kent", type: "Industrial", sqft: 8200, price: 520000, epc: "D", signals: ["admin", "mees"], score: 7.2, source: "admin", days: "2h ago" },
-  { id: "2", address: "Maidstone Enterprise Zone, Plot B3", location: "Maidstone, Kent", type: "Industrial", sqft: 9400, price: 580000, epc: "E", signals: ["auction"], score: 7.4, source: "auction", days: "5h ago" },
-  { id: "3", address: "Redfield Manor", location: "Reigate, Surrey", type: "Industrial", sqft: 6200, price: 722000, epc: "C", signals: ["price_drop"], score: 6.8, source: "price_drop", days: "1d ago" },
-  { id: "4", address: "Ashworth Close, Unit 2", location: "Crawley, West Sussex", type: "Industrial", sqft: 4800, price: 480000, epc: "E", signals: ["auction"], score: 6.9, source: "auction", days: "2d ago" },
-  { id: "5", address: "Kingfield Industrial Estate", location: "Woking, Surrey", type: "Industrial", sqft: 12400, price: 920000, epc: "D", signals: ["admin", "mees"], score: 7.1, source: "admin", days: "3d ago" },
-  { id: "6", address: "Gravesend Industrial Estate, Block C", location: "Gravesend, Kent", type: "Warehouse", sqft: 7600, price: 440000, epc: "F", signals: ["mees", "absent"], score: 5.6, source: "mees", days: "4d ago" },
-  { id: "7", address: "Beckenham Flex Space", location: "London BR3", type: "Flex", sqft: 3800, price: 680000, epc: "C", signals: ["auction"], score: 5.1, source: "auction", days: "5d ago" },
-  { id: "8", address: "Vale Trading Estate", location: "Billericay, Essex", type: "Industrial", sqft: 5600, price: 340000, epc: "F", signals: ["mees"], score: 5.4, source: "mees", days: "6d ago" },
-];
+type SearchResult = {
+  id: string;
+  address: string;
+  location: string;
+  type: string;
+  sqft: number | null;
+  price: number;
+  epc: string | null;
+  signals: string[];
+  score: number | null;
+  source: string;
+  days: string;
+};
 
 function toggle(arr: string[], v: string) {
   return arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];
@@ -41,7 +44,8 @@ function fmt(n: number) {
   return `£${Math.round(n / 1000)}k`;
 }
 
-function scoreColor(sc: number) {
+function scoreColor(sc: number | null) {
+  if (sc === null) return "amber";
   if (sc >= 7) return "green";
   if (sc >= 5) return "amber";
   return "red";
@@ -56,7 +60,24 @@ function SearchContent() {
   const [assets, setAssets] = useState<string[]>([]);
   const [locations, setLocations] = useState<string[]>([]);
   const [sort, setSort] = useState("Relevance");
-  const [results] = useState(DEMO_RESULTS);
+  const [results, setResults] = useState<SearchResult[]>([]);
+
+  useEffect(() => {
+    fetch("/api/dealscope/search")
+      .then(r => r.json())
+      .then(data => {
+        const items = (data.results ?? []).map((r: any) => ({
+          ...r,
+          days: r.daysLabel ?? r.days ?? "—",
+          score: r.score ?? null,
+          sqft: r.sqft ?? null,
+          epc: r.epc ?? null,
+          signals: r.signals ?? [],
+        }));
+        setResults(items);
+      })
+      .catch(() => setResults([]));
+  }, []);
 
   const filtered = results.filter((r) => {
     if (sources.length > 0 && !sources.some((src) => r.signals.includes(src) || r.source === src)) return false;
@@ -146,7 +167,7 @@ function SearchContent() {
               </div>
               <div className={s.resultRight}>
                 <div className={s.resultPrice}>{fmt(r.price)}</div>
-                <div className={`${s.scoreRing} ${s[scoreColor(r.score)]}`}>{r.score}</div>
+                <div className={`${s.scoreRing} ${s[scoreColor(r.score)]}`}>{r.score ?? "—"}</div>
                 <div className={s.resultTime}>{r.days}</div>
               </div>
             </Link>
