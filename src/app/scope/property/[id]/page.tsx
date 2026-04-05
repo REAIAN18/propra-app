@@ -3,14 +3,20 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
+import { HeroPanel } from "@/components/dealscope/HeroPanel";
+import type { HeroPanelSignal } from "@/components/dealscope/HeroPanel";
 import { DealScore } from "@/components/dealscope/DealScore";
 import { RiskFlags } from "@/components/dealscope/RiskFlags";
 import { ComparablesTable } from "@/components/dealscope/ComparablesTable";
+import { PropertyTab } from "./tabs/PropertyTab";
+import { PlanningTab } from "./tabs/PlanningTab";
+import { FinancialsTab as FinancialsTabV2 } from "./tabs/FinancialsTab";
 import type { Comparable } from "@/components/dealscope/ComparablesTable";
 import { MultipleValuations } from "@/components/dealscope/MultipleValuations";
 import type { ValuationScenario } from "@/components/dealscope/MultipleValuations";
 import { ServiceCharges } from "@/components/dealscope/ServiceCharges";
 import type { ServiceChargeItem } from "@/components/dealscope/ServiceCharges";
+import { LettingScenariosTable } from "@/components/dealscope/LettingScenariosTable";
 import { calculateIRR } from "@/lib/dealscope/calculations/irr";
 import { calculateCAPEX } from "@/lib/dealscope/calculations/capex";
 import { calculateEquityMultiple } from "@/lib/dealscope/calculations/equity";
@@ -42,7 +48,7 @@ type RawDeal = {
   dataSources?: Record<string, unknown>;
 };
 
-const TABS = ["Overview", "Financials", "Comparables", "Due Diligence"] as const;
+const TABS = ["Overview", "Property", "Financials", "Comparables", "Planning", "Due Diligence"] as const;
 type Tab = typeof TABS[number];
 
 function fmtCcy(n: number | undefined | null): string {
@@ -233,6 +239,10 @@ function FinancialsTab({ prop }: { prop: Property }) {
         <div className={s.cardTitle}>Exit value scenarios (4 scenarios)</div>
         <MultipleValuations scenarios={scenarios} />
       </div>
+
+      <div className={`${s.card} ${s.anim} ${s.a2}`}>
+        <LettingScenariosTable />
+      </div>
     </>
   );
 }
@@ -353,7 +363,48 @@ export default function PropertyDossierPage() {
   }, [id]);
 
   if (loading) {
-    return <AppShell><div style={{ padding: 32, textAlign: "center", color: "var(--tx3)", fontSize: 13 }}>Loading property…</div></AppShell>;
+    return (
+      <AppShell>
+        <div className={s.skeletonContainer}>
+          <div className={s.skeletonHeader}>
+            <div className={`${s.skeleton} ${s.skeletonPhoto}`} />
+            <div className={s.skeletonInfo}>
+              <div className={`${s.skeleton} ${s.skeletonTitle}`} />
+              <div className={`${s.skeleton} ${s.skeletonSpec}`} />
+              <div className={`${s.skeleton} ${s.skeletonSpec}`} style={{ width: "30%" }} />
+            </div>
+            <div className={s.skeletonInfo} style={{ flex: "0 0 auto", gap: 8 }}>
+              <div className={`${s.skeleton} ${s.skeletonBadge}`} />
+              <div className={`${s.skeleton} ${s.skeletonBadge}`} />
+            </div>
+          </div>
+          <div className={s.skeletonTabs}>
+            {[80, 80, 96, 80, 108].map((w, i) => (
+              <div key={i} className={`${s.skeleton} ${s.skeletonTab}`} style={{ width: w }} />
+            ))}
+          </div>
+          <div className={s.skeletonContent}>
+            <div className={`${s.skeleton} ${s.skeletonTitle}`} style={{ width: 130, height: 18 }} />
+            <div className={s.skeletonGrid}>
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className={s.skeletonCard}>
+                  <div className={`${s.skeleton} ${s.skeletonCardLabel}`} />
+                  <div className={`${s.skeleton} ${s.skeletonCardValue}`} />
+                </div>
+              ))}
+            </div>
+            <div className={s.skeletonGrid}>
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className={s.skeletonCard}>
+                  <div className={`${s.skeleton} ${s.skeletonCardLabel}`} />
+                  <div className={`${s.skeleton} ${s.skeletonCardValue}`} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </AppShell>
+    );
   }
   if (error || !deal) {
     return (
@@ -374,32 +425,25 @@ export default function PropertyDossierPage() {
   return (
     <AppShell>
       <div className={s.page}>
-        <div className={s.header}>
-          <button className={s.backBtn} onClick={() => router.back()}>← Back to results</button>
-          <div className={s.headerMain}>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <h1 className={s.addr}>{deal.address}</h1>
-              <div className={s.specs}>
-                {deal.assetType && <span><strong>{deal.assetType}</strong></span>}
-                {prop.size && <span>{prop.size.toLocaleString()} sqft</span>}
-                {prop.builtYear && <span>Built {prop.builtYear}</span>}
-                {deal.epcRating && <span>EPC {deal.epcRating}</span>}
-                {deal.tenure && <span>{deal.tenure}</span>}
-              </div>
-              {(deal.signals?.length || deal.hasInsolvency || deal.hasLisPendens) ? (
-                <div style={{ marginTop: 6 }}>
-                  <RiskFlags signals={deal.signals} hasInsolvency={deal.hasInsolvency} hasLisPendens={deal.hasLisPendens} hasPlanningApplication={deal.hasPlanningApplication} inFloodZone={deal.inFloodZone} />
-                </div>
-              ) : null}
-            </div>
-            <div className={s.summaryPanel}>
-              <DealScore score={verdict.dealScore} label="Deal score" sublabel={verdict.verdict} />
-              <div className={s.sep} style={{ margin: "8px 0" }} />
-              <div className={s.row}><span className={s.rowL}>Asking</span><span className={`${s.rowV} ${s.mono}`}>{deal.askingPrice ? `£${(deal.askingPrice / 1_000_000).toFixed(2)}m` : "—"}</span></div>
-              <div className={s.row}><span className={s.rowL}>Verdict</span><span className={s.rowV} style={{ color: verdictColor, fontWeight: 600 }}>{verdict.verdict}</span></div>
-            </div>
-          </div>
-        </div>
+        <HeroPanel
+          property={{
+            address: deal.address,
+            assetType: deal.assetType,
+            buildingSizeSqft: deal.buildingSizeSqft ?? deal.sqft,
+            yearBuilt: deal.yearBuilt,
+            epcRating: deal.epcRating,
+            tenure: deal.tenure,
+            askingPrice: deal.askingPrice,
+            guidePrice: deal.guidePrice,
+            dealScore: verdict.dealScore,
+            signals: (deal.signals ?? []).map((name): HeroPanelSignal => ({ name, type: "amb" })),
+            hasInsolvency: deal.hasInsolvency,
+            hasLisPendens: deal.hasLisPendens,
+            dataSources: deal.dataSources,
+          }}
+          onBack={() => router.back()}
+          onContact={() => setActiveTab("Overview")}
+        />
 
         <div style={{ padding: "0 20px" }}>
           <div className={s.tabs}>
@@ -409,8 +453,10 @@ export default function PropertyDossierPage() {
           </div>
           <div className={s.tabContent} style={{ paddingBottom: 40 }}>
             {activeTab === "Overview"       && <OverviewTab      deal={deal} prop={prop} />}
-            {activeTab === "Financials"     && <FinancialsTab    prop={prop} />}
+            {activeTab === "Property"       && <PropertyTab      deal={deal} onBack={() => router.back()} />}
+            {activeTab === "Financials"     && <FinancialsTabV2  deal={deal} />}
             {activeTab === "Comparables"    && <ComparablesTab   deal={deal} />}
+            {activeTab === "Planning"       && <PlanningTab      deal={deal} />}
             {activeTab === "Due Diligence"  && <DueDiligenceTab  deal={deal} />}
           </div>
         </div>
