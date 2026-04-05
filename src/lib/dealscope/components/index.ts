@@ -30,3 +30,7 @@ export { ServiceChargesBreakdown } from "@/components/dealscope/ServiceChargesBr
 export type { ServiceChargeLineItem } from "@/components/dealscope/ServiceChargesBreakdown";
 export { EnvironmentalRiskBars } from "@/components/dealscope/EnvironmentalRiskBars";
 export type { EnvironmentalRisk } from "@/components/dealscope/EnvironmentalRiskBars";
+export { LettingScenariosTable } from "@/components/dealscope/LettingScenariosTable";
+export type { LettingScenario } from "@/components/dealscope/LettingScenariosTable";
+export { SalesHistoryTable } from "@/components/dealscope/SalesHistoryTable";
+export type { SaleRecord } from "@/components/dealscope/SalesHistoryTable";
