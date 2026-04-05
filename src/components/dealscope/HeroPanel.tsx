@@ -1,35 +1,28 @@
 "use client";
 
 import s from "./HeroPanel.module.css";
-import { VerdictBadge } from "./VerdictBadge";
-import { MetricCard } from "./MetricCard";
-import { AISummary } from "./AISummary";
-
-/* ── Formatting helpers ── */
-function fmtCurrency(n: number): string {
-  if (n >= 1_000_000) return `£${(n / 1_000_000).toFixed(1)}m`;
-  if (n >= 1_000) return `£${(n / 1_000).toFixed(0)}k`;
-  return `£${n.toLocaleString()}`;
-}
-
-function fmtPct(n: number): string {
-  return `${(n * 100).toFixed(1)}%`;
-}
-
-function fmtMultiple(n: number): string {
-  return `${n.toFixed(2)}x`;
-}
 
 /* ── Types ── */
+export interface HeroPanelSignal { name: string; type?: string; }
+
 export interface HeroPanelProperty {
   address: string;
   assetType?: string;
   buildingSizeSqft?: number;
+  yearBuilt?: number;
+  epcRating?: string;
   tenure?: string;
+  rateableValue?: number;
   occupancyPct?: number;
   askingPrice?: number;
   guidePrice?: number;
-  dataSources?: Record<string, any>;
+  dealScore?: number;
+  temperature?: string;
+  signals?: HeroPanelSignal[] | string[];
+  hasInsolvency?: boolean;
+  hasLisPendens?: boolean;
+  satelliteImageUrl?: string;
+  dataSources?: Record<string, unknown>;
 }
 
 interface HeroPanelProps {
@@ -38,221 +31,178 @@ interface HeroPanelProps {
   exporting?: string | null;
   onBack?: () => void;
   onExportMemo?: () => void;
+  onExportXlsx?: () => void;
   onAddToPipeline?: () => void;
   onWatch?: () => void;
   onContact?: () => void;
-  onAddInfo?: () => void;
 }
 
-/* ── Verdict color mapping for verdictCell CSS vars ── */
-const VERDICT_VARS: Record<
-  string,
-  { bg: string; border: string }
-> = {
-  strong_buy: { bg: "rgba(52,211,153,.06)", border: "rgba(52,211,153,.22)" },
-  buy:        { bg: "rgba(52,211,153,.06)", border: "rgba(52,211,153,.22)" },
-  good:       { bg: "rgba(52,211,153,.06)", border: "rgba(52,211,153,.22)" },
-  marginal:   { bg: "rgba(251,191,36,.06)", border: "rgba(251,191,36,.22)" },
-  bad:        { bg: "rgba(248,113,113,.06)", border: "rgba(248,113,113,.22)" },
-  avoid:      { bg: "rgba(248,113,113,.06)", border: "rgba(248,113,113,.22)" },
-};
+function fmt(n: number): string {
+  if (n >= 1_000_000) return `£${(n / 1_000_000).toFixed(1)}m`;
+  if (n >= 1_000) return `£${(n / 1_000).toFixed(0)}k`;
+  return `£${n.toLocaleString()}`;
+}
+
+function sigType(sig: HeroPanelSignal | string): string {
+  if (typeof sig === "string") return "amb";
+  const t = sig.type ?? "";
+  if (t === "distress" || t === "admin") return "red";
+  if (t === "opportunity" || t === "mees") return "blu";
+  return "amb";
+}
+
+function sigName(sig: HeroPanelSignal | string): string {
+  return typeof sig === "string" ? sig : sig.name;
+}
+
+const THUMBS = ["Street", "Photo 1", "Floor plan", "EPC", "Title"];
 
 export function HeroPanel({
-  property,
+  property: p,
   watched,
   exporting,
   onBack,
   onExportMemo,
+  onExportXlsx,
   onAddToPipeline,
   onWatch,
   onContact,
-  onAddInfo,
 }: HeroPanelProps) {
-  const ds = property.dataSources ?? {};
+  const ds = (p.dataSources ?? {}) as Record<string, any>;
   const ra = ds.ricsAnalysis;
   const da = ds.dealAnalysis;
   const verdict = ra?.verdict ?? da?.verdict;
   const returns = ra?.returns ?? da;
-  const assumptions = ds.assumptions ?? {};
+  const score = p.dealScore ?? ds.scoring?.total;
+  const scoreThreshold = ds.scoring?.threshold ?? da?.threshold;
+  const aboveThreshold = score != null && scoreThreshold != null && score >= scoreThreshold;
 
-  /* ── Derive verdict display ── */
-  const rating: string = verdict?.rating ?? "";
-  const verdictVars = VERDICT_VARS[rating] ?? {
-    bg: "rgba(124,106,240,.06)",
-    border: "rgba(124,106,240,.2)",
-  };
-  const verdictTitle: string = verdict?.play ?? verdict?.summary?.split(".")[0] ?? "";
-  const verdictSubtitle: string = (() => {
-    const tor = verdict?.targetOfferRange;
-    if (tor?.low && tor?.high)
-      return `Target: ${fmtCurrency(tor.low)} – ${fmtCurrency(tor.high)}`;
-    return verdict?.summary ?? "";
-  })();
+  const rawSigs: Array<HeroPanelSignal | string> = [
+    ...(p.signals ?? []),
+    ...(p.hasInsolvency ? [{ name: "Insolvency", type: "distress" } as HeroPanelSignal] : []),
+    ...(p.hasLisPendens ? [{ name: "Lis Pendens", type: "distress" } as HeroPanelSignal] : []),
+  ];
 
-  /* ── Derive AI summary ── */
-  const aiSummary: string | null = verdict?.reasoning ?? verdict?.summary ?? null;
-  const aiPlay: string | undefined = verdict?.play;
+  const estValLow  = returns?.estimatedValueLow;
+  const estValHigh = returns?.estimatedValueHigh;
+  const offerLow   = verdict?.targetOfferRange?.low;
+  const offerHigh  = verdict?.targetOfferRange?.high;
+  const irr        = returns?.irr != null ? `${(returns.irr * 100).toFixed(1)}%` : null;
+  const timeline   = returns?.holdYears != null ? `${returns.holdYears}–${returns.holdYears + 1}y` : null;
 
-  /* ── Derive metrics ── */
-  const askingRaw = property.askingPrice ?? property.guidePrice;
-  const niy = returns?.niy != null ? returns.niy : null;
-  const irr = returns?.irr != null ? returns.irr : null;
-  const em = returns?.equityMultiple != null ? returns.equityMultiple : null;
-
-  // CAPEX: use .total from ricsAnalysis (it's a CAPEXAnalysis object, not a number)
-  const capexRaw: number | null =
-    ra?.capex?.total ?? assumptions?.capex?.value ?? null;
-
-  const metrics: Array<{
-    label: string;
-    value: string;
-    subtitle?: string;
-    color?: "default" | "green" | "amber" | "red";
-  }> = [];
-
-  if (askingRaw != null) {
-    const psf =
-      property.buildingSizeSqft && property.buildingSizeSqft > 0
-        ? `£${Math.round(askingRaw / property.buildingSizeSqft)} psf`
-        : undefined;
-    metrics.push({ label: "Asking Price", value: fmtCurrency(askingRaw), subtitle: psf });
-  }
-  if (niy != null) {
-    metrics.push({
-      label: "NIY",
-      value: fmtPct(niy),
-      color: niy >= 0.07 ? "green" : niy >= 0.05 ? "amber" : "red",
-    });
-  }
-  if (irr != null) {
-    metrics.push({
-      label: "IRR",
-      value: fmtPct(irr),
-      color: irr >= 0.15 ? "green" : irr >= 0.10 ? "amber" : "red",
-    });
-  }
-  if (em != null) {
-    metrics.push({
-      label: "Equity Multiple",
-      value: fmtMultiple(em),
-      color: em >= 1.8 ? "green" : em >= 1.3 ? "amber" : "red",
-    });
-  }
-  if (capexRaw != null) {
-    metrics.push({ label: "CAPEX", value: fmtCurrency(capexRaw) });
+  // Discount range: from data or calculated from offer vs estimated value
+  let discountStr: string | null = null;
+  if (returns?.discountLow != null && returns?.discountHigh != null) {
+    discountStr = `${Math.round(returns.discountLow * 100)}–${Math.round(returns.discountHigh * 100)}%`;
+  } else if (offerLow && offerHigh && estValLow && estValHigh) {
+    const dLow  = Math.round((1 - offerHigh / estValHigh) * 100);
+    const dHigh = Math.round((1 - offerLow  / estValLow)  * 100);
+    if (dLow > 0 && dHigh > 0) discountStr = `${dLow}–${dHigh}%`;
   }
 
-  /* ── Meta tags ── */
-  const metaTags: string[] = [];
-  if (property.assetType) metaTags.push(property.assetType);
-  if (property.buildingSizeSqft)
-    metaTags.push(`${property.buildingSizeSqft.toLocaleString()} sq ft NLA`);
-  if (property.tenure) metaTags.push(property.tenure);
-  if (property.occupancyPct != null) {
-    const pct = Math.round(property.occupancyPct * 100);
-    metaTags.push(pct === 0 ? "100% Vacant" : `${pct}% Occupied`);
-  }
-
-  const hasVerdict = !!rating;
+  const profit = returns?.profit ?? returns?.netProfit ?? da?.profit ?? null;
 
   return (
-    <div className={s.heroPanel}>
-      {/* ── Property header ── */}
-      <div className={s.propertyHeader}>
-        <div className={s.propertyTitle}>
-          <h1>{property.address}</h1>
-          {metaTags.length > 0 && (
-            <div className={s.propertyMeta}>
-              {metaTags.map((tag, i) => (
-                <span key={i}>{tag}</span>
+    <div className={s.dTop}>
+      {onBack && <div className={s.dBack} onClick={onBack}>← Back to results</div>}
+      <div className={s.dHdr}>
+
+        {/* Gallery */}
+        <div className={s.dGallery}>
+          <div
+            className={s.dHero}
+            style={p.satelliteImageUrl ? { backgroundImage: `url(${p.satelliteImageUrl})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
+          >
+            {!p.satelliteImageUrl && "Satellite Image"}
+            <div className={s.dHeroLbl}>Google Maps</div>
+          </div>
+          <div className={s.dThumbs}>
+            {THUMBS.map(t => (
+              <div key={t} className={s.dThumb}>{t}</div>
+            ))}
+            <div className={s.dThumb} style={{ background: "var(--s3)", color: "var(--tx2)" }}>+3</div>
+          </div>
+        </div>
+
+        {/* Info */}
+        <div className={s.dInfo}>
+          <div className={s.dAddr}>{p.address}</div>
+          <div className={s.dSpecs}>
+            {p.assetType && <span><strong>Type</strong> {p.assetType}</span>}
+            {p.buildingSizeSqft && <span><strong>Size</strong> {p.buildingSizeSqft.toLocaleString()} sqft</span>}
+            {p.yearBuilt && <span><strong>Built</strong> {p.yearBuilt}</span>}
+            {p.epcRating && <span><strong>EPC</strong> {p.epcRating}</span>}
+            {p.tenure && <span><strong>Tenure</strong> {p.tenure}</span>}
+            {p.rateableValue && <span><strong>RV</strong> £{p.rateableValue.toLocaleString()}</span>}
+          </div>
+          {rawSigs.length > 0 && (
+            <div className={s.dSigs}>
+              {rawSigs.map((sig, i) => (
+                <span key={i} className={`${s.b} ${s["b-" + sigType(sig)]}`}>{sigName(sig)}</span>
               ))}
             </div>
           )}
+          <div className={s.dActs}>
+            {onContact && (
+              <button className={`${s.btn} ${s.btnP} ${s.btnSm}`} onClick={onContact}>Approach Owner</button>
+            )}
+            {onAddToPipeline && (
+              <button className={`${s.btn} ${s.btnG} ${s.btnSm}`} onClick={onAddToPipeline}>+ Pipeline</button>
+            )}
+            {onWatch && (
+              <button className={`${s.btn} ${s.btnS} ${s.btnSm} ${watched ? s.btnWatched : ""}`} onClick={onWatch}>
+                {watched ? "Watching" : "Watch"}
+              </button>
+            )}
+            {onExportMemo && (
+              <button className={`${s.btn} ${s.btnS} ${s.btnSm}`} onClick={onExportMemo} disabled={exporting === "pdf"}>
+                {exporting === "pdf" ? "Exporting…" : "Export PDF"}
+              </button>
+            )}
+            {onExportXlsx && (
+              <button className={`${s.btn} ${s.btnS} ${s.btnSm}`} onClick={onExportXlsx} disabled={exporting === "xlsx"}>
+                {exporting === "xlsx" ? "Exporting…" : "Download .xlsx"}
+              </button>
+            )}
+          </div>
         </div>
-        {onBack && (
-          <button className={s.backBtn} onClick={onBack}>
-            ← Back to results
-          </button>
-        )}
-      </div>
 
-      {/* ── AI Summary ── */}
-      {aiSummary && <AISummary summary={aiSummary} play={aiPlay} />}
-
-      {/* ── Metrics grid ── */}
-      {(hasVerdict || metrics.length > 0) && (
-        <div className={s.metricsGrid}>
-          {/* Verdict card */}
-          {hasVerdict && (
-            <div
-              className={s.verdictCell}
-              style={
-                {
-                  "--verdictBg": verdictVars.bg,
-                  "--verdictBorder": verdictVars.border,
-                } as React.CSSProperties
-              }
-            >
-              <VerdictBadge
-                rating={rating}
-                targetOfferRange={verdict?.targetOfferRange}
-              />
-              {verdictTitle && (
-                <p className={s.verdictTitle}>{verdictTitle}</p>
-              )}
-              {verdictSubtitle && verdictSubtitle !== verdictTitle && (
-                <p className={s.verdictSubtitle}>{verdictSubtitle}</p>
-              )}
+        {/* Deal summary */}
+        <div className={s.dSum}>
+          {score != null && (
+            <div className={s.scoreRow}>
+              <div className={s.dSc}>{typeof score === "number" ? score.toFixed(1) : score}</div>
+              <div>
+                <div className={s.scoreLabel}>Opportunity score</div>
+                {aboveThreshold && <div className={s.scoreHint}>Above your {scoreThreshold} threshold</div>}
+                {!aboveThreshold && p.temperature && <div className={s.scoreHint}>{p.temperature}</div>}
+              </div>
             </div>
           )}
-
-          {/* Metric cards */}
-          {metrics.map((m, i) => (
-            <MetricCard
-              key={i}
-              label={m.label}
-              value={m.value}
-              subtitle={m.subtitle}
-              color={m.color}
-            />
-          ))}
+          {estValLow && estValHigh && (
+            <div className={s.dr}><span className={s.drL}>Est. value</span><span className={s.drV}>{fmt(estValLow)}–{fmt(estValHigh)}</span></div>
+          )}
+          {offerLow && offerHigh && (
+            <div className={s.dr}><span className={s.drL}>Target offer</span><span className={`${s.drV} ${s.g}`}>{fmt(offerLow)}–{fmt(offerHigh)}</span></div>
+          )}
+          {!offerLow && (p.askingPrice ?? p.guidePrice) && (
+            <div className={s.dr}><span className={s.drL}>{p.askingPrice ? "Asking price" : "Guide price"}</span><span className={s.drV}>{fmt((p.askingPrice ?? p.guidePrice)!)}</span></div>
+          )}
+          {discountStr && (
+            <div className={s.dr}><span className={s.drL}>Discount</span><span className={s.drV}>{discountStr}</span></div>
+          )}
+          {(irr || profit != null) && <div className={s.sep} />}
+          {profit != null && (
+            <div className={s.dr}><span className={s.drL}>Profit</span><span className={`${s.drV} ${s.g}`}>{profit >= 0 ? "+" : ""}{fmt(profit)}</span></div>
+          )}
+          {irr && (
+            <div className={s.dr}><span className={s.drL}>IRR</span><span className={`${s.drV} ${s.g}`}>{irr}</span></div>
+          )}
+          {timeline && (
+            <div className={s.dr}><span className={s.drL}>Timeline</span><span className={s.drV}>{timeline}</span></div>
+          )}
         </div>
-      )}
 
-      {/* ── Action bar ── */}
-      <div className={s.actionBar}>
-        {onExportMemo && (
-          <button
-            className={`${s.btnPrimary}${exporting === "pdf" ? ` ${s.btnDisabled}` : ""}`}
-            onClick={onExportMemo}
-            disabled={exporting === "pdf"}
-          >
-            Export IC Memo
-          </button>
-        )}
-        {onAddToPipeline && (
-          <button className={s.btnSecondary} onClick={onAddToPipeline}>
-            + Pipeline
-          </button>
-        )}
-        {onWatch && (
-          <button
-            className={`${s.btnSecondary}${watched ? ` ${s.btnActive}` : ""}`}
-            onClick={onWatch}
-          >
-            {watched ? "Watching" : "Watch"}
-          </button>
-        )}
-        {onContact && (
-          <button className={s.btnSecondary} onClick={onContact}>
-            Contact Agent
-          </button>
-        )}
-        {onAddInfo && (
-          <button className={s.btnSecondary} onClick={onAddInfo}>
-            + Add info
-          </button>
-        )}
       </div>
     </div>
   );

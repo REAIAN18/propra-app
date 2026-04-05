@@ -409,9 +409,14 @@ export default function PropertyDossierPage() {
   if (error || !deal) {
     return (
       <AppShell>
-        <div style={{ padding: 32, textAlign: "center" }}>
-          <div style={{ fontSize: 13, color: "var(--red)", marginBottom: 12 }}>{error || "Property not found"}</div>
-          <button onClick={() => router.back()} style={{ padding: "8px 16px", borderRadius: 8, background: "var(--s2)", border: "1px solid var(--s3)", color: "var(--tx2)", cursor: "pointer", fontSize: 12 }}>← Back</button>
+        <div className={s.errorState}>
+          <div className={s.errorIcon}>⚠</div>
+          <p className={s.errorTitle}>Could not load property</p>
+          <p className={s.errorMessage}>{error || "Property not found."}</p>
+          <div className={s.errorActions}>
+            <button className={s.retryBtn} onClick={() => { setError(null); setLoading(true); fetch(`/api/dealscope/properties/${id}`).then(r => r.ok ? r.json() : r.json().then((e: { error?: string }) => Promise.reject(e.error ?? "Failed to load"))).then((data: RawDeal) => { setDeal(data); setLoading(false); }).catch((e: unknown) => { setError(String(e)); setLoading(false); }); }}>Retry</button>
+            <button className={s.backBtn2} onClick={() => router.back()}>← Back</button>
+          </div>
         </div>
       </AppShell>
     );

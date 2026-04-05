@@ -325,6 +325,35 @@
 /* ── INPUT GLOW (search bar on home) ── */
 .inputGlow:focus-within { border-color: var(--acc); animation: glow 3s ease infinite; box-shadow: 0 0 20px rgba(124,106,240,.15); }
 
+/* ── SHIMMER SKELETON ── */
+@keyframes shimmer { from { background-position: -400px 0; } to { background-position: 400px 0; } }
+.skeleton { background: linear-gradient(90deg, var(--s2) 25%, var(--s1) 50%, var(--s2) 75%); background-size: 800px 100%; animation: shimmer 1.5s infinite linear; border-radius: 6px; }
+.skeletonContainer { padding: 0; max-width: 900px; }
+.skeletonHeader { display: flex; gap: 16px; padding: 20px; align-items: flex-start; background: linear-gradient(180deg, var(--s1), var(--bg)); border-bottom: 1px solid var(--s2); }
+.skeletonPhoto { width: 80px; height: 80px; flex-shrink: 0; border-radius: 10px; }
+.skeletonInfo { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.skeletonTitle { height: 20px; width: 60%; border-radius: 5px; }
+.skeletonSpec { height: 13px; width: 40%; border-radius: 4px; }
+.skeletonBadge { height: 24px; width: 72px; border-radius: 20px; }
+.skeletonTabs { display: flex; gap: 8px; padding: 0 20px; border-bottom: 1px solid var(--s2); height: 40px; align-items: center; }
+.skeletonTab { height: 14px; border-radius: 4px; flex-shrink: 0; }
+.skeletonContent { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+.skeletonGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.skeletonCard { background: var(--s1); border: 1px solid var(--s2); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+.skeletonCardLabel { height: 11px; width: 55%; border-radius: 3px; }
+.skeletonCardValue { height: 20px; width: 70%; border-radius: 4px; }
+
+/* ── ERROR STATE ── */
+.errorState { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px; padding: 40px 24px; gap: 12px; text-align: center; }
+.errorIcon { font-size: 32px; margin-bottom: 4px; opacity: .8; }
+.errorTitle { font-size: 16px; font-weight: 600; color: var(--tx); margin: 0; }
+.errorMessage { font-size: 13px; color: var(--tx3); margin: 0; max-width: 380px; line-height: 1.5; }
+.errorActions { display: flex; gap: 8px; margin-top: 4px; }
+.retryBtn { padding: 8px 18px; border-radius: 8px; background: var(--acc); border: none; color: #fff; font-size: 12px; font-weight: 600; cursor: pointer; font-family: var(--sans); transition: opacity .15s; }
+.retryBtn:hover { opacity: .85; }
+.backBtn2 { padding: 8px 18px; border-radius: 8px; background: var(--s2); border: 1px solid var(--s3); color: var(--tx2); font-size: 12px; font-weight: 600; cursor: pointer; font-family: var(--sans); transition: background .15s; }
+.backBtn2:hover { background: var(--s3); }
+
 /* ── 4-TAB PAGE LAYOUT (Steps 4 & 5 rebuild) ── */
 .addr { font-family: var(--serif); font-size: 20px; margin-bottom: 4px; letter-spacing: -.3px; font-weight: 400; }
 .backBtn { font-size: 11px; color: var(--tx3); cursor: pointer; margin-bottom: 6px; display: inline-block; transition: color .15s; background: none; border: none; padding: 0; }
