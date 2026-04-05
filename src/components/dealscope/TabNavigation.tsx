@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, KeyboardEvent } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import s from "./TabNavigation.module.css";
 
-export type DealScopeTab = "overview" | "financials" | "comparables" | "due-diligence";
+export type DealScopeTab = "overview" | "property" | "planning" | "financials" | "documents";
 
 export interface TabDef {
   id: DealScopeTab;
@@ -12,10 +12,11 @@ export interface TabDef {
 }
 
 const DEFAULT_TABS: TabDef[] = [
-  { id: "overview",      label: "Overview" },
-  { id: "financials",    label: "Financials" },
-  { id: "comparables",   label: "Comparables" },
-  { id: "due-diligence", label: "Due Diligence" },
+  { id: "overview",   label: "Overview" },
+  { id: "property",   label: "Property" },
+  { id: "planning",   label: "Planning" },
+  { id: "financials", label: "Financials" },
+  { id: "documents",  label: "Documents" },
 ];
 
 interface TabNavigationProps {

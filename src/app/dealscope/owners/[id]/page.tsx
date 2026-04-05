@@ -31,22 +31,66 @@ export default function OwnerProfilePage() {
   const ownerId = params.id as string;
   const [owner, setOwner] = useState<OwnerProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const loadOwner = () => {
+    setLoading(true);
+    setError(null);
     fetch(`/api/dealscope/owners/${ownerId}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setOwner(data);
-        setLoading(false);
+      .then((res) => {
+        if (!res.ok) throw new Error(`Failed to load owner (${res.status})`);
+        return res.json();
       })
-      .catch((err) => {
-        console.error("Error fetching owner:", err);
-        setLoading(false);
-      });
-  }, [ownerId]);
+      .then((data: OwnerProfile) => { setOwner(data); setLoading(false); })
+      .catch((err: Error) => { setError(err.message || "Failed to load owner"); setLoading(false); });
+  };
+
+  useEffect(() => { loadOwner(); }, [ownerId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (error) {
+    return (
+      <AppShell>
+        <div className={styles.errorPage}>
+          <div className={styles.errorIcon}>⚠</div>
+          <p className={styles.errorTitle}>Could not load owner</p>
+          <p className={styles.errorMessage}>{error}</p>
+          <button className={styles.retryBtn} onClick={loadOwner}>Retry</button>
+        </div>
+      </AppShell>
+    );
+  }
 
   if (loading || !owner) {
-    return <AppShell><div>Loading...</div></AppShell>;
+    return (
+      <AppShell>
+        <div className={styles.skeletonPage}>
+          <div>
+            <div className={`${styles.skeleton} ${styles.skeletonTitle}`} />
+            <div className={`${styles.skeleton} ${styles.skeletonSub}`} />
+          </div>
+          <div className={styles.skeletonSection}>
+            <div className={styles.skeletonGrid}>
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className={styles.skeletonItem}>
+                  <div className={`${styles.skeleton} ${styles.skeletonLabel}`} />
+                  <div className={`${styles.skeleton} ${styles.skeletonValue}`} />
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className={styles.skeletonSection}>
+            <div className={styles.skeletonGrid}>
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className={styles.skeletonItem}>
+                  <div className={`${styles.skeleton} ${styles.skeletonLabel}`} />
+                  <div className={`${styles.skeleton} ${styles.skeletonValue}`} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </AppShell>
+    );
   }
 
   return (

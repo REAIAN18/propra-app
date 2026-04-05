@@ -543,3 +543,159 @@
   line-height: 1.6;
   margin: 0;
 }
+
+/* ── Shimmer skeleton ── */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--s2) 25%, var(--s1) 50%, var(--s2) 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite linear;
+  border-radius: 4px;
+}
+
+.skeletonContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--bg);
+}
+
+.skeletonHeader {
+  background: var(--s1);
+  border-bottom: 1px solid var(--s2);
+  padding: 20px;
+  display: grid;
+  grid-template-columns: 200px 1fr auto;
+  gap: 20px;
+  align-items: start;
+}
+
+.skeletonPhoto {
+  width: 200px;
+  height: 140px;
+  border-radius: 8px;
+}
+
+.skeletonInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 8px;
+}
+
+.skeletonTitle {
+  height: 22px;
+  width: 60%;
+}
+
+.skeletonSpec {
+  height: 14px;
+  width: 80%;
+}
+
+.skeletonBadge {
+  width: 80px;
+  height: 28px;
+  border-radius: 4px;
+}
+
+.skeletonTabs {
+  background: var(--s1);
+  border-bottom: 1px solid var(--s2);
+  padding: 0 20px;
+  display: flex;
+  gap: 8px;
+  height: 46px;
+  align-items: flex-end;
+  padding-bottom: 12px;
+}
+
+.skeletonTab {
+  height: 14px;
+  border-radius: 3px;
+}
+
+.skeletonContent {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.skeletonGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.skeletonCard {
+  background: var(--s2);
+  border: 1px solid var(--s3);
+  border-radius: 6px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skeletonCardLabel {
+  height: 10px;
+  width: 50%;
+}
+
+.skeletonCardValue {
+  height: 20px;
+  width: 70%;
+}
+
+/* ── Error state ── */
+.errorState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 80px 20px;
+  text-align: center;
+}
+
+.errorIcon {
+  font-size: 40px;
+  color: var(--red);
+}
+
+.errorTitle {
+  font-family: "Instrument Serif", serif;
+  font-size: 20px;
+  color: var(--tx);
+  margin: 0;
+}
+
+.errorMessage {
+  font-size: 13px;
+  color: var(--tx2);
+  max-width: 400px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.retryBtn {
+  padding: 10px 20px;
+  background: var(--acc);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-family: "DM Sans", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.retryBtn:hover {
+  opacity: 0.85;
+}

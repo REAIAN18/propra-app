@@ -59,6 +59,7 @@ export default function PropertyDossierPage() {
   const [valuations, setValuations] = useState<Valuation>({});
   const [activeTab, setActiveTab] = useState("overview");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [scenarios, setScenarios] = useState<{
     conservative: { assumptions: Record<string, number>; results: Record<string, number> };
     midcase: { assumptions: Record<string, number>; results: Record<string, number> };
@@ -139,17 +140,21 @@ export default function PropertyDossierPage() {
     });
   };
 
-  useEffect(() => {
+  const loadData = () => {
+    setLoading(true);
+    setError(null);
     Promise.all([
-      fetch(`/api/dealscope/properties/${propertyId}`).then((r) => r.json()),
-      fetch(`/api/dealscope/properties/${propertyId}/signals`).then((r) => r.json()),
-      fetch(`/api/dealscope/properties/${propertyId}/comps`).then((r) => r.json()),
+      fetch(`/api/dealscope/properties/${propertyId}`).then((r) => {
+        if (!r.ok) throw new Error(`Property data unavailable (${r.status})`);
+        return r.json();
+      }),
+      fetch(`/api/dealscope/properties/${propertyId}/signals`).then((r) => r.json()).catch(() => ({ signals: [] })),
+      fetch(`/api/dealscope/properties/${propertyId}/comps`).then((r) => r.json()).catch(() => []),
     ])
       .then(([propData, signalData, compData]) => {
         setProperty(propData);
         setSignals(signalData.signals || []);
         setComps(compData || []);
-        // Calculate valuation methods
         setValuations({
           comparableSales: propData.sqft ? (propData.sqft * 92) : undefined,
           incomeCapitalisation: propData.currentRentPsf && propData.sqft
@@ -157,13 +162,74 @@ export default function PropertyDossierPage() {
             : undefined,
           replacementCost: propData.sqft ? (propData.sqft * 85) : undefined,
         });
-        // Calculate scenarios
         calculateScenarios(propData);
       })
+      .catch((err: Error) => setError(err.message || "Failed to load property data"))
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [propertyId]);
 
-  if (loading || !property) return <AppShell><div>Loading...</div></AppShell>;
+  if (loading) {
+    return (
+      <AppShell>
+        <div className={styles.skeletonContainer}>
+          <div className={styles.skeletonHeader}>
+            <div className={`${styles.skeleton} ${styles.skeletonPhoto}`} />
+            <div className={styles.skeletonInfo}>
+              <div className={`${styles.skeleton} ${styles.skeletonTitle}`} />
+              <div className={`${styles.skeleton} ${styles.skeletonSpec}`} />
+              <div className={`${styles.skeleton} ${styles.skeletonSpec}`} style={{ width: "55%" }} />
+            </div>
+            <div className={styles.skeletonInfo}>
+              <div className={`${styles.skeleton} ${styles.skeletonBadge}`} />
+              <div className={`${styles.skeleton} ${styles.skeletonBadge}`} />
+            </div>
+          </div>
+          <div className={styles.skeletonTabs}>
+            {[80, 72, 96, 88, 60, 64, 60, 100].map((w, i) => (
+              <div key={i} className={`${styles.skeleton} ${styles.skeletonTab}`} style={{ width: w }} />
+            ))}
+          </div>
+          <div className={styles.skeletonContent}>
+            <div className={`${styles.skeleton} ${styles.skeletonTitle}`} style={{ width: 120, height: 18 }} />
+            <div className={styles.skeletonGrid}>
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className={styles.skeletonCard}>
+                  <div className={`${styles.skeleton} ${styles.skeletonCardLabel}`} />
+                  <div className={`${styles.skeleton} ${styles.skeletonCardValue}`} />
+                </div>
+              ))}
+            </div>
+            <div className={styles.skeletonGrid}>
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className={styles.skeletonCard}>
+                  <div className={`${styles.skeleton} ${styles.skeletonCardLabel}`} />
+                  <div className={`${styles.skeleton} ${styles.skeletonCardValue}`} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (error || !property) {
+    return (
+      <AppShell>
+        <div className={styles.errorState}>
+          <div className={styles.errorIcon}>⚠</div>
+          <p className={styles.errorTitle}>Could not load property</p>
+          <p className={styles.errorMessage}>{error || "Property not found."}</p>
+          <button className={styles.retryBtn} onClick={loadData}>Retry</button>
+        </div>
+      </AppShell>
+    );
+  }
 
   const getTempColor = (temp: string) => {
     if (temp === "hot") return "#f87171";
