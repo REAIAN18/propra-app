@@ -18,6 +18,7 @@ import s from "../dossier.module.css";
 
 interface Props {
   deal: RawDeal;
+  prop: Property;
 }
 
 function fmtCcy(n: number | undefined | null): string {
@@ -37,27 +38,6 @@ function fmtX(n: number | undefined | null): string {
   return `${n.toFixed(2)}×`;
 }
 
-function toProperty(deal: RawDeal): Property {
-  const ds = (deal.dataSources ?? {}) as Record<string, unknown>;
-  const assumptions = ds.assumptions as Record<string, unknown> | undefined;
-  return {
-    id: deal.id,
-    address: deal.address,
-    assetType: deal.assetType,
-    askingPrice: deal.askingPrice ?? deal.guidePrice,
-    size: deal.buildingSizeSqft ?? deal.sqft,
-    builtYear: deal.yearBuilt,
-    epcRating: deal.epcRating,
-    occupancyPct: deal.occupancyPct,
-    passingRent: (ds.passingRent ?? ds.currentRentPa ?? assumptions?.passingRent) as number | undefined,
-    erv: (ds.erv ?? ds.marketRentPa ?? assumptions?.erv) as number | undefined,
-    businessRates: (ds.businessRates ?? assumptions?.businessRates) as number | undefined,
-    serviceCharge: (ds.serviceCharge ?? assumptions?.serviceCharge) as number | undefined,
-    expectedVoid: (assumptions?.expectedVoidMonths ?? ds.expectedVoidMonths) as number | undefined,
-    description: deal.dataSources ? JSON.stringify(deal.dataSources).toLowerCase() : undefined,
-  };
-}
-
 function Row({ l, v, color, mono }: { l: string; v: string; color?: "green" | "amber" | "red"; mono?: boolean }) {
   const c = color === "green" ? "var(--grn)" : color === "amber" ? "var(--amb)" : color === "red" ? "var(--red)" : "var(--tx)";
   return (
@@ -68,9 +48,8 @@ function Row({ l, v, color, mono }: { l: string; v: string; color?: "green" | "a
   );
 }
 
-export function FinancialsTab({ deal }: Props) {
+export function FinancialsTab({ deal, prop }: Props) {
   const ds = (deal.dataSources ?? {}) as Record<string, unknown>;
-  const prop = toProperty(deal);
   const irrResult = calculateIRR(prop);
   const equityResult = calculateEquityMultiple(prop);
   const verdict = calculateVerdict(prop);
