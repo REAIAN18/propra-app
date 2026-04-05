@@ -674,6 +674,72 @@ export default function FinancingPage() {
           </div>
         )}
 
+        {/* Rate Sensitivity — SOFR Scenario Table */}
+        {!loading && sofrData && loans.some(l => l.rateType === "variable") && (() => {
+          const floatingBalance = loans
+            .filter(l => l.rateType === "variable")
+            .reduce((s, l) => s + l.outstandingBalance, 0);
+          const currentAnnualInterest = loans
+            .filter(l => l.rateType === "variable")
+            .reduce((s, l) => s + l.outstandingBalance * (l.interestRate / 100), 0);
+
+          const scenarios = [
+            { label: "SOFR −50bps", delta: -0.50 },
+            { label: "SOFR −25bps", delta: -0.25 },
+            { label: "Current", delta: 0 },
+            { label: "SOFR +25bps", delta: 0.25 },
+            { label: "SOFR +50bps", delta: 0.50 },
+          ].map(s => {
+            const newInterest = loans
+              .filter(l => l.rateType === "variable")
+              .reduce((sum, l) => sum + l.outstandingBalance * ((l.interestRate + s.delta) / 100), 0);
+            return { ...s, annualInterest: newInterest, change: newInterest - currentAnnualInterest };
+          });
+
+          return (
+            <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}>
+              <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--bdr)" }}>
+                <div className="text-[9px] font-medium uppercase tracking-wider mb-1" style={{ fontFamily: "var(--mono)", color: "var(--tx3)", letterSpacing: "2px" }}>
+                  Rate Sensitivity
+                </div>
+                <div className="text-xs" style={{ color: "var(--tx3)" }}>
+                  Impact of SOFR changes on {sym}{(floatingBalance / 1_000_000).toFixed(1)}M floating-rate exposure
+                </div>
+              </div>
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "11px" }}>
+                  <thead>
+                    <tr style={{ borderBottom: "1px solid var(--bdr)" }}>
+                      <th style={{ padding: "8px 20px", textAlign: "left", fontFamily: "var(--mono)", fontSize: "8px", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.8px", color: "var(--tx3)" }}>Scenario</th>
+                      <th style={{ padding: "8px 16px", textAlign: "right", fontFamily: "var(--mono)", fontSize: "8px", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.8px", color: "var(--tx3)" }}>Annual Interest</th>
+                      <th style={{ padding: "8px 20px", textAlign: "right", fontFamily: "var(--mono)", fontSize: "8px", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.8px", color: "var(--tx3)" }}>vs. Current</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {scenarios.map((s, i) => {
+                      const isCurrent = s.delta === 0;
+                      return (
+                        <tr key={i} style={{ borderBottom: i < scenarios.length - 1 ? "1px solid var(--bdr-lt)" : "none", background: isCurrent ? "var(--s2)" : "transparent" }}>
+                          <td style={{ padding: "10px 20px", color: isCurrent ? "var(--tx)" : "var(--tx2)", fontWeight: isCurrent ? 600 : 400 }}>
+                            {s.label}
+                            {isCurrent && <span style={{ marginLeft: 6, fontSize: "8px", fontFamily: "var(--mono)", padding: "1px 6px", borderRadius: 4, background: "var(--acc-lt)", color: "var(--acc)", border: "1px solid var(--acc-bdr)" }}>CURRENT</span>}
+                          </td>
+                          <td style={{ padding: "10px 16px", textAlign: "right", fontFamily: "var(--mono)", color: "var(--tx)" }}>
+                            {fmt(Math.round(s.annualInterest), sym)}
+                          </td>
+                          <td style={{ padding: "10px 20px", textAlign: "right", fontFamily: "var(--mono)", color: s.change < 0 ? "var(--grn)" : s.change > 0 ? "var(--red)" : "var(--tx3)" }}>
+                            {s.change === 0 ? "—" : `${s.change > 0 ? "+" : ""}${fmt(Math.round(s.change), sym)}`}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          );
+        })()}
+
         {/* Issue context bar */}
         {!loading && annualOverpay > 0 && (
           <div
