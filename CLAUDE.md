@@ -118,9 +118,19 @@ Infra: vercel.json, .github/*, package.json, tsconfig.json
 1. Feature branch from main
 2. npx tsc --noEmit && npm run lint — FIX ALL ERRORS before pushing. Do not push code that fails type-check.
 3. Push branch. Merge to main only after CI passes.
-4. After merge: check Vercel dashboard or wait 2 minutes then load https://propra-app-orcin.vercel.app — if the page is broken, YOU fix it immediately. Do not move to next ticket.
+4. After merge: wait 2–3 minutes then load https://propra-app-orcin.vercel.app and verify your changes are LIVE. If the page is broken or changes don't appear, investigate and fix before moving on.
 5. Never push directly to main.
 6. If Vercel build fails, check the build logs, fix the errors, push again. Repeat until build succeeds and site loads.
+
+## ⚠️ DEFINITION OF DONE — ALL 4 STEPS REQUIRED
+
+A ticket is NOT done until ALL of the following are true:
+1. **Code written** — .tsx/.ts files created at the correct paths
+2. **TypeScript compiles** — `npx tsc --noEmit` passes with zero errors
+3. **Merged to main** — PR reviewed and merged, CI green
+4. **Deployed and verified live** — https://propra-app-orcin.vercel.app shows the change
+
+**Do not mark a ticket Done without completing Step 4.** Merging to main is not enough — confirm the Vercel deployment succeeded and the feature is visible on the production URL.
 
 ## Production
 Production URL: https://propra-app-orcin.vercel.app
