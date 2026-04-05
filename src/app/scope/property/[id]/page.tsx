@@ -79,6 +79,17 @@ function Row({ l, v, color, mono }: { l: string; v: string; color?: "green" | "a
 
 function toProperty(d: RawDeal): Property {
   const ds = (d.dataSources ?? {}) as Record<string, unknown>;
+  // dataSources.assumptions stores enriched values as { value, source } objects
+  const assumptions = (ds.assumptions ?? {}) as Record<string, unknown>;
+  function assumptionVal(key: string): number | undefined {
+    const v = assumptions[key];
+    if (typeof v === "number") return v;
+    if (v && typeof v === "object" && "value" in (v as object)) {
+      const val = (v as Record<string, unknown>).value;
+      return typeof val === "number" ? val : undefined;
+    }
+    return undefined;
+  }
   return {
     id: d.id,
     address: d.address,
@@ -88,12 +99,15 @@ function toProperty(d: RawDeal): Property {
     builtYear: d.yearBuilt,
     epcRating: d.epcRating,
     occupancyPct: d.occupancyPct,
-    erv: (ds.erv as number | undefined) ?? (ds.marketRent as number | undefined),
-    passingRent: (ds.passingRent as number | undefined) ?? (ds.currentRent as number | undefined),
-    businessRates: ds.businessRates as number | undefined,
-    serviceCharge: typeof ds.serviceCharge === "number" ? ds.serviceCharge : undefined,
-    expectedVoid: (ds.assumptions as Record<string, unknown> | undefined)?.voidMonths as number | undefined,
-    description: (ds.listingDescription as string | undefined) ?? (ds.description as string | undefined),
+    // Try top-level ds fields first, then nested assumptions.*.value structure
+    erv: (ds.erv as number | undefined) ?? (ds.marketRent as number | undefined) ?? assumptionVal("erv"),
+    passingRent: (ds.passingRent as number | undefined) ?? (ds.currentRent as number | undefined) ?? assumptionVal("passingRent"),
+    businessRates: (ds.businessRates as number | undefined) ?? assumptionVal("businessRates"),
+    serviceCharge: typeof ds.serviceCharge === "number" ? ds.serviceCharge : assumptionVal("serviceCharge"),
+    expectedVoid: assumptionVal("voidMonths") ?? (assumptions.voidMonths as number | undefined),
+    description: (ds.listingDescription as string | undefined)
+      ?? (ds.description as string | undefined)
+      ?? ((ds.listing as Record<string, unknown> | undefined)?.description as string | undefined),
   };
 }
 
