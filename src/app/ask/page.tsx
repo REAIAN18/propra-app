@@ -409,7 +409,7 @@ export default function AskPage() {
                             key={a.href}
                             href={a.href}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 hover:opacity-80 hover:-translate-y-0.5"
-                            style={{ backgroundColor: "#F0FDF4", color: "var(--grn)", border: "1px solid #BBF7D0" }}
+                            style={{ backgroundColor: "rgba(52,211,153,.07)", color: "var(--grn)", border: "1px solid rgba(52,211,153,.22)" }}
                           >
                             {a.label}
                             <svg width="10" height="10" viewBox="0 0 10 10" fill="none">

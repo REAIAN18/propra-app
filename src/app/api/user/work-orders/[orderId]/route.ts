@@ -12,11 +12,11 @@ export async function GET(
   { params }: { params: Promise<{ orderId: string }> }
 ) {
   const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   const { orderId } = await params;
+
+  if (!session?.user?.id) {
+    return NextResponse.json({ order: null });
+  }
 
   const order = await prisma.workOrder.findFirst({
     where: { id: orderId, userId: session.user.id },

@@ -146,7 +146,7 @@ export default async function PortfolioSummaryPage({
               <div className="flex items-center gap-2 mb-3">
                 <div
                   className="h-8 w-8 rounded-lg flex items-center justify-center"
-                  style={{ backgroundColor: "#34d399" }}
+                  style={{ backgroundColor: "var(--grn)" }}
                 >
                   <svg
                     width="16"
@@ -156,7 +156,7 @@ export default async function PortfolioSummaryPage({
                   >
                     <path
                       d="M2 12L6 4l4 5 2-3 2 6"
-                      stroke="#fff"
+                      stroke="var(--bg)"
                       strokeWidth="1.5"
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -186,7 +186,7 @@ export default async function PortfolioSummaryPage({
               </div>
               <div
                 className="text-xs mt-1 px-2 py-0.5 rounded-full inline-block"
-                style={{ backgroundColor: "#F0FDF4", color: "#34d399" }}
+                style={{ backgroundColor: "rgba(52,211,153,.07)", color: "var(--grn)" }}
               >
                 RealHQ
               </div>
@@ -279,7 +279,7 @@ export default async function PortfolioSummaryPage({
                   value: fmtK(opp.ins, sym),
                   sub: "estimated annual saving",
                   color: "#7c6af0",
-                  bg: "#EFF6FF",
+                  bg: "rgba(124,106,240,.07)",
                   href: "/insurance",
                 },
                 {
@@ -288,7 +288,7 @@ export default async function PortfolioSummaryPage({
                   value: fmtK(opp.energy, sym),
                   sub: "estimated yr-1 saving",
                   color: "#fbbf24",
-                  bg: "#FFFBEB",
+                  bg: "rgba(251,191,36,.07)",
                   href: "/energy",
                 },
                 {
@@ -297,7 +297,7 @@ export default async function PortfolioSummaryPage({
                   value: fmtK(opp.income, sym),
                   sub: "estimated new income p.a.",
                   color: "#34d399",
-                  bg: "#F0FDF4",
+                  bg: "rgba(52,211,153,.07)",
                   href: "/income",
                 },
               ].map((card) => (
@@ -337,7 +337,7 @@ export default async function PortfolioSummaryPage({
             {/* Total opportunity callout */}
             <div
               className="mt-4 rounded-xl p-4 flex items-center justify-between"
-              style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}
+              style={{ backgroundColor: "rgba(52,211,153,.07)", border: "1px solid rgba(52,211,153,.22)" }}
             >
               <div>
                 <div
@@ -383,7 +383,7 @@ export default async function PortfolioSummaryPage({
               <Link
                 href="/ask"
                 className="no-print shrink-0 rounded-lg px-5 py-2.5 text-sm font-bold whitespace-nowrap"
-                style={{ backgroundColor: "#34d399", color: "#fff" }}
+                style={{ backgroundColor: "var(--grn)", color: "var(--bg)" }}
               >
                 Ask RealHQ →
               </Link>

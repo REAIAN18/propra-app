@@ -9,7 +9,7 @@ import { useNav } from "@/components/layout/NavContext";
 import { usePortfolio } from "@/hooks/usePortfolio";
 import { DirectCallout } from "@/components/ui/DirectCallout";
 
-const DARK_GREEN = "#173404";
+const DARK_GREEN = "var(--grn)";
 
 type TenantRow = {
   id: string;
@@ -290,9 +290,9 @@ export default function EngageTenantsPage() {
                   <span
                     className="inline-block text-[10px] px-2 py-0.5 rounded-full"
                     style={{
-                      background: "#E8F5EE",
-                      color: "#34d399",
-                      border: "0.5px solid #d1fae5",
+                      background: "rgba(52,211,153,.07)",
+                      color: "var(--grn)",
+                      border: "0.5px solid rgba(52,211,153,.22)",
                     }}
                   >
                     {tenant.covenantStatus === "strong" ? "Strong covenant" : "Satisfactory covenant"}

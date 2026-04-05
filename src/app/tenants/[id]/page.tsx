@@ -7,7 +7,6 @@ import { useParams } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
 
-// Mock data for now - will be replaced with real API calls
 interface TenantDetail {
   id: string;
   name: string;
@@ -15,6 +14,9 @@ interface TenantDetail {
   sqft: number;
   since: string;
   rentMonthly: number;
+  annualRent: number;
+  rentPerSqft: number;
+  marketERV: number | null;
   covenantScore: string;
   covenantLevel: "strong" | "adequate" | "weak";
   arrears: number;
@@ -23,8 +25,19 @@ interface TenantDetail {
   engagementScore: number;
   leaseStart: string;
   leaseEnd: string;
+  breakDate: string | null;
+  reviewDate: string | null;
+  daysToExpiry: number | null;
   propertyName: string;
   propertyId: string;
+  sector: string | null;
+  sym: string;
+  healthScore: number;
+}
+
+interface ApiPaymentRecord {
+  period: string;
+  status: string;
 }
 
 // Payment history chart
@@ -140,48 +153,58 @@ export default function TenantDetailPage() {
   const tenantId = params.id as string;
   const [loading, setLoading] = useState(true);
   const [tenant, setTenant] = useState<TenantDetail | null>(null);
+  const [paymentHistory, setPaymentHistory] = useState<ApiPaymentRecord[]>([]);
 
   useEffect(() => {
-    // Mock data for now - will be replaced with real API call
-    const mockTenant: TenantDetail = {
-      id: tenantId,
-      name: "Verde Health LLC",
-      unit: "Suite 2B",
-      sqft: 900,
-      since: "Mar 2024",
-      rentMonthly: 4200,
-      covenantScore: "C",
-      covenantLevel: "weak",
-      arrears: 4200,
-      arrearsEscalation: "formal_demand",
-      paymentTrend: "deteriorating",
-      engagementScore: 4.2,
-      leaseStart: "Mar 2024",
-      leaseEnd: "Mar 2027",
-      propertyName: "Coral Gables Office Park",
-      propertyId: "asset-123",
-    };
+    fetch(`/api/user/tenants/${tenantId}`)
+      .then((r) => r.json())
+      .then((data) => {
+        const t = data.tenant ?? data;
+        const covenantLevel: "strong" | "adequate" | "weak" =
+          (t.covenantLevel === "strong" || t.covenantLevel === "adequate" || t.covenantLevel === "weak")
+            ? t.covenantLevel
+            : t.covenantScore === "Strong" ? "strong"
+            : t.covenantScore === "Weak" ? "weak"
+            : "adequate";
 
-    setTimeout(() => {
-      setTenant(mockTenant);
-      setLoading(false);
-    }, 300);
+        setTenant({
+          id: t.id ?? tenantId,
+          name: t.name ?? "Unknown Tenant",
+          unit: t.unit ?? t.location ?? "—",
+          sqft: t.sqft ?? 0,
+          since: t.leaseStart ? new Date(t.leaseStart).toLocaleDateString("en-GB", { month: "short", year: "numeric" }) : "—",
+          rentMonthly: Math.round((t.annualRent ?? 0) / 12),
+          annualRent: t.annualRent ?? 0,
+          rentPerSqft: t.rentPerSqft ?? 0,
+          marketERV: t.marketERV ?? null,
+          covenantScore: t.covenantScore ?? "—",
+          covenantLevel,
+          arrears: t.arrears ?? 0,
+          arrearsEscalation: t.arrearsEscalation ?? "none",
+          paymentTrend: t.paymentTrend ?? "stable",
+          engagementScore: t.engagementScore ?? 0,
+          leaseStart: t.leaseStart ?? "",
+          leaseEnd: t.leaseEnd ?? t.expiryDate ?? "",
+          breakDate: t.breakDate ?? null,
+          reviewDate: t.reviewDate ?? null,
+          daysToExpiry: t.daysToExpiry ?? null,
+          propertyName: t.propertyName ?? "—",
+          propertyId: t.propertyId ?? "—",
+          sector: t.sector ?? null,
+          sym: t.sym ?? "£",
+          healthScore: t.healthScore ?? 0,
+        });
+        setPaymentHistory(data.paymentHistory ?? []);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, [tenantId]);
 
-  const paymentHistory = [
-    { month: "Apr", status: "on-time" as const },
-    { month: "May", status: "on-time" as const },
-    { month: "Jun", status: "on-time" as const },
-    { month: "Jul", status: "on-time" as const },
-    { month: "Aug", status: "on-time" as const },
-    { month: "Sep", status: "on-time" as const },
-    { month: "Oct", status: "late" as const },
-    { month: "Nov", status: "on-time" as const },
-    { month: "Dec", status: "late" as const },
-    { month: "Jan", status: "late" as const },
-    { month: "Feb", status: "on-time" as const },
-    { month: "Mar", status: "missed" as const },
-  ];
+  // Convert API paymentHistory (period+status) to chart format
+  const chartPayments = paymentHistory.map((p) => ({
+    month: p.period ? new Date(p.period + "-01").toLocaleDateString("en-GB", { month: "short" }) : "—",
+    status: (p.status === "paid" ? "on-time" : p.status === "late" ? "late" : "missed") as "on-time" | "late" | "missed",
+  }));
 
   if (loading || !tenant) {
     return (
@@ -269,7 +292,7 @@ export default function TenantDetailPage() {
                 <h4 style={{ font: "600 13px sans-serif", color: "var(--tx, #e4e4ec)" }}>Payment Pattern</h4>
                 <span style={{ font: "500 11px sans-serif", color: "var(--red, #f87171)" }}>Trend: {tenant.paymentTrend === "deteriorating" ? "Deteriorating ↓" : tenant.paymentTrend === "improving" ? "Improving ↑" : "Stable →"}</span>
               </div>
-              <PaymentHistoryChart payments={paymentHistory} />
+              <PaymentHistoryChart payments={chartPayments} />
             </div>
 
             {/* Arrears Management */}
