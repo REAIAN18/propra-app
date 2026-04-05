@@ -41,113 +41,108 @@ type DevPotential = {
   }>;
 };
 
+// ── API response types ─────────────────────────────────────────────────
+type ApiEntry = {
+  id: string;
+  refNumber: string;
+  description: string;
+  applicant?: string;
+  type: string;
+  status: string;
+  distanceFt?: number;
+  impact: "opportunity" | "threat" | "neutral";
+  impactScore: number;
+  submittedDate: string;
+  decisionDate?: string;
+  notes: string;
+  holdSellLink?: string;
+  alertAcked?: boolean;
+  sourceUrl?: string | null;
+};
+
+type ApiAsset = {
+  assetId: string;
+  assetName: string;
+  location: string;
+  planningHistory: ApiEntry[];
+  planningImpactSignal?: string | null;
+  devPotential?: {
+    level: "high" | "medium" | "low";
+    upliftEstimate: number;
+    description: string;
+    zoningSummary?: Record<string, string>;
+    options?: Array<{ title: string; description: string; cost: number; gdv: number; net: number }>;
+  } | null;
+};
+
+function ftToMi(ft: number): string {
+  return `${(ft / 5280).toFixed(1)}mi`;
+}
+
+function mapImpact(impact: string): "positive" | "negative" | "neutral" {
+  if (impact === "opportunity") return "positive";
+  if (impact === "threat") return "negative";
+  return "neutral";
+}
+
+function mapStatus(status: string): "PENDING" | "APPROVED" | "REJECTED" {
+  if (status === "approved") return "APPROVED";
+  if (status === "rejected" || status === "withdrawn") return "REJECTED";
+  return "PENDING";
+}
+
 // ── Main Page ─────────────────────────────────────────────────────────
 export default function PlanningPage() {
   const { portfolioId } = useNav();
   const { portfolio } = usePortfolio(portfolioId);
   const [viewMode, setViewMode] = useState<"list" | "map">("map");
   const [expandedApp, setExpandedApp] = useState<string | null>(null);
+  const [applications, setApplications] = useState<PlanningApplication[]>([]);
+  const [devPotential, setDevPotential] = useState<DevPotential>({
+    level: "medium",
+    upliftValue: 0,
+    description: "",
+    zoningSummary: { zone: "—", maxHeight: "—", maxFAR: "—", currentFAR: "—", permittedUses: "—", setback: "—", parking: "—" },
+    options: [],
+  });
 
   useEffect(() => {
     document.title = "Planning — RealHQ";
+    fetch("/api/user/planning")
+      .then((r) => r.json())
+      .then((data: { assets?: ApiAsset[] }) => {
+        const assets = data.assets ?? [];
+        // Flatten all planning entries across assets
+        const apps: PlanningApplication[] = assets.flatMap((asset) =>
+          (asset.planningHistory ?? []).map((e) => ({
+            id: e.id,
+            reference: e.refNumber,
+            address: asset.location,
+            description: e.description,
+            distance: e.distanceFt ? ftToMi(e.distanceFt) : "—",
+            status: mapStatus(e.status),
+            impact: mapImpact(e.impact),
+            impactReason: e.notes,
+            submittedDate: e.submittedDate ? new Date(e.submittedDate).toLocaleDateString("en-US", { month: "short", year: "numeric" }) : "—",
+          }))
+        );
+        setApplications(apps);
+
+        // Use devPotential from first asset if available
+        const firstAsset = assets[0];
+        if (firstAsset?.devPotential) {
+          const dp = firstAsset.devPotential;
+          setDevPotential({
+            level: dp.level ?? "medium",
+            upliftValue: dp.upliftEstimate ?? 0,
+            description: dp.description ?? "",
+            zoningSummary: dp.zoningSummary as DevPotential["zoningSummary"] ?? devPotential.zoningSummary,
+            options: dp.options ?? [],
+          });
+        }
+      })
+      .catch(() => {});
   }, []);
-
-  // Demo data - in production this comes from API
-  const applications: PlanningApplication[] = [
-    {
-      id: "app-1",
-      reference: "APP-2026-0142",
-      address: "2801 SW 3rd Ave",
-      description: "New office development — 120-unit Class A office",
-      distance: "0.2mi",
-      status: "PENDING",
-      impact: "negative",
-      impactReason: "Competing use (Class A office) within 0.2 miles of your property. 120 units adds approximately 85,000 sq ft of competing office supply to the submarket. Current vacancy is 11.2% — additional supply could increase vacancy and suppress rental growth. The development is also likely to create construction disruption for 18–24 months.",
-      submittedDate: "Jan 2026",
-    },
-    {
-      id: "app-2",
-      reference: "APP-2025-0987",
-      address: "3200 Ponce de Leon",
-      description: "Mixed-use tower — 22-storey residential + retail",
-      distance: "0.4mi",
-      status: "APPROVED",
-      impact: "negative",
-      impactReason: "High-density development creating traffic impact. 22 storeys with 180 residential units will generate significant additional vehicle movements during peak hours. Construction phase (24-30 months) will cause access disruption.",
-      submittedDate: "Dec 2025",
-    },
-    {
-      id: "app-3",
-      reference: "APP-2026-0203",
-      address: "2725 Ponce de Leon",
-      description: "Restaurant & bar — Change of use from retail",
-      distance: "0.1mi",
-      status: "PENDING",
-      impact: "positive",
-      impactReason: "Adds amenity value. Restaurant/bar at ground level improves neighbourhood appeal for office tenants. Similar amenity additions in comparable submarkets have correlated with 2–4% rental premium for nearby office space. No competing use or traffic concerns at this scale.",
-      submittedDate: "Feb 2026",
-    },
-    {
-      id: "app-4",
-      reference: "APP-2025-0756",
-      address: "Merrick Park",
-      description: "Public space renovation — Landscaping + seating + lighting",
-      distance: "0.3mi",
-      status: "APPROVED",
-      impact: "positive",
-      impactReason: "Public realm improvement enhancing neighbourhood quality. Green space improvements correlate with 3–5% value uplift for nearby commercial properties. Zero negative impact.",
-      submittedDate: "Nov 2025",
-    },
-    {
-      id: "app-5",
-      reference: "APP-2026-0124",
-      address: "148 Almeria Ave",
-      description: "Residential addition — Single family extension",
-      distance: "0.6mi",
-      status: "PENDING",
-      impact: "neutral",
-      impactReason: "Small-scale residential work with no material impact on commercial property values or market conditions. Too distant and different use class to affect your property.",
-      submittedDate: "Mar 2026",
-    },
-  ];
-
-  const devPotential: DevPotential = {
-    level: "medium",
-    upliftValue: 420000,
-    description: "Current zoning (C-MX2) permits mixed-use up to 5 storeys. Your site has 0.4 FAR remaining. Options include: vertical extension (2 additional floors), rear lot conversion, or change of use to residential on upper floors.",
-    zoningSummary: {
-      zone: "C-MX2 (Mixed Use)",
-      maxHeight: "75 ft / 5 storeys",
-      maxFAR: "3.0",
-      currentFAR: "2.6",
-      permittedUses: "Office, Retail, Residential",
-      setback: "10 ft",
-      parking: "1 per 400 sq ft",
-    },
-    options: [
-      {
-        title: "Vertical extension (+2 floors)",
-        description: "Add 8,400 sq ft office. Est cost: $1.2M. GDV uplift: $1.6M. Net: +$420k.",
-        cost: 1200000,
-        gdv: 1600000,
-        net: 420000,
-      },
-      {
-        title: "Rear lot conversion",
-        description: "Convert parking area to small retail unit. Est cost: $380k. GDV uplift: $520k. Net: +$140k.",
-        cost: 380000,
-        gdv: 520000,
-        net: 140000,
-      },
-      {
-        title: "Change of use (upper floors → resi)",
-        description: "Convert floors 2–3 to 6 apartments. Est cost: $960k. GDV uplift: $1.3M. Net: +$340k.",
-        cost: 960000,
-        gdv: 1300000,
-        net: 340000,
-      },
-    ],
-  };
 
   const stats = {
     total: applications.length,
