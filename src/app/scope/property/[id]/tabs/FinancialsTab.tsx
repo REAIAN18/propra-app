@@ -107,20 +107,18 @@ export function FinancialsTab({ deal }: Props) {
     }
   }
 
-  const irrColor = irrResult.irr >= 0.12 ? "var(--grn)" : irrResult.irr >= 0.07 ? "var(--amb)" : "var(--red)";
-  const emColor = equityResult.equityMultiple >= 1.8 ? "var(--grn)" : equityResult.equityMultiple >= 1.2 ? "var(--amb)" : "var(--red)";
-
+  const irrColor: "green" | "amber" | "red" = irrResult.irr >= 0.12 ? "green" : irrResult.irr >= 0.07 ? "amber" : "red";
+  const emColor: "green" | "amber" | "red" = equityResult.equityMultiple >= 1.8 ? "green" : equityResult.equityMultiple >= 1.2 ? "amber" : "red";
   return (
     <>
       {/* Returns summary */}
       <div className={s.card}>
         <div className={s.cardTitle}>Returns summary</div>
         <div className={s.statRow}>
-          <MetricCard label="IRR (10yr)"      value={fmtPct(irrResult.irr)}               sub={`Confidence: ${irrResult.confidence}`} valueColor={irrColor} />
-          <MetricCard label="Equity multiple" value={fmtX(equityResult.equityMultiple)}    sub="Unlevered"                             valueColor={emColor} />
-          <MetricCard label="Deal score"      value={String(verdict.dealScore)}             sub={verdict.verdict} />
-          <MetricCard label="Total cost in"   value={fmtCcy(equityResult.totalCostIn)}      sub="Inc. SDLT + fees" />
-        </div>
+          <MetricCard label="IRR (10yr)"      value={fmtPct(irrResult.irr)}               subtitle={`Confidence: ${irrResult.confidence}`} color={irrColor} />
+          <MetricCard label="Equity multiple" value={fmtX(equityResult.equityMultiple)}    subtitle="Unlevered"                             color={emColor} />
+          <MetricCard label="Deal score"      value={String(verdict.dealScore)}             subtitle={verdict.verdict} />
+          <MetricCard label="Total cost in"   value={fmtCcy(equityResult.totalCostIn)}      subtitle="Inc. SDLT + fees" />        </div>
       </div>
 
       {/* Cash flow breakdown */}
