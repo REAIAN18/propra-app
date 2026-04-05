@@ -365,6 +365,22 @@ export default function PropertyDossierPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("Overview");
+  const [exporting, setExporting] = useState<string | null>(null);
+
+  const handleExportPdf = () => {
+    if (!id) return;
+    setExporting("pdf");
+    window.open(`/api/dealscope/properties/${id}/export/pdf`, "_blank");
+    setTimeout(() => setExporting(null), 3000);
+  };
+
+  const handleExportExcel = () => {
+    if (!id) return;
+    const a = document.createElement("a");
+    a.href = `/api/dealscope/properties/${id}/export/excel`;
+    a.download = "";
+    a.click();
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -453,15 +469,25 @@ export default function PropertyDossierPage() {
             hasLisPendens: deal.hasLisPendens,
             dataSources: deal.dataSources,
           }}
+          exporting={exporting}
           onBack={() => router.back()}
+          onExportMemo={handleExportPdf}
           onContact={() => setActiveTab("Overview")}
         />
 
         <div style={{ padding: "0 20px" }}>
-          <div className={s.tabs}>
-            {TABS.map(tab => (
-              <button key={tab} className={`${s.tab} ${activeTab === tab ? s.tabOn : ""}`} onClick={() => setActiveTab(tab)}>{tab}</button>
-            ))}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div className={s.tabs}>
+              {TABS.map(tab => (
+                <button key={tab} className={`${s.tab} ${activeTab === tab ? s.tabOn : ""}`} onClick={() => setActiveTab(tab)}>{tab}</button>
+              ))}
+            </div>
+            <button
+              onClick={handleExportExcel}
+              style={{ padding: "5px 12px", borderRadius: 6, background: "var(--s2)", border: "1px solid var(--s3)", color: "var(--tx2)", cursor: "pointer", fontSize: 11, fontWeight: 500, flexShrink: 0 }}
+            >
+              ↓ Excel
+            </button>
           </div>
           <div className={s.tabContent} style={{ paddingBottom: 40 }}>
             {activeTab === "Overview"       && <OverviewTab      deal={deal} prop={prop} />}
