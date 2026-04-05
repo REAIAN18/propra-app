@@ -623,6 +623,91 @@ export default function HoldSellPage() {
             </div>
           </div>
         ) : null}
+
+        {/* ── Tax Implications ─────────────────────────────────────────── */}
+        {!loading && sellCandidates.length > 0 && (() => {
+          const sellAsset = sellCandidates[0];
+          const sellPrice = sellAsset.sellPrice ?? 0;
+          const jurisdiction = portfolio.currency === "GBP" ? "UK" : "US";
+
+          return (
+            <div>
+              <div style={{ font: "500 9px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "2px", marginBottom: 12, paddingTop: 4 }}>
+                Tax Implications — {sellAsset.assetName}
+              </div>
+              <div style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: 10, overflow: "hidden" }}>
+                <div style={{ padding: "14px 18px", borderBottom: "1px solid var(--bdr)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <span style={{ font: "600 13px var(--sans)", color: "var(--tx)" }}>
+                    Capital Gains Estimate — {jurisdiction === "UK" ? "UK" : "US"}
+                  </span>
+                  <span style={{ font: "500 11px var(--sans)", color: "var(--tx3)" }}>Illustrative only</span>
+                </div>
+                <div style={{ padding: 18 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+                    <div>
+                      <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".5px", marginBottom: 4 }}>
+                        Acquisition Cost
+                      </div>
+                      <div style={{ fontFamily: "var(--serif)", fontSize: 17, color: "var(--tx3)" }}>—</div>
+                      <div style={{ font: "400 10px var(--sans)", color: "var(--acc)", marginTop: 2 }}>
+                        Add purchase price to calculate
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".5px", marginBottom: 4 }}>
+                        Estimated Sale Price
+                      </div>
+                      <div style={{ fontFamily: "var(--serif)", fontSize: 17, color: "var(--tx)" }}>
+                        {fmt(sellPrice, sym)}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".5px", marginBottom: 4 }}>
+                        Estimated Gain
+                      </div>
+                      <div style={{ fontFamily: "var(--serif)", fontSize: 17, color: "var(--tx3)" }}>—</div>
+                    </div>
+                    <div>
+                      <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".5px", marginBottom: 4 }}>
+                        {jurisdiction === "UK" ? "Estimated CGT (24%)" : "Estimated Federal CGT (20%)"}
+                      </div>
+                      <div style={{ fontFamily: "var(--serif)", fontSize: 17, color: "var(--tx3)" }}>—</div>
+                    </div>
+                  </div>
+
+                  {jurisdiction === "US" && (
+                    <div style={{ padding: 14, background: "var(--grn-lt)", border: "1px solid var(--grn-bdr)", borderRadius: 8, marginBottom: 12 }}>
+                      <div style={{ font: "600 11px var(--sans)", color: "var(--grn)", marginBottom: 4 }}>1031 Exchange Eligible</div>
+                      <div style={{ font: "300 12px/1.6 var(--sans)", color: "var(--tx2)" }}>
+                        Reinvest the full sale proceeds into a like-kind property within{" "}
+                        <strong style={{ color: "var(--tx)" }}>180 days</strong> to defer capital gains tax.
+                        Replacement property identification required within{" "}
+                        <strong style={{ color: "var(--tx)" }}>45 days</strong> of sale.
+                      </div>
+                    </div>
+                  )}
+                  {jurisdiction === "UK" && (
+                    <div style={{ padding: 14, background: "var(--acc-lt)", border: "1px solid var(--acc-bdr)", borderRadius: 8, marginBottom: 12 }}>
+                      <div style={{ font: "600 11px var(--sans)", color: "var(--acc)", marginBottom: 4 }}>Business Asset Disposal Relief</div>
+                      <div style={{ font: "300 12px/1.6 var(--sans)", color: "var(--tx2)" }}>
+                        If you qualify, Business Asset Disposal Relief reduces CGT to{" "}
+                        <strong style={{ color: "var(--tx)" }}>10%</strong> on up to £1M of lifetime gains.
+                        Annual CGT exemption of{" "}
+                        <strong style={{ color: "var(--tx)" }}>£3,000</strong> applies per individual.
+                      </div>
+                    </div>
+                  )}
+
+                  <div style={{ padding: "10px 14px", background: "var(--s2)", border: "1px solid var(--bdr)", borderRadius: 8, font: "300 11px/1.5 var(--sans)", color: "var(--tx3)" }}>
+                    ⚠ This is an illustrative estimate only. Tax liability depends on your individual circumstances,
+                    {jurisdiction === "US" ? " depreciation recapture (§1250), state taxes, and holding period." : " your marginal rate, indexation allowance, and other reliefs."}
+                    {" "}Consult your tax advisor before making any decisions.
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
       </main>
     </AppShell>
   );

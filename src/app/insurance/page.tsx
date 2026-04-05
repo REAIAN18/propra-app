@@ -105,44 +105,7 @@ export default function InsurancePage() {
     }).catch((err) => console.error("Failed to fetch insurance data:", err));
   }, []);
 
-  const quotes: QuoteData[] = [
-    {
-      id: "1",
-      carrier: "Hartford",
-      carrierRating: "A+ (Superior)",
-      policyType: "Property All-Risk",
-      premium: 13300,
-      cover: 16000000,
-      deductible: 25000,
-      saving: 5100,
-      isBest: true,
-      coverage: {
-        building: "$16M",
-        businessInterruption: "12 months",
-        liability: "$2M",
-        deductible: "$25,000",
-        flood: { included: true },
-        hurricane: { included: true },
-      },
-      carrierIntel: {
-        amBestRating: "A+ (Superior)",
-        avgClaimsPay: "14 days",
-        claimsSatisfaction: 4,
-        flMarketPresence: "Strong",
-        creSpecialism: "Office focus",
-        renewalStability: "Low rate volatility",
-      },
-      pros: [
-        "Best price at same cover level",
-        "Fastest claims — 14 day avg payout",
-        "Strong CRE specialism in FL",
-        "Flood + wind included, no sub-deductible",
-      ],
-      cons: [],
-      warnings: ["Market value basis, not agreed value"],
-      review: "Hartford paid our hurricane claim within 10 business days. No arguments, no reductions. Adjuster on site within 48 hours.",
-    },
-  ];
+  const quotes: QuoteData[] = [];
 
   const totalPremium = policies.reduce((sum, p) => sum + p.premium, 0);
   const marketRate = insuranceBenchmarks
@@ -443,9 +406,15 @@ export default function InsurancePage() {
             {/* Quotes Section (shown when showQuotes is true) */}
             {showQuotes && (
               <>
-                <div style={{ font: "500 9px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "2px", margin: "28px 0 14px" }}>Quotes — Coral Gables Office Park</div>
-                <p style={{ font: "300 12px var(--sans)", color: "var(--tx3)", margin: "-8px 0 14px" }}>4 quotes from CoverForce in 8 seconds. Compared on price, cover, carrier strength, claims history, and renewal stability.</p>
+                <div style={{ font: "500 9px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "2px", margin: "28px 0 14px" }}>Quotes</div>
+                <p style={{ font: "300 12px var(--sans)", color: "var(--tx3)", margin: "-8px 0 14px" }}>Live quotes from CoverForce — compared on price, cover, carrier strength, claims history, and renewal stability.</p>
 
+                {quotes.length === 0 && (
+                  <div style={{ padding: "32px", textAlign: "center", background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px", marginBottom: "8px" }}>
+                    <div style={{ font: "500 13px var(--sans)", color: "var(--tx)", marginBottom: "6px" }}>CoverForce integration coming soon</div>
+                    <div style={{ font: "300 12px var(--sans)", color: "var(--tx3)" }}>Upload your policy documents and sign in to receive live quotes.</div>
+                  </div>
+                )}
                 {quotes.map((quote) => (
                   <div key={quote.id} style={{ background: "var(--s1)", border: quote.isBest ? "1px solid var(--grn-bdr)" : "1px solid var(--bdr)", borderRadius: "10px", marginBottom: "8px", overflow: "hidden", transition: "border-color .15s" }}>
                     {/* Quote Top */}

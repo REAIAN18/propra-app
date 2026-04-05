@@ -10,6 +10,11 @@ import { calculateCAPEX } from "@/lib/dealscope/calculations/capex";
 import { calculateEquityMultiple } from "@/lib/dealscope/calculations/equity";
 import { calculateVerdict } from "@/lib/dealscope/calculations/verdict";
 import type { Property as DealscopeProperty } from "@/types/dealscope";
+import { ComparablesTable } from "@/components/dealscope/ComparablesTable";
+import { MultipleValuations } from "@/components/dealscope/MultipleValuations";
+import { ServiceCharges } from "@/components/dealscope/ServiceCharges";
+import { DealScore } from "@/components/dealscope/DealScore";
+import { RiskFlags } from "@/components/dealscope/RiskFlags";
 import s from "./dossier.module.css";
 
 const TABS = ["Property", "Planning", "Title & Legal", "Environmental", "Ownership", "Financials", "Market", "Approach"];
@@ -347,6 +352,20 @@ function PropertyTab({ p, onRefresh }: { p: PropertyData; onRefresh: () => void 
 
   return (
     <>
+      {/* Risk flags */}
+      {(p.signals?.length || p.hasLisPendens || p.hasInsolvency || p.hasPlanningApplication || p.inFloodZone || p.epcRating) && (
+        <div className={s.card}>
+          <div className={s.cardTitle}>Risk flags</div>
+          <RiskFlags
+            signals={p.signals}
+            hasLisPendens={p.hasLisPendens}
+            hasInsolvency={p.hasInsolvency}
+            hasPlanningApplication={p.hasPlanningApplication}
+            inFloodZone={p.inFloodZone}
+            epcRating={p.epcRating}
+          />
+        </div>
+      )}
       {description && (
         <div className={s.card}>
           <div className={s.cardTitle}>Description</div>
@@ -859,7 +878,9 @@ function FinancialsTab({ p, onRefresh }: { p: PropertyData; onRefresh: () => voi
                 </div>
                 <div className={s.statBox}>
                   <div className={s.statLabel}>Deal score</div>
-                  <div className={s.statVal} style={{ color: vc }}>{verdictResult.dealScore}</div>
+                  <div className={s.statVal}>
+                    <DealScore score={verdictResult.dealScore} sublabel={verdictResult.verdict} />
+                  </div>
                 </div>
                 <div className={s.statBox}>
                   <div className={s.statLabel}>Total cost in</div>
@@ -1206,6 +1227,73 @@ function FinancialsTab({ p, onRefresh }: { p: PropertyData; onRefresh: () => voi
           </table>
         </div>
       )}
+
+      {/* ── MULTIPLE VALUATIONS ── */}
+      {rVal && (() => {
+        const mvScenarios = [];
+        if (rVal.income?.capitalisation) {
+          mvScenarios.push({
+            label: "Income capitalisation",
+            valueLow: rVal.income.capitalisation.valueLow ?? rVal.income.capitalisation.incomeCapValue * 0.9,
+            valueMid: rVal.income.capitalisation.valueMid ?? rVal.income.capitalisation.incomeCapValue,
+            valueHigh: rVal.income.capitalisation.valueHigh ?? rVal.income.capitalisation.incomeCapValue * 1.1,
+            method: "Income / yield",
+            confidence: "high" as const,
+          });
+        }
+        if (rVal.market) {
+          mvScenarios.push({
+            label: "Comparable sales",
+            valueLow: rVal.market.valueLow,
+            valueMid: rVal.market.valueMid,
+            valueHigh: rVal.market.valueHigh,
+            method: "Market comps",
+            confidence: (rVal.market.comps?.length > 2 ? "high" : "medium") as "high" | "medium",
+          });
+        }
+        if (rVal.residual) {
+          mvScenarios.push({
+            label: "Residual (development)",
+            valueLow: rVal.residual.valueLow ?? rVal.residual.grossDevValue * 0.85,
+            valueMid: rVal.residual.valueMid ?? rVal.residual.grossDevValue * 0.9,
+            valueHigh: rVal.residual.valueHigh ?? rVal.residual.grossDevValue * 0.95,
+            method: "GDV residual",
+            confidence: "low" as const,
+          });
+        }
+        if (rVal.replacement) {
+          mvScenarios.push({
+            label: "Replacement cost",
+            valueLow: rVal.replacement.valueLow ?? rVal.replacement.totalReplacementCost * 0.9,
+            valueMid: rVal.replacement.valueMid ?? rVal.replacement.totalReplacementCost,
+            valueHigh: rVal.replacement.valueHigh ?? rVal.replacement.totalReplacementCost * 1.05,
+            method: "Depreciated cost",
+            confidence: "medium" as const,
+          });
+        }
+        if (mvScenarios.length === 0) return null;
+        return (
+          <div className={s.card}>
+            <div className={s.cardTitle}>Multiple valuations ({mvScenarios.length} methods)</div>
+            <MultipleValuations scenarios={mvScenarios} />
+          </div>
+        );
+      })()}
+
+      {/* ── SERVICE CHARGES ── */}
+      {(() => {
+        const sc = assumptions?.serviceChargeBreakdown;
+        if (!sc && !assumptions?.serviceCharge?.value) return null;
+        const items = sc
+          ? (Array.isArray(sc) ? sc : Object.entries(sc).map(([label, annualCost]) => ({ label, annualCost: annualCost as number })))
+          : [{ label: "Service charge", annualCost: assumptions.serviceCharge.value as number }];
+        return (
+          <div className={s.card}>
+            <div className={s.cardTitle}>Service charges</div>
+            <ServiceCharges items={items} totalBudget={assumptions?.serviceCharge?.value} />
+          </div>
+        );
+      })()}
     </>
   );
 }
@@ -1378,6 +1466,25 @@ function MarketTab({ p }: { p: PropertyData }) {
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+
+      {/* ── COMPARABLE TRANSACTIONS (ComparablesTable component) ── */}
+      {comps.length > 0 && (
+        <div className={s.card}>
+          <ComparablesTable
+            comps={comps.map((c: any) => ({
+              address: c.address || c.title || `Comparable ${comps.indexOf(c) + 1}`,
+              type: c.assetType || c.type,
+              sqft: c.sqft || c.buildingSizeSqft,
+              price: c.price,
+              pricePsf: c.psf || (c.price && (c.sqft || c.buildingSizeSqft) ? Math.round(c.price / (c.sqft || c.buildingSizeSqft)) : undefined),
+              date: c.date ? new Date(c.date).toLocaleDateString("en-GB", { year: "numeric", month: "short" }) : undefined,
+              distance: c.distance,
+              adjustedPsf: c.adjustedPsf,
+            }))}
+            title="Comparable transactions"
+          />
         </div>
       )}
 
