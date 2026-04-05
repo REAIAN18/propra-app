@@ -135,3 +135,9 @@ A ticket is NOT done until ALL of the following are true:
 ## Production
 Production URL: https://propra-app-orcin.vercel.app
 Verify all deploys against this URL. Do NOT use propra.vercel.app or propra-app.vercel.app — those are not this project.
+
+## ⚠️ CORRECT WORKING DIRECTORY
+
+**Always work from `/Users/ianbaron/Documents/projects/propra-app`** — this is the live GitHub-connected repo.
+
+Do NOT use `/Users/ianbaron/Documents/projects/propra` — that directory is not a git repository and is disconnected from GitHub. Deploying from it will push stale/wrong code to production.
