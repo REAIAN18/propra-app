@@ -109,7 +109,6 @@ export function FinancialsTab({ deal }: Props) {
 
   const irrColor: "green" | "amber" | "red" = irrResult.irr >= 0.12 ? "green" : irrResult.irr >= 0.07 ? "amber" : "red";
   const emColor: "green" | "amber" | "red" = equityResult.equityMultiple >= 1.8 ? "green" : equityResult.equityMultiple >= 1.2 ? "amber" : "red";
-
   return (
     <>
       {/* Returns summary */}
@@ -119,8 +118,7 @@ export function FinancialsTab({ deal }: Props) {
           <MetricCard label="IRR (10yr)"      value={fmtPct(irrResult.irr)}               subtitle={`Confidence: ${irrResult.confidence}`} color={irrColor} />
           <MetricCard label="Equity multiple" value={fmtX(equityResult.equityMultiple)}    subtitle="Unlevered"                             color={emColor} />
           <MetricCard label="Deal score"      value={String(verdict.dealScore)}             subtitle={verdict.verdict} />
-          <MetricCard label="Total cost in"   value={fmtCcy(equityResult.totalCostIn)}      subtitle="Inc. SDLT + fees" />
-        </div>
+          <MetricCard label="Total cost in"   value={fmtCcy(equityResult.totalCostIn)}      subtitle="Inc. SDLT + fees" />        </div>
       </div>
 
       {/* Cash flow breakdown */}
