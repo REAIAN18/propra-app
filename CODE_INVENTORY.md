@@ -42,7 +42,7 @@ health.ts(22) checkHealth()
 /api/insurance/ config quotes
 /api/energy/ quotes(GET+POST Octopus)
 /api/quotes/ insurance energy bind refinance(POST) sale-lead(POST)
-/api/user/ 30 sub-routes: assets portfolio insurance-summary insurance-risk energy-summary compliance-summary compliance/renew financing-summary hold-sell-scenarios income-opportunities income-opportunities/activate tenants tenants/actions rent-reviews leases/materialise lease-summary lettings documents noi-bridge monthly-financial financial-budget transactions work-orders contractors planning export ask-context ask requests acquisitions action-queue cash-flow-forecast loans
+/api/user/ 31 sub-routes: assets portfolio insurance-summary insurance-risk energy-summary compliance-summary compliance/renew financing-summary hold-sell-scenarios income-opportunities income-opportunities/activate tenants tenants/actions rent-reviews leases/materialise lease-summary lettings documents noi-bridge monthly-financial financial-budget transactions work-orders contractors planning export ask-context ask requests acquisitions action-queue cash-flow-forecast loans me(GET — session user name/email/id)
 /api/dealscope/ enrich(POST) pipeline(GET) search(GET — demo+LandRegistryPricePaid) alerts(GET/PATCH/DELETE) responses(POST) import/price-paid(POST CSV) import/ccod(POST CSV) test/import-sample(POST)
 /api/macro/ sofr(Federal Reserve)
 /api/dashboard/ summary(KPIs)
@@ -102,5 +102,6 @@ DATABASE_URL DIRECT_URL GOOGLE_MAPS_API_KEY ATTOM_API_KEY ANTHROPIC_API_KEY AWS_
 /lettings/[id] — letting detail: KPIs, enquiry list with covenant grades, HoTs action
 /assets/[id]/tenants/[tenantId] — tenant detail page (from missing-pages-design)
 /transactions/[roomId] — transaction detail: stage pipeline, task checklists, document room, parties, costs
+/settings — profile (/api/user/me + usePortfolio), email notification toggles (localStorage), acquisition strategy (/api/user/acquisition-strategy), data export
 
 ## DO NOT: create duplicates, rebuild APIs, replace components, delete src/lib/, modify migrations, use old CSS vars, push to main
