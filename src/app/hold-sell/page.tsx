@@ -2,7 +2,7 @@
 
 export const dynamic = "force-dynamic";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
@@ -197,7 +197,14 @@ function AssumptionsPanel({ assetId, sym }: AssumptionsPanelProps) {
 export default function HoldSellPage() {
   const [saleActioned, setSaleActioned] = useState<Set<string>>(new Set());
   const [openAssumptions, setOpenAssumptions] = useState<string | null>(null);
+  const [sofr, setSofr] = useState<number | null>(null);
   const { scenarios: apiScenarios, loading: apiLoading } = useHoldSellScenarios();
+
+  useEffect(() => {
+    fetch("/api/macro/sofr").then(r => r.ok ? r.json() : null).then(d => {
+      if (d?.sofr?.value != null) setSofr(d.sofr.value);
+    }).catch(() => {});
+  }, []);
   const { portfolioId } = useNav();
   const { portfolio } = usePortfolio(portfolioId);
   const sym = portfolio.currency === "USD" ? "$" : "£";
@@ -234,6 +241,26 @@ export default function HoldSellPage() {
     }),
     ...incomplete,
   ];
+
+  // Portfolio ranking — sorted by sell advantage (sellPrice − estimatedValue)
+  const rankedBySellAdvantage = [...complete].sort((a, b) => {
+    const advA = (a.sellPrice ?? 0) - (a.estimatedValue ?? 0);
+    const advB = (b.sellPrice ?? 0) - (b.estimatedValue ?? 0);
+    return advB - advA;
+  });
+  const bestSellCandidate = rankedBySellAdvantage[0] ?? null;
+
+  // Avg portfolio cap rate (net income / valuation)
+  const assetsWithYield = portfolio.assets.filter(a => {
+    const val = a.valuationUSD ?? a.valuationGBP ?? 0;
+    return val > 0 && a.netIncome > 0;
+  });
+  const avgCapRate = assetsWithYield.length > 0
+    ? assetsWithYield.reduce((sum, a) => {
+        const val = a.valuationUSD ?? a.valuationGBP ?? 0;
+        return sum + (a.netIncome / val) * 100;
+      }, 0) / assetsWithYield.length
+    : null;
 
   return (
     <AppShell>
@@ -310,79 +337,136 @@ export default function HoldSellPage() {
           </div>
         )}
 
-        {/* Issue / Cost / Action banner */}
-        {!loading && complete.length > 0 && (
-          <div
-            className="rounded-xl px-5 py-3.5"
-            style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}
-          >
-            <div className="text-xs" style={{ color: "var(--tx3)" }}>
-              {sellCandidates.length} asset{sellCandidates.length !== 1 ? "s" : ""} where exit IRR exceeds hold IRR.{" "}
-              <span style={{ color: "var(--amb)", fontWeight: 600 }}>{fmt(totalSellValue, sym)}</span> total exit value available from sell candidates.{" "}
-              RealHQ manages the full transaction — buyer market approach and execution.
-            </div>
-          </div>
-        )}
-
-        {/* RealHQ Direct callout */}
+        {/* Market Timing */}
         {!loading && scenarios.length > 0 && (
-          <div className="flex items-start gap-3 px-6 py-4 rounded-xl text-[12px] leading-relaxed" style={{ background: "var(--s1)", border: "1px solid var(--bdr)" }}>
-            <div className="text-lg mt-0.5" style={{ color: "var(--acc)" }}>⚡</div>
-            <div className="flex-1">
-              <strong className="block mb-0.5 text-sm" style={{ color: "var(--tx)" }}>RealHQ models every scenario with live market data — then manages the transaction</strong>
-              <p style={{ color: "var(--tx3)" }}>Sell candidates get a full buyer market approach and transaction management. Hold assets get optimisation across income, costs, and compliance.</p>
+          <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}>
+            <div className="px-5 py-3.5 flex items-center justify-between" style={{ borderBottom: "1px solid var(--bdr)" }}>
+              <h4 className="text-[13px] font-semibold" style={{ color: "var(--tx)" }}>Is Now a Good Time to Sell?</h4>
+              <span className="text-[11px] font-medium" style={{ color: "var(--acc)" }}>Market Timing</span>
             </div>
-          </div>
-        )}
-
-        {/* Portfolio Recommendation */}
-        {!loading && complete.length > 0 && (
-          <div className="rounded-xl p-6" style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}>
-            <div className="text-[9px] font-medium uppercase tracking-wider mb-3" style={{ fontFamily: "var(--mono)", color: "var(--tx3)", letterSpacing: "2px" }}>
-              Your Portfolio
-            </div>
-            <div className="mb-4">
-              <div className="text-2xl font-semibold mb-2" style={{ fontFamily: "var(--serif)", color: "var(--tx)" }}>
-                {holdCandidates.length >= sellCandidates.length
-                  ? "Hold & Optimise"
-                  : "Selective Exit — Recycle Capital"}
-              </div>
-              <div className="text-sm mb-4" style={{ color: "var(--tx3)" }}>
-                {holdCandidates.length >= sellCandidates.length
-                  ? `${holdCandidates.length} assets with strong hold thesis. ${sellCandidates.length > 0 ? `Sell ${sellCandidates.length} to recycle into higher-return positions.` : "No sell catalysts at current market pricing."}`
-                  : `${sellCandidates.length} assets where exit IRR exceeds hold. ${fmt(totalSellValue, sym)} available to redeploy.`}
-              </div>
-              <div className="flex items-baseline gap-3 mb-1">
-                <span className="text-xs" style={{ color: "var(--tx3)" }}>Exit value</span>
-                <span className="text-3xl font-bold" style={{ fontFamily: "var(--serif)", color: "var(--grn)" }}>
-                  {fmt(totalSellValue, sym)}
+            <div style={{ padding: "18px" }}>
+              <div className="text-[12px] mb-4 px-3 py-2.5 rounded-lg" style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.2)", color: "var(--tx)" }}>
+                <strong>Neutral market conditions.</strong>{" "}
+                <span style={{ color: "var(--tx3)" }}>
+                  {sofr != null
+                    ? `Rates at ${sofr.toFixed(2)}% are constraining buyer pools. Strong assets are sellable; weaker assets may want to wait.`
+                    : "Monitor rate environment and cap rate compression before initiating exit."}
                 </span>
               </div>
-              <div className="text-xs" style={{ color: "var(--tx3)" }}>
-                {sellCandidates.length} asset{sellCandidates.length !== 1 ? "s" : ""} at market pricing
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "14px" }}>
+                {[
+                  {
+                    label: "Cap Rate Trend",
+                    value: avgCapRate != null ? `${avgCapRate.toFixed(1)}%` : "—",
+                    sub: avgCapRate != null ? "portfolio avg yield" : "Add asset data",
+                    color: "var(--amb)",
+                  },
+                  {
+                    label: "SOFR / Rate Env",
+                    value: sofr != null ? `${sofr.toFixed(2)}%` : "—",
+                    sub: sofr != null ? "current benchmark rate" : "Loading...",
+                    color: sofr != null && sofr > 5 ? "var(--amb)" : "var(--grn)",
+                  },
+                  { label: "Days on Market", value: "—", sub: "No data connected", color: "var(--tx3)" },
+                  { label: "New Supply", value: "—", sub: "No data connected", color: "var(--tx3)" },
+                ].map(ind => (
+                  <div key={ind.label}>
+                    <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".5px", marginBottom: "4px" }}>{ind.label}</div>
+                    <div style={{ fontFamily: "var(--serif)", fontSize: "17px", color: ind.color }}>{ind.value}</div>
+                    <div style={{ font: "300 10px var(--sans)", color: "var(--tx3)", marginTop: "2px" }}>{ind.sub}</div>
+                  </div>
+                ))}
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() =>
-                  postTransactionSaleLead({ action: "optimise", portfolioName: "Your Portfolio", sellPrice: fmt(totalSellValue, sym) })
-                }
-                className="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90"
-                style={{ backgroundColor: "var(--acc)", color: "#fff" }}
-              >
-                Optimise portfolio →
-              </button>
-              <button
-                onClick={() =>
-                  postTransactionSaleLead({ action: "test_market", portfolioName: "Your Portfolio", sellPrice: fmt(totalSellValue, sym) })
-                }
-                className="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90"
-                style={{ backgroundColor: "var(--s2)", color: "var(--tx3)", border: "1px solid var(--bdr)" }}
-              >
-                Test market →
-              </button>
-            </div>
           </div>
+        )}
+
+        {/* Portfolio Ranking */}
+        {!loading && complete.length > 0 && bestSellCandidate && (
+          <>
+            {/* Best sell candidate insight */}
+            {(() => {
+              const adv = (bestSellCandidate.sellPrice ?? 0) - (bestSellCandidate.estimatedValue ?? 0);
+              const isHold = adv <= 0;
+              return (
+                <div className="rounded-xl p-5 flex items-start justify-between gap-4" style={{ background: "var(--s1)", border: "1px solid var(--bdr)" }}>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[9px] font-semibold uppercase tracking-widest mb-1" style={{ fontFamily: "var(--mono)", color: "var(--tx3)" }}>
+                      {isHold ? "Hold Thesis" : "Best Sell Candidate"}
+                    </div>
+                    <div className="text-base font-semibold mb-1" style={{ color: "var(--tx)" }}>{bestSellCandidate.assetName}</div>
+                    <div className="text-[12px]" style={{ color: "var(--tx3)" }}>
+                      {isHold
+                        ? `Hold NPV (${fmt(bestSellCandidate.estimatedValue ?? 0, sym)}) exceeds sell (${fmt(bestSellCandidate.sellPrice ?? 0, sym)}) across all assets. No exit catalyst at current pricing.`
+                        : `Exit value exceeds hold by ${fmt(adv, sym)}. ${holdCandidates.length > 0 ? `${holdCandidates.map(h => h.assetName).join(", ")}: hold strongly recommended.` : ""}`}
+                    </div>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <div className="text-[11px] font-bold uppercase" style={{ color: isHold ? "var(--grn)" : "var(--red)", letterSpacing: "1px" }}>
+                      {isHold ? "HOLD" : "SELL"}
+                    </div>
+                    {!isHold && <div className="text-[11px]" style={{ color: "var(--tx3)" }}>+{fmt(adv, sym)} advantage</div>}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Ranked by sell advantage */}
+            <div className="rounded-xl overflow-hidden" style={{ background: "var(--s1)", border: "1px solid var(--bdr)" }}>
+              <div className="px-5 py-3.5 flex items-center justify-between" style={{ borderBottom: "1px solid var(--bdr)" }}>
+                <h4 className="text-[13px] font-semibold" style={{ color: "var(--tx)" }}>All Assets — Ranked by Exit Advantage</h4>
+                <span className="text-[10px]" style={{ fontFamily: "var(--mono)", color: "var(--tx3)" }}>Exit advantage = Sell − Hold value</span>
+              </div>
+              {rankedBySellAdvantage.map(s => {
+                const adv = (s.sellPrice ?? 0) - (s.estimatedValue ?? 0);
+                const cfg = recommendationConfig[s.recommendation!] ?? recommendationConfig.hold;
+                return (
+                  <div key={s.assetId} className="px-5 py-3.5 flex items-center gap-3" style={{ borderBottom: "1px solid var(--bdr-lt)" }}>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[13px] font-medium" style={{ color: "var(--tx)" }}>{s.assetName}</div>
+                      <div className="text-[11px]" style={{ color: "var(--tx3)" }}>{fmt(s.estimatedValue ?? 0, sym)} value · {s.assetType}</div>
+                    </div>
+                    <span className="shrink-0 text-[9px] font-semibold px-2 py-0.5 rounded" style={{ background: cfg.bgColor, color: cfg.color, border: `1px solid ${cfg.borderColor}` }}>
+                      {cfg.label.toUpperCase()}
+                    </span>
+                    <div className="shrink-0 text-right" style={{ minWidth: "90px" }}>
+                      <div className="text-[11px]" style={{ fontFamily: "var(--mono)", color: "var(--tx3)" }}>Hold: {fmt(s.estimatedValue ?? 0, sym)}</div>
+                      <div className="text-[11px]" style={{ fontFamily: "var(--mono)", color: "var(--tx3)" }}>Sell: {fmt(s.sellPrice ?? 0, sym)}</div>
+                    </div>
+                    <div className="shrink-0 text-right" style={{ minWidth: "80px" }}>
+                      <div className="text-[11px] font-semibold" style={{ fontFamily: "var(--mono)", color: adv > 0 ? "var(--red)" : "var(--grn)" }}>
+                        {adv > 0 ? `+${fmt(adv, sym)} sell` : `+${fmt(Math.abs(adv), sym)} hold`}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* CTA banner */}
+            <div className="rounded-xl px-5 py-4 flex items-center justify-between gap-4" style={{ background: "var(--s1)", border: "1px solid var(--bdr)" }}>
+              <div className="text-[12px]" style={{ color: "var(--tx3)" }}>
+                <span style={{ color: "var(--amb)", fontWeight: 600 }}>{fmt(totalSellValue, sym)}</span> total exit value from sell candidates.
+                RealHQ manages the full transaction — buyer market approach and execution.
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={() => postTransactionSaleLead({ action: "optimise", portfolioName: "Your Portfolio", sellPrice: fmt(totalSellValue, sym) })}
+                  className="px-4 py-2 rounded-lg text-sm font-semibold"
+                  style={{ backgroundColor: "var(--acc)", color: "#fff" }}
+                >
+                  Optimise portfolio →
+                </button>
+                <button
+                  onClick={() => postTransactionSaleLead({ action: "test_market", portfolioName: "Your Portfolio", sellPrice: fmt(totalSellValue, sym) })}
+                  className="px-4 py-2 rounded-lg text-sm font-semibold"
+                  style={{ backgroundColor: "var(--s2)", color: "var(--tx3)", border: "1px solid var(--bdr)" }}
+                >
+                  Test market →
+                </button>
+              </div>
+            </div>
+          </>
         )}
 
         {/* Asset Scenarios */}
