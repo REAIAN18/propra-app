@@ -74,9 +74,9 @@ Compliance: ComplianceCertificate
 Planning: PlanningApplication
 LandRegistry: LandRegistryPricePaid LandRegistryCCOD
 
-## Components (21) — all need dark restyle
+## Components (20)
 
-PageHero G2NComparisonCard MetricCard ActionAlert DirectCallout HoldSellRecommendation PolicyUploadWidget LeaseUploadModal PortfolioCalculator RefinanceWidget AskPanel NOIBridge BarChart LineChart RevenueChart Badge CopyLink(keep) Skeleton(keep) SectionHeader ActionQueueDrawer Wave2Banner(remove)
+PageHero G2NComparisonCard MetricCard ActionAlert DirectCallout HoldSellRecommendation PolicyUploadWidget LeaseUploadModal PortfolioCalculator RefinanceWidget AskPanel NOIBridge BarChart LineChart RevenueChart Badge CopyLink(keep) Skeleton(keep) SectionHeader ActionQueueDrawer
 
 ## Hooks (6)
 
