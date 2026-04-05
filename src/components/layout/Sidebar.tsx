@@ -278,6 +278,11 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
           label: "Financials",
           icon: <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="1.5" y="1.5" width="11" height="11" rx="1.5"/><path d="M4.5 9.5V7M7 9.5V5M9.5 9.5V3"/></svg>,
         },
+        {
+          href: "/reports",
+          label: "Reports",
+          icon: <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="1.5" width="10" height="11" rx="1.2"/><path d="M4.5 4.5h5M4.5 7h5M4.5 9.5h3"/></svg>,
+        },
       ],
     },
   ];
