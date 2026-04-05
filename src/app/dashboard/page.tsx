@@ -1513,23 +1513,23 @@ export default function DashboardPage() {
                       const isUrgent = lease.daysToExpiry <= 90;
                       const annualRent = lease.sqft * lease.rentPerSqft;
                       return (
-                        <div key={i} style={{ padding: "12px 16px", borderRight: i < expiringLeases.length - 1 ? "0.5px solid #f3f4f6" : "none", cursor: "pointer", transition: "background .1s", background: isUrgent ? "#fffbfb" : "transparent" }}
-                          onMouseEnter={(e) => e.currentTarget.style.background = "#fafafa"}
-                          onMouseLeave={(e) => e.currentTarget.style.background = isUrgent ? "#fffbfb" : "transparent"}
+                        <div key={i} style={{ padding: "12px 16px", borderRight: i < expiringLeases.length - 1 ? "0.5px solid var(--bdr)" : "none", cursor: "pointer", transition: "background .1s", background: isUrgent ? "rgba(248,113,113,.05)" : "transparent" }}
+                          onMouseEnter={(e) => e.currentTarget.style.background = "var(--s2)"}
+                          onMouseLeave={(e) => e.currentTarget.style.background = isUrgent ? "rgba(248,113,113,.05)" : "transparent"}
                         >
                           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
                             <div style={{ font: "600 12px/1 Inter, system-ui, sans-serif", color: "var(--tx)" }}>{lease.tenant}</div>
-                            <div style={{ font: "700 10px/1 Inter, system-ui, sans-serif", padding: "2px 7px", borderRadius: "10px", color: isUrgent ? "#dc2626" : "#d97706", background: isUrgent ? "#fee2e2" : "#fef3c7" }}>
+                            <div style={{ font: "700 10px/1 Inter, system-ui, sans-serif", padding: "2px 7px", borderRadius: "10px", color: isUrgent ? "var(--red)" : "var(--amb)", background: isUrgent ? "rgba(248,113,113,.10)" : "rgba(251,191,36,.10)" }}>
                               {lease.daysToExpiry}d
                             </div>
                           </div>
                           <div style={{ fontSize: "10px", color: "var(--tx3, #555568)", marginBottom: "5px", lineHeight: 1.5 }}>
                             {lease.asset} · {fmt(annualRent, portfolio.currency)}/yr
                           </div>
-                          <div style={{ height: "3px", background: "#f3f4f6", borderRadius: "2px", overflow: "hidden", marginBottom: "7px" }}>
-                            <div style={{ height: "100%", borderRadius: "2px", background: isUrgent ? "#dc2626" : "#d97706", width: `${100 - (lease.daysToExpiry / 365 * 100)}%`, transition: "width 1s ease .7s" }} />
+                          <div style={{ height: "3px", background: "var(--s3, #1f1f28)", borderRadius: "2px", overflow: "hidden", marginBottom: "7px" }}>
+                            <div style={{ height: "100%", borderRadius: "2px", background: isUrgent ? "var(--red)" : "var(--amb)", width: `${100 - (lease.daysToExpiry / 365 * 100)}%`, transition: "width 1s ease .7s" }} />
                           </div>
-                          <Link href="/rent-clock" style={{ font: isUrgent ? "600 11px/1 Inter, system-ui, sans-serif" : "600 11px/1 Inter, system-ui, sans-serif", color: isUrgent ? "#34d399" : "#6b7280", textDecoration: "none" }}>
+                          <Link href="/rent-clock" style={{ font: "600 11px/1 Inter, system-ui, sans-serif", color: isUrgent ? "var(--grn)" : "var(--tx3)", textDecoration: "none" }}>
                             {isUrgent ? "✓ Letter ready — send now →" : "Review Q4 →"}
                           </Link>
                         </div>
