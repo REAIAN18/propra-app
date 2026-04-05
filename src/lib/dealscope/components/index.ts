@@ -4,7 +4,7 @@
  * Import from here: import { HeroPanel, DealScore } from "@/lib/dealscope/components"
  */
 export { HeroPanel } from "@/components/dealscope/HeroPanel";
-export type { HeroPanelProperty } from "@/components/dealscope/HeroPanel";
+export type { HeroPanelProperty, HeroPanelSignal } from "@/components/dealscope/HeroPanel";
 export { VerdictBadge } from "@/components/dealscope/VerdictBadge";
 export { MetricCard } from "@/components/dealscope/MetricCard";
 export { AISummary } from "@/components/dealscope/AISummary";
@@ -18,3 +18,5 @@ export type { ValuationScenario } from "@/components/dealscope/MultipleValuation
 export { ServiceCharges } from "@/components/dealscope/ServiceCharges";
 export type { ServiceChargeItem } from "@/components/dealscope/ServiceCharges";
 export { InlineEdit } from "@/components/dealscope/InlineEdit";
+export { EPCCard } from "@/components/dealscope/EPCCard";
+export type { EPCCardProps, EPCUpgrade } from "@/components/dealscope/EPCCard";
