@@ -221,7 +221,7 @@ export default function DashboardPage() {
                 justifyContent: "center",
                 gap: "8px"
               }}
-              onMouseEnter={(e) => e.currentTarget.style.background = "#6d5ce0"}
+              onMouseEnter={(e) => e.currentTarget.style.background = "var(--acc-lt, rgba(124,106,240,.15))"}
               onMouseLeave={(e) => e.currentTarget.style.background = "var(--acc, #7c6af0)"}
               >
                 <span>+</span>
@@ -1435,7 +1435,7 @@ export default function DashboardPage() {
                         </div>
                         <div style={{ padding: "8px 15px", background: "var(--s1, #111116)", borderTop: "0.5px solid var(--bdr, #252533)", font: "600 11px/1 Inter, system-ui, sans-serif", color: "var(--tx3, #555568)", display: "flex", justifyContent: "flex-end", transition: "color .12s" }}
                           onMouseEnter={(e) => e.currentTarget.style.color = "var(--tx)"}
-                          onMouseLeave={(e) => e.currentTarget.style.color = "#6b7280"}
+                          onMouseLeave={(e) => e.currentTarget.style.color = "var(--tx3)"}
                         >
                           View asset →
                         </div>
@@ -1450,7 +1450,7 @@ export default function DashboardPage() {
           {/* Full-width "Where your money is" opportunities card - per v9 design */}
           {opportunities.length > 0 && (
             <div className="animate-stagger-4" style={{ background: "var(--s1)", border: "0.5px solid var(--bdr)", borderRadius: "14px", overflow: "hidden", marginBottom: "8px" }}>
-              <div style={{ padding: "12px 18px", borderBottom: "0.5px solid #f3f4f6", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ padding: "12px 18px", borderBottom: "0.5px solid var(--bdr)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <div>
                   <p style={{ fontSize: "13px", fontWeight: 500, color: "var(--tx)", margin: 0 }}>Where your money is</p>
                   <div style={{ fontSize: "11px", color: "var(--tx3, #555568)", marginTop: "2px" }}>RealHQ has found these — ranked by what they&apos;re worth to you annually</div>
@@ -1466,8 +1466,8 @@ export default function DashboardPage() {
               </div>
               {opportunities.map((opp, i) => (
                 <Link key={i} href={opp.route} style={{ textDecoration: "none", color: "inherit" }}>
-                  <div style={{ display: "flex", alignItems: "center", padding: "10px 18px", borderBottom: i < opportunities.length - 1 ? "0.5px solid #f9fafb" : "none", gap: "12px", cursor: "pointer", transition: "background .1s" }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = "#fafafa"}
+                  <div style={{ display: "flex", alignItems: "center", padding: "10px 18px", borderBottom: i < opportunities.length - 1 ? "0.5px solid var(--bdr)" : "none", gap: "12px", cursor: "pointer", transition: "background .1s" }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = "var(--s2)"}
                     onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
                   >
                     <div style={{ font: "500 10px/1 'Courier New', monospace", color: "var(--tx3, #555568)", width: "18px", flexShrink: 0 }}>
@@ -1476,8 +1476,8 @@ export default function DashboardPage() {
                     <div style={{ flex: 1, fontSize: "12.5px", fontWeight: 500, color: "var(--tx)" }}>
                       {opp.name} <span style={{ fontSize: "11px", fontWeight: 400, color: "var(--tx3, #555568)", marginLeft: "4px" }}>· {opp.desc}</span>
                     </div>
-                    <div style={{ width: "120px", background: "#f3f4f6", borderRadius: "3px", height: "5px", overflow: "hidden", flexShrink: 0 }}>
-                      <div style={{ background: "#d1d5db", height: "100%", width: `${opp.pct}%`, transition: "width 1s ease .4s" }} />
+                    <div style={{ width: "120px", background: "var(--s3, #1f1f28)", borderRadius: "3px", height: "5px", overflow: "hidden", flexShrink: 0 }}>
+                      <div style={{ background: "var(--tx3)", height: "100%", width: `${opp.pct}%`, transition: "width 1s ease .4s" }} />
                     </div>
                     <div style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: "15px", color: "var(--amb, #fbbf24)", minWidth: "62px", textAlign: "right", fontWeight: 500 }}>
                       {fmt(opp.value, portfolio.currency)}/yr
