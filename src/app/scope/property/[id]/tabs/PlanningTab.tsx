@@ -5,8 +5,8 @@
  * Assembles planning applications and dev potential (T11).
  */
 
-import { PlanningApplications } from "@/lib/dealscope/components";
-import type { PlanningApplication, PlanningStatus } from "@/lib/dealscope/components";
+import { PlanningApplications } from "@/components/dealscope/PlanningApplications";
+import type { PlanningApplication, PlanningStatus } from "@/components/dealscope/PlanningApplications";
 import type { RawDeal } from "./types";
 import s from "../dossier.module.css";
 

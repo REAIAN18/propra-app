@@ -1,8 +1,7 @@
 /**
  * GET /api/dealscope/properties/[id]/export/pdf
- * Generates and streams an IC Memo PDF for a DealScope property.
- * Uses puppeteer-core + @sparticuz/chromium (same pattern as brochure.ts).
- * Falls back to 501 if chromium is unavailable.
+ * Returns a printable HTML page for the IC Memo (open in new tab → browser print-to-PDF).
+ * No Puppeteer required — the browser handles PDF generation via print dialog.
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -11,7 +10,7 @@ import { renderMemoHTML, type MemoData } from "@/lib/dealscope-memo-template";
 import { analyseProperty, type AnalysisInput, type ComparableSale } from "@/lib/dealscope-deal-analysis";
 import { normaliseRegion, normaliseAssetType } from "@/lib/data/scout-benchmarks";
 
-export const maxDuration = 60;
+export const maxDuration = 30;
 
 export async function GET(
   req: NextRequest,
@@ -147,46 +146,11 @@ export async function GET(
 
     const html = renderMemoHTML(memoData);
 
-    // Generate PDF via puppeteer + chromium
-    const chromium = await (async () => {
-      try {
-        return (await import("@sparticuz/chromium" as string) as { default: { args: string[]; executablePath: () => Promise<string>; headless: boolean } }).default;
-      } catch { return null; }
-    })();
-    const puppeteer = await (async () => {
-      try {
-        return (await import("puppeteer-core" as string) as { default: { launch: (opts: object) => Promise<{ newPage: () => Promise<{ setContent: (h: string, opts: object) => Promise<void>; pdf: (opts: object) => Promise<Uint8Array> }>; close: () => Promise<void> }> } }).default;
-      } catch { return null; }
-    })();
-
-    if (!chromium || !puppeteer) {
-      return NextResponse.json({ error: "PDF generation unavailable in this environment" }, { status: 501 });
-    }
-
-    const browser = await puppeteer.launch({
-      args: chromium.args,
-      executablePath: await chromium.executablePath(),
-      headless: chromium.headless,
-    });
-
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: "networkidle0" });
-    const pdfBytes = await page.pdf({
-      format: "A4",
-      printBackground: true,
-      margin: { top: "0mm", bottom: "0mm", left: "0mm", right: "0mm" },
-    });
-    await browser.close();
-
-    const slug = deal.address
-      ? deal.address.replace(/[^a-z0-9]+/gi, "-").toLowerCase().slice(0, 60)
-      : deal.id;
-    const filename = `ic-memo-${slug}.pdf`;
-
-    return new NextResponse(Buffer.from(pdfBytes), {
+    // Return the HTML page directly — the browser handles print-to-PDF via Ctrl+P.
+    // No Puppeteer or server-side chromium required.
+    return new NextResponse(html, {
       headers: {
-        "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="${filename}"`,
+        "Content-Type": "text/html; charset=utf-8",
       },
     });
   } catch (error: unknown) {

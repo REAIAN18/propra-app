@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-
 export type PlanningStatus = "approved" | "refused" | "pending" | "withdrawn";
 
 export interface PlanningApplication {
@@ -10,8 +8,6 @@ export interface PlanningApplication {
   description: string;
   status: PlanningStatus;
   decisionDate?: string;
-  decisionType?: string;
-  objections?: number;
   fullDescription?: string;
 }
 
@@ -19,94 +15,58 @@ interface PlanningApplicationsProps {
   applications?: PlanningApplication[];
 }
 
-const STATUS_COLOR: Record<PlanningStatus, string> = {
-  approved:  "var(--grn)",
-  refused:   "var(--red)",
-  pending:   "var(--amb)",
-  withdrawn: "var(--tx3, #6b7280)",
+const STATUS_COLORS: Record<PlanningStatus, { color: string; bg: string; label: string }> = {
+  approved:  { color: "var(--grn)", bg: "rgba(52,211,153,.08)",  label: "Approved"  },
+  refused:   { color: "var(--red)", bg: "rgba(248,113,113,.08)", label: "Refused"   },
+  pending:   { color: "var(--amb)", bg: "rgba(251,191,36,.08)",  label: "Pending"   },
+  withdrawn: { color: "var(--tx3)", bg: "rgba(255,255,255,.04)", label: "Withdrawn" },
 };
 
-const STATUS_LABEL: Record<PlanningStatus, string> = {
-  approved:  "Approved",
-  refused:   "Refused",
-  pending:   "Pending decision",
-  withdrawn: "Withdrawn",
-};
-
-export function PlanningApplications({ applications = [] }: PlanningApplicationsProps) {
-  const [expanded, setExpanded] = useState<Record<number, boolean>>({});
-
-  const toggle = (i: number) =>
-    setExpanded(prev => ({ ...prev, [i]: !prev[i] }));
-
-  if (applications.length === 0) {
+export function PlanningApplications({ applications }: PlanningApplicationsProps) {
+  if (!applications || applications.length === 0) {
     return (
-      <div style={{ color: "var(--tx3, #6b7280)", fontSize: 13, padding: "12px 0" }}>
-        No planning history available.
+      <div style={{ fontSize: 12, color: "var(--tx3)", padding: "12px 0" }}>
+        No planning applications found
       </div>
     );
   }
 
   return (
-    <div id="planList">
-      {applications.map((app, i) => {
-        const color = STATUS_COLOR[app.status];
-        const isOpen = !!expanded[i];
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      {applications.map((app) => {
+        const st = STATUS_COLORS[app.status];
         return (
           <div
-            key={i}
-            className="plan-row"
-            onClick={() => toggle(i)}
+            key={app.ref}
             style={{
-              display: "flex",
-              alignItems: "flex-start",
-              gap: 10,
-              padding: "10px 0",
-              borderBottom: "1px solid var(--s2)",
-              cursor: "pointer",
+              borderRadius: 8,
+              border: "1px solid var(--s2)",
+              padding: "12px 14px",
+              background: "var(--s1)",
             }}
           >
-            <div
-              className="plan-dot"
-              style={{
-                width: 8,
-                height: 8,
-                borderRadius: "50%",
-                background: color,
-                flexShrink: 0,
-                marginTop: 5,
-              }}
-            />
-            <div style={{ flex: 1 }}>
-              <div className="plan-ref" style={{ fontSize: 12, fontWeight: 600, color: "var(--tx)", marginBottom: 2 }}>
-                {app.ref} · {app.proximity}
-              </div>
-              <div className="plan-desc" style={{ fontSize: 13, color: "var(--tx)", marginBottom: 2 }}>
-                {app.description} —{" "}
-                <strong style={{ color }}>{STATUS_LABEL[app.status]}</strong>
-              </div>
-              <div className="plan-date" style={{ fontSize: 11, color: "var(--tx3, #6b7280)" }}>
-                {app.decisionDate
-                  ? `Decision: ${app.decisionDate}${app.decisionType ? ` · ${app.decisionType}` : ""}${app.objections ? ` · ${app.objections} objection${app.objections !== 1 ? "s" : ""}` : ""}`
-                  : app.status === "pending"
-                  ? "Awaiting decision"
-                  : ""}
-              </div>
-              {isOpen && app.fullDescription && (
-                <div
-                  className="plan-expand"
-                  style={{
-                    marginTop: 8,
-                    fontSize: 12,
-                    color: "var(--tx3, #6b7280)",
-                    lineHeight: 1.6,
-                    paddingTop: 8,
-                    borderTop: "1px solid var(--s2)",
-                  }}
-                >
-                  {app.fullDescription}
-                </div>
-              )}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8, marginBottom: 6 }}>
+              <div style={{ fontSize: 11, fontFamily: "var(--mono, monospace)", color: "var(--tx3)" }}>{app.ref}</div>
+              <span
+                style={{
+                  fontSize: 10,
+                  fontWeight: 600,
+                  padding: "2px 8px",
+                  borderRadius: 4,
+                  background: st.bg,
+                  color: st.color,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {st.label}
+              </span>
+            </div>
+            <div style={{ fontSize: 12, color: "var(--tx)", lineHeight: 1.5, marginBottom: 4 }}>
+              {app.description}
+            </div>
+            <div style={{ display: "flex", gap: 12, fontSize: 10, color: "var(--tx3)" }}>
+              <span>{app.proximity}</span>
+              {app.decisionDate && <span>· {app.decisionDate}</span>}
             </div>
           </div>
         );
