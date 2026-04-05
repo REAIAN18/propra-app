@@ -5,6 +5,11 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { HeroPanel } from "@/components/dealscope/HeroPanel";
+import { calculateIRR } from "@/lib/dealscope/calculations/irr";
+import { calculateCAPEX } from "@/lib/dealscope/calculations/capex";
+import { calculateEquityMultiple } from "@/lib/dealscope/calculations/equity";
+import { calculateVerdict } from "@/lib/dealscope/calculations/verdict";
+import type { Property as DealscopeProperty } from "@/types/dealscope";
 import s from "./dossier.module.css";
 
 const TABS = ["Property", "Planning", "Title & Legal", "Environmental", "Ownership", "Financials", "Market", "Approach"];
@@ -66,6 +71,32 @@ function SourceDot({ source }: { source?: string }) {
   const colors: Record<SourceType, string> = { listing: "var(--acc)", government: "var(--grn)", estimated: "var(--amb)", user: "#5599f0" };
   const labels: Record<SourceType, string> = { listing: "From listing", government: "Government API", estimated: "Estimated", user: "User provided" };
   return <span className={s.srcDot} style={{ background: colors[type] }} title={labels[type]} />;
+}
+
+/* ── Convert page PropertyData → DealscopeProperty for local calculations ── */
+function toDealscopeProperty(p: PropertyData): DealscopeProperty {
+  const ds = p.dataSources || {};
+  const assumptions = ds.assumptions || {};
+  const passingRent = assumptions.passingRent?.value
+    ?? (p.currentRentPsf && p.buildingSizeSqft ? p.currentRentPsf * p.buildingSizeSqft : undefined);
+  const erv = assumptions.erv?.value
+    ?? (p.marketRentPsf && p.buildingSizeSqft ? p.marketRentPsf * p.buildingSizeSqft : undefined);
+  const description = (ds.listing?.description || ds.listing?.summary || "") as string;
+  return {
+    id: p.id,
+    address: p.address,
+    assetType: p.assetType,
+    askingPrice: p.askingPrice || p.guidePrice,
+    passingRent,
+    erv,
+    size: p.buildingSizeSqft || p.sqft,
+    builtYear: p.yearBuilt,
+    occupancyPct: p.occupancyPct,
+    businessRates: assumptions.businessRates?.value,
+    serviceCharge: assumptions.serviceCharge?.value,
+    expectedVoid: assumptions.voidMonths?.value,
+    description,
+  };
 }
 
 function sourceLabel(source?: string): { text: string; className: string } | null {
@@ -788,6 +819,72 @@ function FinancialsTab({ p, onRefresh }: { p: PropertyData; onRefresh: () => voi
           <div className={s.statVal}>{rics?.equityMultiple ? `${rics.equityMultiple.toFixed(2)}×` : returns?.equityMultiple ? `${returns.equityMultiple.toFixed(2)}×` : "—"}</div>
         </div>
       </div>
+
+      {/* ── LOCAL DEAL MODEL (client-side calculations, always fresh) ── */}
+      {(() => {
+        if (!p.askingPrice && !p.guidePrice) return null;
+        try {
+          const prop = toDealscopeProperty(p);
+          const irrResult = calculateIRR(prop);
+          const capexResult = calculateCAPEX(prop);
+          const equityResult = calculateEquityMultiple(prop);
+          const verdictResult = calculateVerdict(prop);
+          const verdictColors: Record<string, string> = {
+            PROCEED: "var(--grn)",
+            CONDITIONAL: "var(--amb)",
+            REJECT: "var(--red)",
+          };
+          const vc = verdictColors[verdictResult.verdict] ?? "var(--tx)";
+          return (
+            <div className={s.card} style={{ borderColor: vc + "44" }}>
+              <div className={s.cardTitle} style={{ color: vc }}>
+                Deal model — {verdictResult.verdict} <span style={{ fontSize: 10, color: "var(--tx3)", fontWeight: 400 }}>(local · {verdictResult.confidence} confidence)</span>
+              </div>
+              <div className={s.statRow} style={{ marginBottom: 8 }}>
+                <div className={s.statBox}>
+                  <div className={s.statLabel}>IRR (10yr)</div>
+                  <div className={s.statVal} style={{ color: irrResult.irr >= 0.15 ? "var(--grn)" : irrResult.irr >= 0.10 ? "var(--amb)" : "var(--red)" }}>
+                    {(irrResult.irr * 100).toFixed(1)}%
+                  </div>
+                </div>
+                <div className={s.statBox}>
+                  <div className={s.statLabel}>CAPEX</div>
+                  <div className={s.statVal}>
+                    {capexResult.capex === 0 ? "£0" : capexResult.capex >= 1_000_000 ? `£${(capexResult.capex / 1_000_000).toFixed(1)}m` : `£${(capexResult.capex / 1_000).toFixed(0)}k`}
+                  </div>
+                </div>
+                <div className={s.statBox}>
+                  <div className={s.statLabel}>Equity multiple</div>
+                  <div className={s.statVal}>{equityResult.equityMultiple.toFixed(2)}×</div>
+                </div>
+                <div className={s.statBox}>
+                  <div className={s.statLabel}>Deal score</div>
+                  <div className={s.statVal} style={{ color: vc }}>{verdictResult.dealScore}</div>
+                </div>
+                <div className={s.statBox}>
+                  <div className={s.statLabel}>Total cost in</div>
+                  <div className={s.statVal}>£{(equityResult.totalCostIn / 1_000_000).toFixed(2)}m</div>
+                </div>
+              </div>
+              {verdictResult.reasons.length > 0 && (
+                <div style={{ fontSize: 11, color: "var(--tx2)", marginBottom: 4 }}>
+                  {verdictResult.reasons.map((r, i) => <div key={i}>• {r}</div>)}
+                </div>
+              )}
+              {verdictResult.conditions && verdictResult.conditions.length > 0 && (
+                <div style={{ fontSize: 11, color: "var(--amb)", marginTop: 4 }}>
+                  {verdictResult.conditions.map((c, i) => <div key={i}>⚠ {c}</div>)}
+                </div>
+              )}
+              <div style={{ fontSize: 10, color: "var(--tx3)", marginTop: 6 }}>
+                {capexResult.reason}
+              </div>
+            </div>
+          );
+        } catch {
+          return null;
+        }
+      })()}
 
       {/* ── RICS VALUATIONS ── */}
       {rVal && (
