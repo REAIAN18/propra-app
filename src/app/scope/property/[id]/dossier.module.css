@@ -324,3 +324,10 @@
 
 /* ── INPUT GLOW (search bar on home) ── */
 .inputGlow:focus-within { border-color: var(--acc); animation: glow 3s ease infinite; box-shadow: 0 0 20px rgba(124,106,240,.15); }
+
+/* ── 4-TAB PAGE LAYOUT (Steps 4 & 5 rebuild) ── */
+.addr { font-family: var(--serif); font-size: 20px; margin-bottom: 4px; letter-spacing: -.3px; font-weight: 400; }
+.backBtn { font-size: 11px; color: var(--tx3); cursor: pointer; margin-bottom: 6px; display: inline-block; transition: color .15s; background: none; border: none; padding: 0; }
+.backBtn:hover { color: #a899ff; }
+.headerMain { display: flex; gap: 14px; align-items: flex-start; }
+.summaryPanel { background: var(--s2); border-radius: 10px; padding: 12px; min-width: 180px; flex-shrink: 0; border: 1px solid var(--s3); }
