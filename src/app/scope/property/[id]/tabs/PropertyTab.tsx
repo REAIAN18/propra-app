@@ -5,15 +5,13 @@
  * Assembles HeroPanel (T06), Gallery (T08), BuildingSpec (T09), EPC (T10), AISummary (T20).
  */
 
-import { HeroPanel, AISummary, Gallery } from "@/lib/dealscope/components";
+import { AISummary, Gallery } from "@/lib/dealscope/components";
 import type { GalleryItem } from "@/lib/dealscope/components";
 import type { RawDeal } from "./types";
 import s from "../dossier.module.css";
 
 interface Props {
   deal: RawDeal;
-  onBack?: () => void;
-  onExportMemo?: () => void;
 }
 
 function Row({
@@ -28,7 +26,7 @@ function Row({
   );
 }
 
-export function PropertyTab({ deal, onBack, onExportMemo }: Props) {
+export function PropertyTab({ deal }: Props) {
   const ds = (deal.dataSources ?? {}) as Record<string, unknown>;
   const ai = ds.aiAnalysis as Record<string, unknown> | undefined;
   const listing = ds.listing as Record<string, unknown> | undefined;
@@ -45,25 +43,6 @@ export function PropertyTab({ deal, onBack, onExportMemo }: Props) {
 
   return (
     <>
-      {/* T06 — Hero Panel */}
-      <HeroPanel
-        property={{
-          address: deal.address,
-          assetType: deal.assetType,
-          buildingSizeSqft: size,
-          yearBuilt: deal.yearBuilt,
-          epcRating: deal.epcRating,
-          tenure: deal.tenure,
-          askingPrice: deal.askingPrice ?? deal.guidePrice,
-          signals: deal.signals,
-          hasInsolvency: deal.hasInsolvency,
-          hasLisPendens: deal.hasLisPendens,
-          dataSources: deal.dataSources,
-        }}
-        onBack={onBack}
-        onExportMemo={onExportMemo}
-      />
-
       {/* T20 — AI Summary */}
       {ai?.summary && (
         <AISummary

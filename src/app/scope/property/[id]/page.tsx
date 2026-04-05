@@ -510,7 +510,7 @@ export default function PropertyDossierPage() {
           </div>
           <div className={s.tabContent} style={{ paddingBottom: 40 }}>
             {activeTab === "Overview"       && <OverviewTab      deal={deal} prop={prop} />}
-            {activeTab === "Property"       && <PropertyTab      deal={deal} onBack={() => router.back()} />}
+            {activeTab === "Property"       && <PropertyTab      deal={deal} />}
             {activeTab === "Financials"     && <FinancialsTabV2  deal={deal} prop={prop} />}
             {activeTab === "Comparables"    && <ComparablesTab   deal={deal} />}
             {activeTab === "Planning"       && <PlanningTab      deal={deal} />}
