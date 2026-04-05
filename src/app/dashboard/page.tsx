@@ -642,62 +642,73 @@ export default function DashboardPage() {
               </Link>
             </div>
 
-            {/* Lease rows */}
-            {[
-              { name: "Coastal Pharmacy", location: "Brickell", rent: "$149k/yr", days: "90 days", danger: true },
-              { name: "Broward Medical", location: "Ft Lauderdale", rent: "$147k/yr", days: "120 days", danger: true },
-              { name: "SunState Accountants", location: "Coral Gables", rent: "$240k/yr", days: "284 days", danger: false },
-              { name: "HR Dynamics", location: "Orlando", rent: "$147k/yr", days: "284 days", danger: false },
-            ].map((lease, i) => (
-              <Link
-                key={i}
-                href="/rent-clock"
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr auto auto auto",
-                  alignItems: "center",
-                  gap: "12px",
-                  padding: "11px 18px",
-                  borderBottom: i === 3 ? "none" : "1px solid var(--bdr-lt, #1a1a26)",
-                  cursor: "pointer",
-                  transition: "background .1s",
-                }}
-              >
-                <div>
-                  <div
+            {/* Lease rows — wired to portfolio data */}
+            {rawPortfolio && (() => {
+              const expiring = rawPortfolio.assets
+                .flatMap(a => a.leases
+                  .filter(l => l.daysToExpiry > 0 && l.daysToExpiry < 730)
+                  .map(l => ({
+                    id: l.id,
+                    tenant: l.tenant,
+                    assetName: a.name,
+                    annualRent: l.sqft * l.rentPerSqft,
+                    daysToExpiry: l.daysToExpiry,
+                    danger: l.daysToExpiry < 180,
+                    currency: a.currency,
+                  }))
+                )
+                .sort((a, b) => a.daysToExpiry - b.daysToExpiry)
+                .slice(0, 4);
+              if (expiring.length === 0) return (
+                <div style={{ padding: "20px 18px", fontSize: "12px", color: "var(--tx3, #555568)" }}>No leases expiring within 2 years.</div>
+              );
+              return expiring.map((lease, i) => (
+                <Link
+                  key={lease.id}
+                  href="/rent-clock"
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr auto auto auto",
+                    alignItems: "center",
+                    gap: "12px",
+                    padding: "11px 18px",
+                    borderBottom: i < expiring.length - 1 ? "1px solid var(--bdr-lt, #1a1a26)" : "none",
+                    cursor: "pointer",
+                    transition: "background .1s",
+                    textDecoration: "none",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "var(--s2, #18181f)")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                >
+                  <div>
+                    <div style={{ fontSize: "12px", fontWeight: 500, color: "var(--tx, #e4e4ec)", lineHeight: 1.3 }}>
+                      {lease.tenant}
+                    </div>
+                    <div style={{ fontSize: "11px", color: "var(--tx3, #555568)" }}>
+                      {lease.assetName} · {fmt(lease.annualRent, lease.currency)}/yr
+                    </div>
+                  </div>
+                  <span></span>
+                  <span
                     style={{
-                      fontSize: "12px",
-                      fontWeight: 500,
-                      color: "var(--tx, #e4e4ec)",
-                      lineHeight: 1.3,
+                      font: "500 9px/1 'JetBrains Mono', monospace",
+                      padding: "3px 7px",
+                      borderRadius: "5px",
+                      letterSpacing: ".3px",
+                      whiteSpace: "nowrap",
+                      background: lease.danger ? "var(--red-lt, rgba(248,113,113,.07))" : "var(--s3, #1f1f28)",
+                      color: lease.danger ? "var(--red, #f87171)" : "var(--tx3, #555568)",
+                      border: lease.danger ? "1px solid var(--red-bdr, rgba(248,113,113,.22))" : "1px solid var(--bdr, #252533)",
                     }}
                   >
-                    {lease.name}
-                  </div>
-                  <div style={{ fontSize: "11px", color: "var(--tx3, #555568)" }}>
-                    {lease.location} · {lease.rent}
-                  </div>
-                </div>
-                <span></span>
-                <span
-                  style={{
-                    font: "500 9px/1 'JetBrains Mono', monospace",
-                    padding: "3px 7px",
-                    borderRadius: "5px",
-                    letterSpacing: ".3px",
-                    whiteSpace: "nowrap",
-                    background: lease.danger ? "var(--red-lt, rgba(248,113,113,.07))" : "var(--s3, #1f1f28)",
-                    color: lease.danger ? "var(--red, #f87171)" : "var(--tx3, #555568)",
-                    border: lease.danger ? "1px solid var(--red-bdr, rgba(248,113,113,.22))" : "1px solid var(--bdr, #252533)",
-                  }}
-                >
-                  {lease.days}
-                </span>
-                <span style={{ color: "var(--tx3, #555568)", fontSize: "12px", transition: "color .12s" }}>
-                  →
-                </span>
-              </Link>
-            ))}
+                    {lease.daysToExpiry}d
+                  </span>
+                  <span style={{ color: "var(--tx3, #555568)", fontSize: "12px", transition: "color .12s" }}>
+                    →
+                  </span>
+                </Link>
+              ));
+            })()}
           </div>
 
           {/* Properties Card */}
@@ -730,78 +741,80 @@ export default function DashboardPage() {
                   fontWeight: 500,
                 }}
               >
-                View all 5 →
+                View all {rawPortfolio?.assets.length ?? 0} →
               </Link>
             </div>
 
-            {/* Property rows */}
-            {[
-              { name: "Coral Gables Office Park", type: "Office", sqft: "42,000 sqft", occupancy: "84%", value: "$14–16M" },
-              { name: "Brickell Retail Center", type: "Retail", sqft: "18,000 sqft", occupancy: "100%", value: "$9–11M" },
-              { name: "Tampa Industrial Park", type: "Industrial", sqft: "28,000 sqft", occupancy: "100%", value: "$7–9M" },
-            ].map((property, i) => (
-              <Link
-                key={i}
-                href="/properties"
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr auto auto auto",
-                  alignItems: "center",
-                  gap: "12px",
-                  padding: "11px 18px",
-                  borderBottom: i === 2 ? "none" : "1px solid var(--bdr-lt, #1a1a26)",
-                  cursor: "pointer",
-                  transition: "background .1s",
-                }}
-              >
-                <div>
-                  <div
-                    style={{
-                      fontSize: "12px",
-                      fontWeight: 500,
-                      color: "var(--tx, #e4e4ec)",
-                      lineHeight: 1.3,
-                    }}
-                  >
-                    {property.name}
-                  </div>
-                  <div style={{ fontSize: "11px", color: "var(--tx3, #555568)" }}>
-                    {property.type} · {property.sqft}
-                  </div>
-                </div>
-                <span
+            {/* Property rows — wired to portfolio data */}
+            {rawPortfolio && rawPortfolio.assets.slice(0, 3).map((asset, i) => {
+              const valuation = portfolio!.currency === "USD" ? (asset.valuationUSD ?? 0) : (asset.valuationGBP ?? 0);
+              return (
+                <Link
+                  key={asset.id}
+                  href="/properties"
                   style={{
-                    font: "500 11px/1 'JetBrains Mono', monospace",
-                    color: "var(--tx2, #8888a0)",
+                    display: "grid",
+                    gridTemplateColumns: "1fr auto auto auto",
+                    alignItems: "center",
+                    gap: "12px",
+                    padding: "11px 18px",
+                    borderBottom: i < 2 ? "1px solid var(--bdr-lt, #1a1a26)" : "none",
+                    cursor: "pointer",
+                    transition: "background .1s",
+                    textDecoration: "none",
                   }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "var(--s2, #18181f)")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                 >
-                  {property.occupancy}
-                </span>
-                <span
-                  style={{
-                    fontSize: "13px",
-                    fontWeight: 600,
-                    color: "var(--tx, #e4e4ec)",
-                    letterSpacing: "-.01em",
-                    textAlign: "right",
-                  }}
-                >
-                  {property.value}{" "}
+                  <div>
+                    <div
+                      style={{
+                        fontSize: "12px",
+                        fontWeight: 500,
+                        color: "var(--tx, #e4e4ec)",
+                        lineHeight: 1.3,
+                      }}
+                    >
+                      {asset.name}
+                    </div>
+                    <div style={{ fontSize: "11px", color: "var(--tx3, #555568)" }}>
+                      {asset.type.charAt(0).toUpperCase() + asset.type.slice(1)} · {asset.sqft.toLocaleString()} sqft
+                    </div>
+                  </div>
                   <span
                     style={{
-                      font: "500 8px/1 'JetBrains Mono', monospace",
-                      color: "var(--tx3, #555568)",
-                      letterSpacing: ".8px",
+                      font: "500 11px/1 'JetBrains Mono', monospace",
+                      color: "var(--tx2, #8888a0)",
                     }}
                   >
-                    EST
+                    {asset.occupancy}%
                   </span>
-                </span>
-                <span style={{ color: "var(--tx3, #555568)", fontSize: "12px", transition: "color .12s" }}>
-                  →
-                </span>
-              </Link>
-            ))}
+                  <span
+                    style={{
+                      fontSize: "13px",
+                      fontWeight: 600,
+                      color: "var(--tx, #e4e4ec)",
+                      letterSpacing: "-.01em",
+                      textAlign: "right",
+                    }}
+                  >
+                    {valuation > 0 ? fmt(valuation, portfolio!.currency) : "—"}{" "}
+                    <span
+                      style={{
+                        font: "500 8px/1 'JetBrains Mono', monospace",
+                        color: "var(--tx3, #555568)",
+                        letterSpacing: ".8px",
+                      }}
+                    >
+                      EST
+                    </span>
+                  </span>
+                  <span style={{ color: "var(--tx3, #555568)", fontSize: "12px", transition: "color .12s" }}>
+                    →
+                  </span>
+                </Link>
+              );
+            })}
           </div>
         </div>
 
@@ -1237,14 +1250,22 @@ export default function DashboardPage() {
 
               <div style={{ padding: "14px 18px" }}>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
-                  {[
-                    { label: "Cap Rate", value: "6.6%", comparison: "mkt 6.5% ✓", status: "good" },
-                    { label: "NOI Margin", value: "67%", comparison: "mkt 58% ✓", status: "good" },
-                    { label: "Occupancy", value: "91%", comparison: "mkt 94% ↓", status: "warn" },
-                    { label: "Rent/sqft", value: "$25.12", comparison: "mkt $14.50 ✓", status: "good" },
-                    { label: "OpEx/sqft", value: "$8.18", comparison: "mkt $4.29 ↑↑", status: "bad" },
-                    { label: "Ins/sqft", value: "$2.43", comparison: "mkt $1.11 ↑↑", status: "bad" },
-                  ].map((metric, i) => (
+                  {(() => {
+                    const capRate = portfolio!.totalValue > 0 ? (portfolio!.noi / portfolio!.totalValue * 100).toFixed(1) + "%" : "—";
+                    const noiMargin = portfolio!.rentRoll > 0 ? Math.round(portfolio!.noi / portfolio!.rentRoll * 100) + "%" : "—";
+                    const occ = portfolio!.occupancy + "%";
+                    const rentPerSqft = portfolio!.sqft > 0 ? (portfolio!.rentRoll / portfolio!.sqft).toFixed(2) : null;
+                    const opexPerSqft = portfolio!.sqft > 0 ? ((portfolio!.rentRoll - portfolio!.noi) / portfolio!.sqft).toFixed(2) : null;
+                    const sym = portfolio!.currency === "USD" ? "$" : "£";
+                    return [
+                      { label: "Cap Rate", value: capRate, comparison: "mkt 6.5%", status: portfolio!.totalValue > 0 && (portfolio!.noi / portfolio!.totalValue * 100) >= 6.5 ? "good" as const : "warn" as const },
+                      { label: "NOI Margin", value: noiMargin, comparison: "mkt 58%", status: portfolio!.rentRoll > 0 && (portfolio!.noi / portfolio!.rentRoll) >= 0.58 ? "good" as const : "warn" as const },
+                      { label: "Occupancy", value: occ, comparison: "mkt 94%", status: portfolio!.occupancy >= 90 ? "warn" as const : "bad" as const },
+                      { label: "Rent/sqft", value: rentPerSqft ? `${sym}${rentPerSqft}` : "—", comparison: `mkt ${sym}14.50`, status: "good" as const },
+                      { label: "OpEx/sqft", value: opexPerSqft ? `${sym}${opexPerSqft}` : "—", comparison: `mkt ${sym}4.29`, status: "bad" as const },
+                      { label: "Ins/sqft", value: "—", comparison: `mkt ${sym}1.11`, status: "warn" as const },
+                    ];
+                  })().map((metric, i) => (
                     <div
                       key={i}
                       style={{
