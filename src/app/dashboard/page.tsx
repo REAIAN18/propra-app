@@ -124,16 +124,29 @@ export default function DashboardPage() {
   const [rawPortfolio, setRawPortfolio] = useState<PortfolioType | null>(null);
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [financingOpen, setFinancingOpen] = useState(false);
+  const [scoutDeals, setScoutDeals] = useState<Array<{ id: string; address: string; assetType: string; capRate: number | null; askingPrice: number | null; guidePrice: number | null; matchScore: number | null; currency: string }>>([]);
+  const [pipelineGroups, setPipelineGroups] = useState<Array<{ stage: string; deals: Array<{ id: string; address: string; assetType: string; askingPrice: number | null; currency: string }> }>>([]);
+  const [workOrders, setWorkOrders] = useState<Array<{ id: string; jobType: string; asset?: { name: string }; status: string; budgetEstimate: number | null; currency: string; timing?: string | null }>>([]);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const res = await fetch("/api/portfolios/user");
-        if (!res.ok) throw new Error("Failed to fetch portfolio");
-        const data: PortfolioType = await res.json();
+        const [portfolioRes, scoutRes, pipelineRes, woRes] = await Promise.all([
+          fetch("/api/portfolios/user"),
+          fetch("/api/scout/deals"),
+          fetch("/api/scout/pipeline"),
+          fetch("/api/user/work-orders"),
+        ]);
+        const data: PortfolioType = await portfolioRes.json();
         setRawPortfolio(data);
         setPortfolio(computeKPIs(data));
         setOpportunities(computeOpportunities(data));
+        const scoutData = await scoutRes.json();
+        setScoutDeals((scoutData.deals ?? []).slice(0, 3));
+        const pipelineData = await pipelineRes.json();
+        setPipelineGroups(pipelineData.pipeline ?? []);
+        const woData = await woRes.json();
+        setWorkOrders((woData.orders ?? []).slice(0, 4));
         setLoading(false);
       } catch (error) {
         console.error("Dashboard data fetch failed:", error);
@@ -824,13 +837,16 @@ export default function DashboardPage() {
                 </Link>
               </div>
               <div>
-                {[
-                  { name: "Brickell Key Professional Centre", sub: "Office · 7.4% cap · above your avg yield · adjacent to portfolio", match: "94%", value: "$6.2M" },
-                  { name: "Sunrise Strip Commercial", sub: "Retail · 6.9% cap · diversifies your mix · Broward county", match: "88%", value: "$4.1M" },
-                  { name: "Brandon Logistics Hub", sub: "Industrial · 7.1% cap · long WAULT · below typical deal size", match: "81%", value: "$8.9M" },
-                ].map((deal, i) => (
+                {scoutDeals.length === 0 ? (
+                  <div style={{ padding: "28px 20px", textAlign: "center" }}>
+                    <div style={{ fontSize: "12px", color: "var(--tx3, #555568)", marginBottom: "8px" }}>No deals surfaced yet.</div>
+                    <Link href="/scout" style={{ fontSize: "12px", color: "var(--acc, #7c6af0)", fontWeight: 600, textDecoration: "none" }}>
+                      Open Scout to find opportunities →
+                    </Link>
+                  </div>
+                ) : scoutDeals.map((deal, i) => (
                   <Link
-                    key={i}
+                    key={deal.id}
                     href="/scout"
                     style={{
                       display: "grid",
@@ -838,7 +854,7 @@ export default function DashboardPage() {
                       alignItems: "center",
                       gap: "16px",
                       padding: "13px 20px",
-                      borderBottom: i < 2 ? "1px solid var(--bdr-lt, #1a1a26)" : "none",
+                      borderBottom: i < scoutDeals.length - 1 ? "1px solid var(--bdr-lt, #1a1a26)" : "none",
                       cursor: "pointer",
                       transition: "background .1s",
                       textDecoration: "none",
@@ -848,26 +864,30 @@ export default function DashboardPage() {
                   >
                     <div>
                       <div style={{ fontSize: "13px", fontWeight: 500, color: "var(--tx, #e4e4ec)", lineHeight: 1.3 }}>
-                        {deal.name}
+                        {deal.address}
                       </div>
-                      <div style={{ fontSize: "11px", color: "var(--tx3, #555568)" }}>{deal.sub}</div>
+                      <div style={{ fontSize: "11px", color: "var(--tx3, #555568)" }}>
+                        {deal.assetType}{deal.capRate ? ` · ${deal.capRate}% cap` : ""}
+                      </div>
                     </div>
-                    <span
-                      style={{
-                        font: "500 9px/1 'JetBrains Mono', monospace",
-                        padding: "3px 8px",
-                        borderRadius: "5px",
-                        letterSpacing: ".3px",
-                        whiteSpace: "nowrap",
-                        background: "var(--acc-lt, rgba(124,106,240,.10))",
-                        color: "var(--acc, #7c6af0)",
-                        border: "1px solid var(--acc-bdr, rgba(124,106,240,.22))",
-                      }}
-                    >
-                      {deal.match}
-                    </span>
+                    {deal.matchScore !== null && (
+                      <span
+                        style={{
+                          font: "500 9px/1 'JetBrains Mono', monospace",
+                          padding: "3px 8px",
+                          borderRadius: "5px",
+                          letterSpacing: ".3px",
+                          whiteSpace: "nowrap",
+                          background: "var(--acc-lt, rgba(124,106,240,.10))",
+                          color: "var(--acc, #7c6af0)",
+                          border: "1px solid var(--acc-bdr, rgba(124,106,240,.22))",
+                        }}
+                      >
+                        {deal.matchScore}%
+                      </span>
+                    )}
                     <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "13px", fontWeight: 500, color: "var(--tx, #e4e4ec)", minWidth: "70px", textAlign: "right" }}>
-                      {deal.value}
+                      {deal.askingPrice || deal.guidePrice ? fmt((deal.askingPrice ?? deal.guidePrice)!, deal.currency as "USD" | "GBP") : "—"}
                     </span>
                     <span style={{ color: "var(--tx3, #555568)", fontSize: "14px", transition: "color .12s" }}>→</span>
                   </Link>
@@ -900,111 +920,110 @@ export default function DashboardPage() {
                   Configure →
                 </Link>
               </div>
-              <div style={{ padding: "18px" }}>
-                {/* Pipeline stages */}
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(6, 1fr)",
-                    gap: "1px",
-                    background: "var(--bdr-lt, #1a1a26)",
-                    borderRadius: "8px",
-                    overflow: "hidden",
-                    marginBottom: "14px",
-                  }}
-                >
-                  {[
-                    { label: "Watch", value: "7", active: true },
-                    { label: "Analysed", value: "4", active: false },
-                    { label: "Approach", value: "2", active: false },
-                    { label: "Offer", value: "1", active: false },
-                    { label: "DD", value: "1", active: false },
-                    { label: "Exchange", value: "0", active: false },
-                  ].map((stage, i) => (
+              {(() => {
+                const STAGES = [
+                  { key: "interested", label: "Watch" },
+                  { key: "due_diligence", label: "D/D" },
+                  { key: "offer_made", label: "Offer" },
+                  { key: "under_offer", label: "U/O" },
+                  { key: "completed", label: "Done" },
+                  { key: "withdrawn", label: "Out" },
+                ];
+                const flatDeals = pipelineGroups.flatMap(g => g.deals).slice(0, 2);
+                return (
+                  <div style={{ padding: "18px" }}>
+                    {/* Pipeline stage funnel */}
                     <div
-                      key={i}
                       style={{
-                        background: "var(--s2, #18181f)",
-                        padding: "10px 8px",
-                        textAlign: "center",
-                        cursor: "pointer",
-                        transition: "background .1s",
-                        borderBottom: stage.active ? "2px solid var(--acc, #7c6af0)" : "none",
+                        display: "grid",
+                        gridTemplateColumns: "repeat(6, 1fr)",
+                        gap: "1px",
+                        background: "var(--bdr-lt, #1a1a26)",
+                        borderRadius: "8px",
+                        overflow: "hidden",
+                        marginBottom: "14px",
                       }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = "var(--s3, #1f1f28)")}
-                      onMouseLeave={(e) => (e.currentTarget.style.background = "var(--s2, #18181f)")}
                     >
-                      <div
-                        style={{
-                          font: "500 8px/1 'JetBrains Mono', monospace",
-                          color: stage.active ? "var(--acc, #7c6af0)" : "var(--tx3, #555568)",
-                          textTransform: "uppercase",
-                          letterSpacing: ".6px",
-                          marginBottom: "4px",
-                        }}
-                      >
-                        {stage.label}
-                      </div>
-                      <div
-                        style={{
-                          fontFamily: "'Instrument Serif', Georgia, serif",
-                          fontSize: "18px",
-                          color: stage.value === "0" ? "var(--tx3, #555568)" : "var(--tx, #e4e4ec)",
-                        }}
-                      >
-                        {stage.value}
-                      </div>
+                      {STAGES.map((stage, i) => {
+                        const count = pipelineGroups.find(g => g.stage === stage.key)?.deals.length ?? 0;
+                        const isFirst = i === 0;
+                        return (
+                          <div
+                            key={stage.key}
+                            style={{
+                              background: "var(--s2, #18181f)",
+                              padding: "10px 8px",
+                              textAlign: "center",
+                              cursor: "pointer",
+                              transition: "background .1s",
+                              borderBottom: isFirst && count > 0 ? "2px solid var(--acc, #7c6af0)" : "none",
+                            }}
+                            onMouseEnter={(e) => (e.currentTarget.style.background = "var(--s3, #1f1f28)")}
+                            onMouseLeave={(e) => (e.currentTarget.style.background = "var(--s2, #18181f)")}
+                          >
+                            <div
+                              style={{
+                                font: "500 8px/1 'JetBrains Mono', monospace",
+                                color: isFirst && count > 0 ? "var(--acc, #7c6af0)" : "var(--tx3, #555568)",
+                                textTransform: "uppercase",
+                                letterSpacing: ".6px",
+                                marginBottom: "4px",
+                              }}
+                            >
+                              {stage.label}
+                            </div>
+                            <div
+                              style={{
+                                fontFamily: "'Instrument Serif', Georgia, serif",
+                                fontSize: "18px",
+                                color: count === 0 ? "var(--tx3, #555568)" : "var(--tx, #e4e4ec)",
+                              }}
+                            >
+                              {count}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                  ))}
-                </div>
 
-                {/* Pipeline deals */}
-                {[
-                  { name: "Brickell Key Professional Centre", location: "Office · Miami-Dade", stage: "DD", value: "$6.2M", active: true },
-                  { name: "Sunrise Strip Commercial", location: "Retail · Broward", stage: "Approached", value: "$4.1M", active: false },
-                ].map((deal, i) => (
-                  <Link
-                    key={i}
-                    href="/scope/pipeline"
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      padding: "10px 14px",
-                      borderBottom: i < 1 ? "1px solid var(--bdr-lt, #1a1a26)" : "none",
-                      gap: "10px",
-                      cursor: "pointer",
-                      transition: "background .1s",
-                      borderRadius: "6px",
-                      textDecoration: "none",
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = "var(--s2, #18181f)")}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-                  >
-                    <div>
-                      <div style={{ fontSize: "12px", fontWeight: 500, color: "var(--tx, #e4e4ec)" }}>
-                        {deal.name}
+                    {/* Pipeline deals */}
+                    {flatDeals.length === 0 ? (
+                      <div style={{ padding: "12px 0", textAlign: "center", fontSize: "11px", color: "var(--tx3, #555568)" }}>
+                        React to Scout deals to build your pipeline →
                       </div>
-                      <div style={{ fontSize: "11px", color: "var(--tx3, #555568)" }}>{deal.location}</div>
-                    </div>
-                    <span
-                      style={{
-                        font: "500 9px/1 'JetBrains Mono', monospace",
-                        padding: "3px 7px",
-                        borderRadius: "5px",
-                        background: deal.active ? "var(--acc-lt, rgba(124,106,240,.10))" : "var(--s3, #1f1f28)",
-                        color: deal.active ? "var(--acc, #7c6af0)" : "var(--tx3, #555568)",
-                        border: deal.active ? "1px solid var(--acc-bdr, rgba(124,106,240,.22))" : "1px solid var(--bdr, #252533)",
-                      }}
-                    >
-                      {deal.stage}
-                    </span>
-                    <span style={{ font: "500 12px 'JetBrains Mono', monospace", color: "var(--tx, #e4e4ec)" }}>
-                      {deal.value}
-                    </span>
-                  </Link>
-                ))}
-              </div>
+                    ) : flatDeals.map((deal, i) => (
+                      <Link
+                        key={deal.id}
+                        href="/scope/pipeline"
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          padding: "10px 14px",
+                          borderBottom: i < flatDeals.length - 1 ? "1px solid var(--bdr-lt, #1a1a26)" : "none",
+                          gap: "10px",
+                          cursor: "pointer",
+                          transition: "background .1s",
+                          borderRadius: "6px",
+                          textDecoration: "none",
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.background = "var(--s2, #18181f)")}
+                        onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                      >
+                        <div>
+                          <div style={{ fontSize: "12px", fontWeight: 500, color: "var(--tx, #e4e4ec)" }}>
+                            {deal.address}
+                          </div>
+                          <div style={{ fontSize: "11px", color: "var(--tx3, #555568)" }}>{deal.assetType}</div>
+                        </div>
+                        <span style={{ font: "500 12px 'JetBrains Mono', monospace", color: "var(--tx, #e4e4ec)" }}>
+                          {deal.askingPrice ? fmt(deal.askingPrice, deal.currency as "USD" | "GBP") : "—"}
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
           </div>
         </div>
@@ -1296,29 +1315,34 @@ export default function DashboardPage() {
                 <h4 style={{ fontSize: "13px", fontWeight: 600, color: "var(--tx, #e4e4ec)" }}>
                   Transactions &amp; Projects
                 </h4>
-                <span style={{ fontSize: "11px", color: "var(--tx3, #555568)" }}>4 active</span>
+                <span style={{ fontSize: "11px", color: "var(--tx3, #555568)" }}>{workOrders.length > 0 ? `${workOrders.length} active` : ""}</span>
               </div>
 
-              {/* Transaction rows */}
-              {[
-                { name: "Brickell Key Professional Centre", subtitle: "Acquisition · 58% DD complete · survey due 4 Apr", progress: 58, value: "$6.2M" },
-                { name: "Coral Gables — Suite 4B", subtitle: "Letting · HoTs agreed · solicitor instructed", progress: 40, value: "$85k/yr" },
-                { name: "Tampa roof replacement", subtitle: "Capex · contractor on site · due Jun 2026", progress: 65, value: "$120k" },
-                { name: "CG office refurb — Suite 4B", subtitle: "Fit-out · design approved · build starts 7 Apr", progress: 25, value: "$48k" },
-              ].map((txn, i) => (
+              {/* Work order rows */}
+              {workOrders.length === 0 ? (
+                <div style={{ padding: "24px 18px", textAlign: "center" }}>
+                  <div style={{ fontSize: "12px", color: "var(--tx3, #555568)", marginBottom: "8px" }}>No active projects.</div>
+                  <Link href="/work-orders" style={{ fontSize: "12px", color: "var(--acc, #7c6af0)", fontWeight: 600, textDecoration: "none" }}>
+                    Create a work order →
+                  </Link>
+                </div>
+              ) : workOrders.map((wo, i) => (
                 <Link
-                  key={i}
-                  href="/transactions"
+                  key={wo.id}
+                  href="/work-orders"
                   style={{
                     display: "grid",
-                    gridTemplateColumns: "1fr auto auto auto",
+                    gridTemplateColumns: "1fr auto auto",
                     alignItems: "center",
                     gap: "12px",
                     padding: "11px 18px",
-                    borderBottom: i === 3 ? "none" : "1px solid var(--bdr-lt, #1a1a26)",
+                    borderBottom: i < workOrders.length - 1 ? "1px solid var(--bdr-lt, #1a1a26)" : "none",
                     cursor: "pointer",
                     transition: "background .1s",
+                    textDecoration: "none",
                   }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "var(--s2, #18181f)")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                 >
                   <div>
                     <div
@@ -1329,40 +1353,10 @@ export default function DashboardPage() {
                         lineHeight: 1.3,
                       }}
                     >
-                      {txn.name}
+                      {wo.jobType}
                     </div>
                     <div style={{ fontSize: "11px", color: "var(--tx3, #555568)" }}>
-                      {txn.subtitle}
-                    </div>
-                  </div>
-
-                  {/* Progress bar */}
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                    <div
-                      style={{
-                        width: "48px",
-                        height: "3px",
-                        background: "var(--s3, #1f1f28)",
-                        borderRadius: "2px",
-                        overflow: "hidden",
-                      }}
-                    >
-                      <div
-                        style={{
-                          height: "100%",
-                          borderRadius: "2px",
-                          background: "var(--acc, #7c6af0)",
-                          width: `${txn.progress}%`,
-                        }}
-                      />
-                    </div>
-                    <div
-                      style={{
-                        font: "500 9px/1 'JetBrains Mono', monospace",
-                        color: "var(--tx3, #555568)",
-                      }}
-                    >
-                      {txn.progress}%
+                      {wo.asset?.name ?? "—"} · {wo.status}{wo.timing ? ` · ${wo.timing}` : ""}
                     </div>
                   </div>
 
@@ -1375,7 +1369,7 @@ export default function DashboardPage() {
                       textAlign: "right",
                     }}
                   >
-                    {txn.value}
+                    {wo.budgetEstimate ? fmt(wo.budgetEstimate, (wo.currency as "USD" | "GBP") ?? "USD") : "—"}
                   </span>
                   <span style={{ color: "var(--tx3, #555568)", fontSize: "12px", transition: "color .12s" }}>
                     →
