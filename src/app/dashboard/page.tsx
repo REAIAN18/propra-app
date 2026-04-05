@@ -384,9 +384,9 @@ export default function DashboardPage() {
                 <h4 style={{ fontSize: "14px", fontWeight: 600, color: "var(--tx, #e4e4ec)" }}>
                   Gross to Net
                 </h4>
-                <span style={{ fontSize: "12px", color: "var(--acc, #7c6af0)", fontWeight: 600, cursor: "pointer" }}>
+                <Link href="/financials" style={{ fontSize: "12px", color: "var(--acc, #7c6af0)", fontWeight: 600, cursor: "pointer", textDecoration: "none" }}>
                   Full breakdown →
-                </span>
+                </Link>
               </div>
               <div style={{ padding: "24px 28px" }}>
                 <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "16px" }}>
@@ -896,7 +896,7 @@ export default function DashboardPage() {
                 <h4 style={{ fontSize: "14px", fontWeight: 600, color: "var(--tx, #e4e4ec)" }}>
                   Pipeline
                 </h4>
-                <Link href="/scout/pipeline" style={{ fontSize: "12px", color: "var(--acc, #7c6af0)", fontWeight: 600, textDecoration: "none" }}>
+                <Link href="/scope/pipeline" style={{ fontSize: "12px", color: "var(--acc, #7c6af0)", fontWeight: 600, textDecoration: "none" }}>
                   Configure →
                 </Link>
               </div>
@@ -965,7 +965,7 @@ export default function DashboardPage() {
                 ].map((deal, i) => (
                   <Link
                     key={i}
-                    href="/scout/pipeline"
+                    href="/scope/pipeline"
                     style={{
                       display: "flex",
                       alignItems: "center",
