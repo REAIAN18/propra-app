@@ -71,7 +71,7 @@ export function FinancialsTab({ deal, prop }: Props) {
       type: (comp.assetType ?? comp.type ?? deal.assetType) as string | undefined,
       sqft: (comp.sqft ?? comp.size) as number | undefined,
       price: (comp.price ?? comp.salePrice) as number | undefined,
-      pricePsf: (comp.psf ?? comp.pricePsf) as number | undefined,
+      pricePsf: (comp.psf ?? comp.pricePsf ?? (comp.price != null && comp.sqft != null ? Math.round((comp.price as number) / (comp.sqft as number)) : undefined)) as number | undefined,
       date: (comp.date ?? comp.saleDate) as string | undefined,
       distance: comp.distance as string | undefined,
     };
