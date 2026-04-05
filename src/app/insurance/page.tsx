@@ -72,6 +72,7 @@ export default function InsurancePage() {
     }>;
   } | null>(null);
   const [insuranceBenchmarks, setInsuranceBenchmarks] = useState<{ min: number; max: number } | null>(null);
+  const [policies, setPolicies] = useState<PolicyData[]>([]);
 
   // Fetch insurance risk + summary data
   useEffect(() => {
@@ -83,77 +84,26 @@ export default function InsurancePage() {
       if (summaryData?.benchmarkMin && summaryData?.benchmarkMax) {
         setInsuranceBenchmarks({ min: summaryData.benchmarkMin, max: summaryData.benchmarkMax });
       }
+      if (Array.isArray(summaryData?.policies)) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        setPolicies(summaryData.policies.map((p: any) => ({
+          id: p.id,
+          propertyName: p.propertyAddress?.split(",")[0] ?? "Property",
+          propertyType: p.coverageType ?? "Commercial",
+          sqft: 0,
+          carrier: p.insurer ?? "—",
+          premium: p.premium ?? 0,
+          cover: p.sumInsured ?? 0,
+          deductible: p.excess ?? 0,
+          renewal: p.renewalDate
+            ? new Date(p.renewalDate).toLocaleDateString("en-US", { month: "short", year: "numeric" })
+            : "",
+          vsMarket: 0,
+          status: (p.premium === 0 ? "missing" : "overpaying") as PolicyData["status"],
+        })));
+      }
     }).catch((err) => console.error("Failed to fetch insurance data:", err));
   }, []);
-
-  // Mock data - replace with API calls
-  const policies: PolicyData[] = [
-    {
-      id: "1",
-      propertyName: "Coral Gables Office Park",
-      propertyType: "Office",
-      sqft: 42000,
-      carrier: "Zurich",
-      premium: 18400,
-      cover: 16000000,
-      deductible: 25000,
-      renewal: "Dec 2026",
-      vsMarket: 22,
-      status: "overpaying",
-    },
-    {
-      id: "2",
-      propertyName: "Brickell Retail Center",
-      propertyType: "Retail",
-      sqft: 18000,
-      carrier: "AIG",
-      premium: 24800,
-      cover: 11000000,
-      deductible: 10000,
-      renewal: "Aug 2026",
-      vsMarket: 18,
-      status: "overpaying",
-    },
-    {
-      id: "3",
-      propertyName: "Orlando Medical Office",
-      propertyType: "Medical",
-      sqft: 15000,
-      carrier: "Nationwide",
-      premium: 16200,
-      cover: 8000000,
-      deductible: 10000,
-      renewal: "Sep 2026",
-      vsMarket: 15,
-      status: "overpaying",
-    },
-    {
-      id: "4",
-      propertyName: "Tampa Industrial Park",
-      propertyType: "Industrial",
-      sqft: 28000,
-      carrier: "Hartford",
-      premium: 18400,
-      cover: 9000000,
-      deductible: 25000,
-      renewal: "Mar 2027",
-      vsMarket: 0,
-      status: "bound",
-    },
-    {
-      id: "5",
-      propertyName: "Ft Lauderdale Flex Space",
-      propertyType: "Flex",
-      sqft: 22000,
-      carrier: "",
-      premium: 0,
-      cover: 0,
-      deductible: 0,
-      renewal: "",
-      vsMarket: 0,
-      status: "missing",
-    },
-  ];
 
   const quotes: QuoteData[] = [
     {
