@@ -942,12 +942,16 @@ export default function TenantsPage() {
                   if (isStarted || isPending) return;
                   setLettingsPending(t.id);
                   try {
-                    await fetch("/api/user/lettings", {
+                    const res = await fetch("/api/user/lettings", {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({ assetId: t.assetId, askingRent: t.annualRent }),
                     });
+                    const data = await res.json().catch(() => ({}));
                     setLettingsStarted((prev) => new Set([...prev, t.id]));
+                    if (data?.letting?.id) {
+                      window.location.href = `/lettings/${data.letting.id}`;
+                    }
                   } catch { /* non-fatal */ }
                   finally { setLettingsPending(null); }
                 }
