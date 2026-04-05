@@ -44,6 +44,7 @@ health.ts(22) checkHealth()
 /api/quotes/ insurance energy bind refinance(POST) sale-lead(POST)
 /api/user/ 31 sub-routes: assets portfolio insurance-summary insurance-risk energy-summary compliance-summary compliance/renew financing-summary hold-sell-scenarios income-opportunities income-opportunities/activate tenants tenants/actions rent-reviews leases/materialise lease-summary lettings documents noi-bridge monthly-financial financial-budget transactions work-orders contractors planning export ask-context ask requests acquisitions action-queue cash-flow-forecast loans me(GET — session user name/email/id)
 /api/dealscope/ enrich(POST) pipeline(GET) search(GET — demo+LandRegistryPricePaid) alerts(GET/PATCH/DELETE) responses(POST) import/price-paid(POST CSV) import/ccod(POST CSV) test/import-sample(POST)
+/api/dealscope/properties/[id]/export/ pdf(GET — renders IC Memo HTML for browser print-to-PDF) excel(GET — generates .xlsx workbook: Summary+Financials+Comparables+Scenarios+Planning)
 /api/macro/ sofr(Federal Reserve)
 /api/dashboard/ summary(KPIs)
 /api/cron/ 8 jobs: compliance-reminders energy-rates octopus-rates planning-monitor rent-review-triggers tenant-engagement-triggers send-emails sofr
@@ -77,6 +78,9 @@ LandRegistry: LandRegistryPricePaid LandRegistryCCOD
 ## Components (20)
 
 PageHero G2NComparisonCard MetricCard ActionAlert DirectCallout HoldSellRecommendation PolicyUploadWidget LeaseUploadModal PortfolioCalculator RefinanceWidget AskPanel NOIBridge BarChart LineChart RevenueChart Badge CopyLink(keep) Skeleton(keep) SectionHeader ActionQueueDrawer
+DealScope: HeroPanel VerdictBadge MetricCard DealScore RiskFlags AISummary TabNavigation ComparablesTable MultipleValuations ServiceCharges InlineEdit Gallery PlanningApplications EnvironmentalRiskBars LettingScenariosTable ResponseTrackingModal
+DealScope lib: src/lib/dealscope/components/index.ts (re-exports all above) src/lib/dealscope/exports/{ic-memo-template,populate-ic-memo,excel-template} src/lib/dealscope/calculations/{irr,capex,equity,verdict}
+DealScope tabs: src/app/scope/property/[id]/tabs/{PropertyTab,FinancialsTab,PlanningTab,types}
 
 ## Hooks (6)
 
