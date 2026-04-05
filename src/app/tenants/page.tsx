@@ -97,6 +97,7 @@ interface TenantRow {
   portfolio: string;
   breakDate?: string;
   reviewDate?: string;
+  paymentHistory?: Array<{ period: string; status: string }>;
 }
 
 function buildTenants(portfolioData: Portfolio): TenantRow[] {
@@ -722,6 +723,7 @@ export default function TenantsPage() {
           reviewDate: string | null; daysToExpiry: number | null; leaseStatus: string;
           healthScore: number; renewalProbability: string; renewalPct: number;
           covenantGrade: string; currency: string; sym: string;
+          paymentHistory?: Array<{ period: string; status: string }>;
         }>;
       }) => {
         if (!data.tenants?.length) {
@@ -750,6 +752,7 @@ export default function TenantsPage() {
           portfolio:         "user",
           breakDate:         t.breakDate ?? undefined,
           reviewDate:        t.reviewDate ?? undefined,
+          paymentHistory:    t.paymentHistory,
         }));
         setUserSym(apiSym);
         setUserTenants(rows.sort((a, b) => a.daysToExpiry - b.daysToExpiry));
@@ -832,6 +835,74 @@ export default function TenantsPage() {
             body={`RealHQ monitors every lease event and engages tenants 12+ months before expiry to avoid void risk. ${atRisk.length > 0 ? `${atRisk.length} tenant${atRisk.length !== 1 ? "s" : ""} need attention now.` : "All leases currently within safe renewal windows."}`}
           />
         )}
+
+        {/* ── Upcoming Events — Next 12 Months ────────────────────────────── */}
+        {!isLoading && tenants.length > 0 && (() => {
+          const now = new Date();
+          const cutoff = new Date(now);
+          cutoff.setFullYear(cutoff.getFullYear() + 1);
+
+          type LeaseEvent = { date: Date; label: string; tenant: string; type: "review" | "break" | "expiry" };
+          const events: LeaseEvent[] = [];
+
+          for (const t of tenants) {
+            if (t.reviewDate) {
+              const d = new Date(t.reviewDate);
+              if (d >= now && d <= cutoff) events.push({ date: d, label: "Rent Review", tenant: t.tenant, type: "review" });
+            }
+            if (t.breakDate) {
+              const d = new Date(t.breakDate);
+              if (d >= now && d <= cutoff) events.push({ date: d, label: "Break Clause", tenant: t.tenant, type: "break" });
+            }
+            if (t.expiryDate) {
+              const d = new Date(t.expiryDate);
+              if (d >= now && d <= cutoff) events.push({ date: d, label: "Lease Expiry", tenant: t.tenant, type: "expiry" });
+            }
+          }
+
+          events.sort((a, b) => a.date.getTime() - b.date.getTime());
+
+          if (events.length === 0) return null;
+
+          const typeStyle: Record<string, { bg: string; color: string; border: string; badge: string }> = {
+            review: { bg: "var(--acc-lt)", color: "var(--acc)", border: "var(--acc-bdr)", badge: "REVIEW" },
+            break:  { bg: "var(--amb-lt)", color: "var(--amb)", border: "var(--amb-bdr)", badge: "BREAK" },
+            expiry: { bg: "var(--red-lt)", color: "var(--red)", border: "var(--red-bdr)", badge: "EXPIRY" },
+          };
+
+          return (
+            <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--bdr)", backgroundColor: "var(--s1)" }}>
+              <div className="px-5 py-3.5 flex items-center justify-between" style={{ borderBottom: "1px solid var(--bdr)" }}>
+                <div>
+                  <div className="text-[9px] font-medium uppercase tracking-widest mb-0.5" style={{ fontFamily: "var(--mono)", color: "var(--tx3)", letterSpacing: "2px" }}>
+                    Upcoming Events — Next 12 Months
+                  </div>
+                  <div className="text-[10px]" style={{ color: "var(--tx3)" }}>Reviews, breaks &amp; expiries</div>
+                </div>
+                <a href="/rent-clock" className="text-[10px] font-medium" style={{ color: "var(--acc)", textDecoration: "none" }}>
+                  View rent clock →
+                </a>
+              </div>
+              {events.map((ev, i) => {
+                const s = typeStyle[ev.type];
+                const isLast = i === events.length - 1;
+                return (
+                  <div key={i} className="flex items-center gap-3 px-5 py-3" style={{ borderBottom: isLast ? "none" : "1px solid var(--bdr-lt)" }}>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[11px] font-semibold" style={{ color: "var(--tx)" }}>{ev.label} — {ev.tenant}</div>
+                    </div>
+                    <div className="text-[10px] font-medium shrink-0" style={{ color: "var(--tx3)", fontFamily: "var(--mono)" }}>
+                      {ev.date.toLocaleDateString("en-GB", { month: "short", year: "numeric" }).toUpperCase()}
+                    </div>
+                    <span className="shrink-0 text-[8px] font-semibold px-2 py-0.5 rounded-md" style={{ backgroundColor: s.bg, color: s.color, border: `1px solid ${s.border}` }}>
+                      {s.badge}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
 
         {/* Insight bar */}
         {!isLoading && atRisk.length > 0 && (
