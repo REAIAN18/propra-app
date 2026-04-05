@@ -1,7 +1,7 @@
 # RealHQ — Code Inventory
 
 > READ THIS BEFORE WRITING ANY CODE.
-> 23 lib files, 70+ API routes, 21 components, 6 hooks, 32 pages, 54 models, 30 emails, 8 crons.
+> 23 lib files, 70+ API routes, 21 components, 6 hooks, 33 pages, 54 models, 30 emails, 8 crons.
 > RESTYLE. REWIRE. EXTEND. Never rebuild what works.
 
 ## Lib Files (src/lib/) — 26 files
