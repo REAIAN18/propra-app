@@ -10,6 +10,7 @@ import { ComparablesTable } from "@/components/dealscope/ComparablesTable";
 import { PropertyTab } from "./tabs/PropertyTab";
 import { PlanningTab } from "./tabs/PlanningTab";
 import { FinancialsTab as FinancialsTabV2 } from "./tabs/FinancialsTab";
+import { TitleTab, EnvironmentalTab, OwnershipTab, MarketTab, ApproachTab } from "./dossier-tabs";
 import type { Comparable } from "@/components/dealscope/ComparablesTable";
 import { MultipleValuations } from "@/components/dealscope/MultipleValuations";
 import type { ValuationScenario } from "@/components/dealscope/MultipleValuations";
@@ -49,7 +50,7 @@ type RawDeal = {
   dataSources?: Record<string, unknown>;
 };
 
-const TABS = ["Overview", "Property", "Financials", "Comparables", "Planning", "Due Diligence"] as const;
+const TABS = ["Overview", "Property", "Planning", "Title & Legal", "Environmental", "Ownership", "Financials", "Comparables", "Market", "Approach", "Due Diligence"] as const;
 type Tab = typeof TABS[number];
 
 function fmtCcy(n: number | undefined | null): string {
@@ -510,10 +511,15 @@ export default function PropertyDossierPage() {
           </div>
           <div className={s.tabContent} style={{ paddingBottom: 40 }}>
             {activeTab === "Overview"       && <OverviewTab      deal={deal} prop={prop} />}
-            {activeTab === "Property"       && <PropertyTab      deal={deal} onBack={() => router.back()} />}
+            {activeTab === "Property"       && <PropertyTab      deal={deal} />}
+            {activeTab === "Planning"       && <PlanningTab      deal={deal} />}
+            {activeTab === "Title & Legal"  && <TitleTab />}
+            {activeTab === "Environmental"  && <EnvironmentalTab />}
+            {activeTab === "Ownership"      && <OwnershipTab />}
             {activeTab === "Financials"     && <FinancialsTabV2  deal={deal} prop={prop} />}
             {activeTab === "Comparables"    && <ComparablesTab   deal={deal} />}
-            {activeTab === "Planning"       && <PlanningTab      deal={deal} />}
+            {activeTab === "Market"         && <MarketTab />}
+            {activeTab === "Approach"       && <ApproachTab />}
             {activeTab === "Due Diligence"  && <DueDiligenceTab  deal={deal} />}
           </div>
         </div>
