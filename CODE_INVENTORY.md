@@ -102,5 +102,6 @@ DATABASE_URL DIRECT_URL GOOGLE_MAPS_API_KEY ATTOM_API_KEY ANTHROPIC_API_KEY AWS_
 /lettings/[id] — letting detail: KPIs, enquiry list with covenant grades, HoTs action
 /assets/[id]/tenants/[tenantId] — tenant detail page (from missing-pages-design)
 /transactions/[roomId] — transaction detail: stage pipeline, task checklists, document room, parties, costs
+/settings — profile (useSession + usePortfolio), email notification toggles (localStorage), acquisition strategy, data export
 
 ## DO NOT: create duplicates, rebuild APIs, replace components, delete src/lib/, modify migrations, use old CSS vars, push to main
