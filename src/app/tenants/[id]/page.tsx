@@ -154,6 +154,8 @@ export default function TenantDetailPage() {
   const [loading, setLoading] = useState(true);
   const [tenant, setTenant] = useState<TenantDetail | null>(null);
   const [paymentHistory, setPaymentHistory] = useState<ApiPaymentRecord[]>([]);
+  const [timeline, setTimeline] = useState<Array<{ id: string; type: string; title: string; description: string; status: string; date: string }>>([]);
+  const [tenantEmail, setTenantEmail] = useState<string | null>(null);
 
   useEffect(() => {
     fetch(`/api/user/tenants/${tenantId}`)
@@ -195,6 +197,8 @@ export default function TenantDetailPage() {
           healthScore: t.healthScore ?? 0,
         });
         setPaymentHistory(data.paymentHistory ?? []);
+        setTimeline(data.timeline ?? []);
+        setTenantEmail(t.email ?? null);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -374,7 +378,11 @@ export default function TenantDetailPage() {
                 <span style={{ font: "500 11px sans-serif", color: "var(--acc, #7c6af0)" }}>{tenant.engagementScore} / 10</span>
               </div>
               <div style={{ padding: "18px", font: "300 12px/1.6 sans-serif", color: "var(--tx2, #8888a0)" }}>
-                Low engagement. Verde Health has not responded to the last 2 satisfaction surveys. Arrears pattern suggests possible business difficulties. Consider: direct conversation with tenant principal to understand situation before escalating further.
+                {tenant.engagementScore >= 7
+                  ? "Active engagement. Tenant is responsive and satisfaction surveys show positive trend. Maintain regular check-ins."
+                  : tenant.engagementScore >= 4
+                  ? "Moderate engagement. Some survey non-responses. Schedule a quarterly check-in to maintain relationship."
+                  : "Low engagement. Tenant has not responded to recent satisfaction surveys. Consider a direct conversation with the tenant principal to understand their situation before escalating."}
               </div>
             </div>
           </div>
@@ -390,15 +398,14 @@ export default function TenantDetailPage() {
               </div>
               <div style={{ padding: "0" }}>
                 {[
-                  { label: "Rent", value: `$${tenant.rentMonthly.toLocaleString()}/mo ($${(tenant.rentMonthly * 12).toLocaleString()}/yr)`, source: "extracted" as const },
-                  { label: "Term", value: `3 years (${tenant.leaseStart} – ${tenant.leaseEnd})`, source: "extracted" as const },
-                  { label: "Rent Review", value: "None (short lease)", source: "extracted" as const },
-                  { label: "Break Clause", value: "None", source: "extracted" as const },
-                  { label: "Permitted Use", value: "Healthcare consulting / office", source: "extracted" as const },
-                  { label: "Repair Obligation", value: "Tenant: internal repairs. Landlord: structure + exterior.", source: "extracted" as const },
-                  { label: "Service Charge", value: "Pro-rata share (8.5%) capped at $6,200/yr", source: "extracted" as const },
+                  { label: "Annual Rent", value: tenant.annualRent > 0 ? `${tenant.sym}${tenant.annualRent.toLocaleString()}/yr` : "—", source: "extracted" as const },
+                  { label: "Term", value: tenant.leaseStart && tenant.leaseEnd ? `${tenant.leaseStart} – ${tenant.leaseEnd}` : "—", source: tenant.leaseStart ? "extracted" as const : "missing" as const },
+                  { label: "Rent Review", value: tenant.reviewDate ? tenant.reviewDate : "—", source: tenant.reviewDate ? "extracted" as const : "missing" as const },
+                  { label: "Break Clause", value: tenant.breakDate ? tenant.breakDate : "None", source: "extracted" as const },
+                  { label: "Sector", value: tenant.sector ?? "—", source: tenant.sector ? "extracted" as const : "missing" as const },
+                  { label: "Repair Obligation", value: "—", source: "missing" as const },
+                  { label: "Service Charge", value: "—", source: "missing" as const },
                   { label: "Alienation", value: "—", source: "missing" as const },
-                  { label: "Rent Deposit", value: "$8,400 (2 months)", source: "extracted" as const },
                 ].map((item, i, arr) => (
                   <div key={i} style={{ display: "grid", gridTemplateColumns: "140px 1fr", borderBottom: i === arr.length - 1 ? "none" : "1px solid var(--bdr-lt, #1a1a26)" }}>
                     <div style={{ padding: "8px 18px", font: "500 10px sans-serif", color: "var(--tx3, #555568)" }}>{item.label}</div>
@@ -410,7 +417,7 @@ export default function TenantDetailPage() {
                 ))}
               </div>
               <div style={{ padding: "10px 18px", borderTop: "1px solid var(--bdr, #252533)", font: "300 10px sans-serif", color: "var(--tx3, #555568)" }}>
-                8 of 9 fields auto-extracted from uploaded lease. 1 field not found in document — RealHQ will re-attempt if a clearer scan is uploaded.
+                Upload lease documents to auto-extract full terms via document parser.
               </div>
             </div>
 
@@ -428,38 +435,19 @@ export default function TenantDetailPage() {
                     borderRadius: "100px",
                     font: "600 9px/1 monospace",
                     letterSpacing: ".3px",
-                    background: "var(--red-lt, rgba(248,113,113,.07))",
-                    color: "var(--red, #f87171)",
-                    border: "1px solid var(--red-bdr, rgba(248,113,113,.22))",
+                    background: tenant.covenantLevel === "strong" ? "var(--grn-lt, rgba(52,211,153,.07))" : tenant.covenantLevel === "weak" ? "var(--red-lt, rgba(248,113,113,.07))" : "var(--amb-lt, rgba(251,191,36,.07))",
+                    color: tenant.covenantLevel === "strong" ? "var(--grn, #34d399)" : tenant.covenantLevel === "weak" ? "var(--red, #f87171)" : "var(--amb, #fbbf24)",
+                    border: `1px solid ${tenant.covenantLevel === "strong" ? "var(--grn-bdr, rgba(52,211,153,.22))" : tenant.covenantLevel === "weak" ? "var(--red-bdr, rgba(248,113,113,.22))" : "var(--amb-bdr, rgba(251,191,36,.22))"}`,
                   }}
                 >
-                  HIGH RISK
+                  {tenant.covenantScore}
                 </span>
               </div>
-              <div style={{ padding: "0" }}>
-                {[
-                  { label: "Entity Type", value: "Florida LLC · Single-member" },
-                  { label: "Incorporated", value: 'Jan 14, 2024 (2 years old)', warn: true },
-                  { label: "Registered Agent", value: "Dr. Maria Santos · 2801 Ponce de Leon Blvd, Suite 2B" },
-                  { label: "Employees", value: "3–5 (estimated from LinkedIn)", dim: true },
-                  { label: "Est. Revenue", value: "$180k–$320k/yr (D&B estimate)", dim: true },
-                  { label: "Credit Score", value: "Not rated (entity too new for D&B PAYDEX)", dim: true, warn: true },
-                  { label: "FL Sunbiz Status", value: "Active ✓ · Annual report filed Jan 2026", ok: true },
-                ].map((item, i, arr) => (
-                  <div key={i} style={{ display: "grid", gridTemplateColumns: "140px 1fr", borderBottom: i === arr.length - 1 ? "none" : "1px solid var(--bdr-lt, #1a1a26)" }}>
-                    <div style={{ padding: "8px 18px", font: "500 10px sans-serif", color: "var(--tx3, #555568)" }}>{item.label}</div>
-                    <div style={{ padding: "8px 18px", font: "400 12px sans-serif", color: item.ok ? "var(--grn, #34d399)" : item.warn ? "var(--amb, #fbbf24)" : "var(--tx, #e4e4ec)" }}>
-                      {item.value.includes("(") ? (
-                        <>
-                          {item.value.split("(")[0]}
-                          <span style={{ color: "var(--tx3, #555568)" }}>({item.value.split("(")[1]}</span>
-                        </>
-                      ) : (
-                        item.value
-                      )}
-                    </div>
-                  </div>
-                ))}
+              <div style={{ padding: "18px", font: "300 12px/1.6 sans-serif", color: "var(--tx3, #555568)", textAlign: "center" }}>
+                Run a covenant check to see full company intelligence — entity type, registration, filing history, credit indicators, and key contacts.
+                <div style={{ marginTop: 10 }}>
+                  <span style={{ font: "500 11px var(--sans)", color: "var(--acc, #7c6af0)", cursor: "pointer" }}>Run covenant check →</span>
+                </div>
               </div>
             </div>
 
@@ -486,33 +474,37 @@ export default function TenantDetailPage() {
               <div style={{ padding: "18px" }}>
                 <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "12px" }}>
                   {[
-                    { text: "⚠ New entity (2 years)", type: "danger" },
-                    { text: "⚠ Single-member LLC", type: "danger" },
-                    { text: "⚠ No credit rating", type: "danger" },
-                    { text: "⚠ Rent high vs revenue", type: "warn" },
-                    { text: "⚠ Deteriorating payment pattern", type: "danger" },
-                    { text: "✓ Entity active & compliant", type: "ok" },
-                    { text: "✓ Rent deposit held (2 months)", type: "ok" },
-                  ].map((tag, i) => (
-                    <div
-                      key={i}
-                      style={{
-                        padding: "6px 10px",
-                        background: tag.type === "ok" ? "var(--grn-lt, rgba(52,211,153,.07))" : tag.type === "warn" ? "var(--amb-lt, rgba(251,191,36,.07))" : "var(--red-lt, rgba(248,113,113,.07))",
-                        border: `1px solid ${tag.type === "ok" ? "var(--grn-bdr, rgba(52,211,153,.22))" : tag.type === "warn" ? "var(--amb-bdr, rgba(251,191,36,.22))" : "var(--red-bdr, rgba(248,113,113,.22))"}`,
-                        borderRadius: "6px",
-                        font: "400 11px sans-serif",
-                        color: tag.type === "ok" ? "var(--grn, #34d399)" : tag.type === "warn" ? "var(--amb, #fbbf24)" : "var(--red, #f87171)",
-                      }}
-                    >
-                      {tag.text}
-                    </div>
-                  ))}
+                    tenant.covenantLevel === "weak" && { text: "⚠ Weak covenant", type: "danger" },
+                    tenant.paymentTrend === "deteriorating" && { text: "⚠ Deteriorating payment trend", type: "danger" },
+                    tenant.arrears > 0 && { text: `⚠ ${tenant.sym}${tenant.arrears.toLocaleString()} in arrears`, type: "danger" },
+                    tenant.covenantLevel === "adequate" && { text: "⚠ Covenant ungraded", type: "warn" },
+                    tenant.paymentTrend === "improving" && { text: "✓ Payment trend improving", type: "ok" },
+                    tenant.covenantLevel === "strong" && { text: "✓ Strong covenant", type: "ok" },
+                    tenant.arrears === 0 && { text: "✓ No arrears", type: "ok" },
+                  ].filter(Boolean).map((tag, i) => {
+                    const t2 = tag as { text: string; type: string };
+                    return (
+                      <div
+                        key={i}
+                        style={{
+                          padding: "6px 10px",
+                          background: t2.type === "ok" ? "var(--grn-lt, rgba(52,211,153,.07))" : t2.type === "warn" ? "var(--amb-lt, rgba(251,191,36,.07))" : "var(--red-lt, rgba(248,113,113,.07))",
+                          border: `1px solid ${t2.type === "ok" ? "var(--grn-bdr, rgba(52,211,153,.22))" : t2.type === "warn" ? "var(--amb-bdr, rgba(251,191,36,.22))" : "var(--red-bdr, rgba(248,113,113,.22))"}`,
+                          borderRadius: "6px",
+                          font: "400 11px sans-serif",
+                          color: t2.type === "ok" ? "var(--grn, #34d399)" : t2.type === "warn" ? "var(--amb, #fbbf24)" : "var(--red, #f87171)",
+                        }}
+                      >
+                        {t2.text}
+                      </div>
+                    );
+                  })}
                 </div>
                 <div style={{ font: "300 12px/1.7 sans-serif", color: "var(--tx2, #8888a0)" }}>
-                  <strong style={{ color: "var(--tx, #e4e4ec)" }}>Assessment:</strong> High tenant risk. Verde Health is a micro-business with no credit history and a worsening payment pattern. The single-member LLC structure offers limited recourse. Rent represents an
-                  estimated 16–28% of revenue, which is above the 15% comfort threshold. The 2-month deposit provides short-term protection but will be eroded if arrears continue.{" "}
-                  <strong style={{ color: "var(--red, #f87171)" }}>Recommend escalating to formal demand immediately</strong> and beginning contingency planning for re-letting Suite 2B if payment does not resume within 30 days.
+                  {tenant.covenantLevel === "weak" || tenant.arrears > 0
+                    ? <><strong style={{ color: "var(--tx, #e4e4ec)" }}>Assessment:</strong> Elevated tenant risk. {tenant.arrears > 0 ? `Current arrears of ${tenant.sym}${tenant.arrears.toLocaleString()} require immediate attention. ` : ""}Review lease terms and consider direct engagement with the tenant before escalating further.</>
+                    : <><strong style={{ color: "var(--tx, #e4e4ec)" }}>Assessment:</strong> {tenant.covenantLevel === "strong" ? "Low risk tenant with strong covenant. Continue regular monitoring." : "Moderate risk. Run a covenant check for full intelligence on this tenant."}</>
+                  }
                 </div>
               </div>
             </div>
@@ -524,20 +516,22 @@ export default function TenantDetailPage() {
                 <span style={{ font: "400 10px sans-serif", color: "var(--tx3, #555568)" }}>Auto-populated</span>
               </div>
               <div style={{ padding: "18px" }}>
-                {[
-                  { label: "Principal", value: "Dr. Maria Santos", source: "SUNBIZ" },
-                  { label: "Email", value: "maria@verdehealth.com", source: "LEASE" },
-                  { label: "Phone", value: "(305) 555-0477", source: "D&B" },
-                  { label: "Website", value: "verdehealth.com", source: "WEB", link: true },
-                  { label: "LinkedIn", value: "linkedin.com/in/mariasantos-verde", source: "WEB", link: true },
-                ].map((item, i) => (
-                  <div key={i} style={{ marginBottom: i === 4 ? "0" : "10px" }}>
-                    <div style={{ font: "500 10px sans-serif", color: "var(--tx3, #555568)", marginBottom: "2px" }}>
-                      {item.label} <SourceBadge source="extracted" />
+                {tenantEmail ? (
+                  <div style={{ marginBottom: 10 }}>
+                    <div style={{ font: "500 10px sans-serif", color: "var(--tx3, #555568)", marginBottom: 2 }}>
+                      Email <SourceBadge source="extracted" />
                     </div>
-                    <div style={{ font: item.link ? "400 12px sans-serif" : "500 12px sans-serif", color: item.link ? "var(--acc, #7c6af0)" : "var(--tx, #e4e4ec)" }}>{item.value}</div>
+                    <div style={{ font: "500 12px sans-serif", color: "var(--tx, #e4e4ec)" }}>{tenantEmail}</div>
                   </div>
-                ))}
+                ) : (
+                  <div style={{ font: "300 12px/1.5 sans-serif", color: "var(--tx3, #555568)", paddingBottom: 8 }}>
+                    Contact details not available. Upload the lease or tenancy agreement to auto-extract contact information.
+                  </div>
+                )}
+                <div>
+                  <div style={{ font: "500 10px sans-serif", color: "var(--tx3, #555568)", marginBottom: 2 }}>Sector</div>
+                  <div style={{ font: "500 12px sans-serif", color: "var(--tx, #e4e4ec)" }}>{tenant.sector ?? "—"}</div>
+                </div>
               </div>
             </div>
           </div>
@@ -548,18 +542,21 @@ export default function TenantDetailPage() {
         <div style={{ background: "var(--s1, #111116)", border: "1px solid var(--bdr, #252533)", borderRadius: "10px", overflow: "hidden" }}>
           <div style={{ padding: "14px 18px", borderBottom: "1px solid var(--bdr, #252533)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <h4 style={{ font: "600 13px sans-serif", color: "var(--tx, #e4e4ec)" }}>Auto-Aggregated from All Systems</h4>
-            <span style={{ font: "400 10px sans-serif", color: "var(--tx3, #555568)" }}>7 events · last 6 months</span>
+            <span style={{ font: "400 10px sans-serif", color: "var(--tx3, #555568)" }}>{timeline.length} events</span>
           </div>
 
-          {[
-            { type: "PAYMENT", date: "Mar 27, 2026", text: "March rent not received. $4,200 overdue · 27 days. Auto-escalated to formal demand stage.", color: "red" },
-            { type: "EMAIL · RESEND", date: "Mar 18, 2026 · 9:00 AM", text: "Friendly payment reminder sent to maria@verdehealth.com. Opened Mar 18 at 11:23 AM. No response.", color: "blue", badge: "AUTO REMINDER" },
-            { type: "PAYMENT", date: "Feb 1, 2026", text: "February rent received ($4,200). Paid 3 days late.", color: "amber" },
-            { type: "ENGAGEMENT", date: "Jan 15, 2026", text: "Satisfaction survey sent. No response received (2nd consecutive non-response).", color: "amber" },
-            { type: "PAYMENT", date: "Jan 5, 2026", text: "January rent received ($4,200). Paid 5 days late.", color: "amber" },
-            { type: "PAYMENT", date: "Dec 1, 2025", text: "December rent received ($4,200). Paid on time.", color: "green" },
-            { type: "ENGAGEMENT", date: "Oct 20, 2025", text: "Satisfaction survey sent. No response received.", color: "muted" },
-          ].map((event, i, arr) => {
+          {timeline.length === 0 ? (
+            <div style={{ padding: "24px 18px", color: "var(--tx3, #555568)", font: "400 12px sans-serif", textAlign: "center" }}>
+              No activity recorded yet. Events will appear here as payments are received, letters are sent, and engagements are logged.
+            </div>
+          ) : timeline.map((event, i, arr) => {
+            const typeColorMap: Record<string, string> = {
+              payment: event.status === "paid_on_time" ? "green" : "amber",
+              letter: "blue",
+              engagement: "amber",
+              covenant_check: "muted",
+            };
+            const colorKey = typeColorMap[event.type] ?? "muted";
             const colors = {
               red: { bg: "var(--red-lt, rgba(248,113,113,.07))", color: "var(--red, #f87171)", border: "var(--red-bdr, rgba(248,113,113,.22))" },
               blue: { bg: "rgba(56,189,248,.07)", color: "#38bdf8", border: "rgba(56,189,248,.22)" },
@@ -568,44 +565,24 @@ export default function TenantDetailPage() {
               muted: { bg: "var(--s3, #1f1f28)", color: "var(--tx3, #555568)", border: "var(--bdr, #252533)" },
             };
 
-            const c = colors[event.color as keyof typeof colors];
+            const c = colors[colorKey as keyof typeof colors];
+            const eventDisplay = {
+              type: event.type.toUpperCase().replace(/_/g, " "),
+              date: event.date ? new Date(event.date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—",
+              text: `${event.title}${event.description ? ` — ${event.description}` : ""}`,
+              color: colorKey,
+              badge: undefined as string | undefined,
+            };
 
             return (
-              <div key={i} style={{ padding: "14px 18px", borderBottom: i === arr.length - 1 ? "none" : "1px solid var(--bdr-lt, #1a1a26)" }}>
+              <div key={event.id} style={{ padding: "14px 18px", borderBottom: i === arr.length - 1 ? "none" : "1px solid var(--bdr-lt, #1a1a26)" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-                  <span
-                    style={{
-                      font: "500 8px/1 monospace",
-                      padding: "2px 6px",
-                      borderRadius: "4px",
-                      background: c.bg,
-                      color: c.color,
-                      border: `1px solid ${c.border}`,
-                    }}
-                  >
-                    {event.type}
+                  <span style={{ font: "500 8px/1 monospace", padding: "2px 6px", borderRadius: "4px", background: c.bg, color: c.color, border: `1px solid ${c.border}` }}>
+                    {eventDisplay.type}
                   </span>
-                  <span style={{ font: "400 10px sans-serif", color: "var(--tx3, #555568)" }}>{event.date}</span>
-                  {event.badge && (
-                    <span
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        padding: "3px 7px",
-                        borderRadius: "5px",
-                        font: "500 7px/1 monospace",
-                        letterSpacing: ".3px",
-                        whiteSpace: "nowrap",
-                        background: "var(--red-lt, rgba(248,113,113,.07))",
-                        color: "var(--red, #f87171)",
-                        border: "1px solid var(--red-bdr, rgba(248,113,113,.22))",
-                      }}
-                    >
-                      {event.badge}
-                    </span>
-                  )}
+                  <span style={{ font: "400 10px sans-serif", color: "var(--tx3, #555568)" }}>{eventDisplay.date}</span>
                 </div>
-                <div style={{ font: "300 12px/1.6 sans-serif", color: event.color === "red" ? "var(--red, #f87171)" : event.color === "amber" ? "var(--amb, #fbbf24)" : "var(--tx2, #8888a0)" }}>{event.text}</div>
+                <div style={{ font: "300 12px/1.6 sans-serif", color: eventDisplay.color === "red" ? "var(--red, #f87171)" : eventDisplay.color === "amber" ? "var(--amb, #fbbf24)" : "var(--tx2, #8888a0)" }}>{eventDisplay.text}</div>
               </div>
             );
           })}
