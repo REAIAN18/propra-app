@@ -279,7 +279,7 @@ export default async function PortfolioSummaryPage({
                   value: fmtK(opp.ins, sym),
                   sub: "estimated annual saving",
                   color: "#7c6af0",
-                  bg: "#EFF6FF",
+                  bg: "rgba(124,106,240,.07)",
                   href: "/insurance",
                 },
                 {
@@ -288,7 +288,7 @@ export default async function PortfolioSummaryPage({
                   value: fmtK(opp.energy, sym),
                   sub: "estimated yr-1 saving",
                   color: "#fbbf24",
-                  bg: "#FFFBEB",
+                  bg: "rgba(251,191,36,.07)",
                   href: "/energy",
                 },
                 {
