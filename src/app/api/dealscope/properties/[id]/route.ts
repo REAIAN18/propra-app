@@ -18,7 +18,7 @@ const DEMO_PROPERTIES: Record<string, object> = {
     signals: ["admin", "mees"], dealScore: 62, temperature: "warm",
     dataSources: {
       passingRent: 49200, erv: 57400, serviceCharge: 4100,
-      assumptions: { passingRent: { value: 49200, source: "estimated" }, erv: { value: 57400, source: "market" }, capRate: { value: 0.075, source: "market" }, serviceCharge: { value: 4100, source: "estimated" }, voidMonths: { value: 3, source: "estimated" } },
+      assumptions: { passingRent: { value: 49200, source: "estimated" }, erv: { value: 57400, source: "market" }, capRate: { value: 0.075, source: "market" }, serviceCharge: { value: 4100, source: "estimated" }, voidMonths: 3 },
       valuations: { incomeCap: { value: 657333, method: "Income capitalisation", capRate: 0.075, noi: 48800 }, blended: { value: 590000, confidence: 0.72, method: "blended" }, askingPrice: 520000, discount: 12 },
       returns: { capRate: 7.5, noi: 48800, irr5yr: 11.2, cashOnCash: 6.8, equityMultiple: 1.74 },
       comps: [
@@ -36,7 +36,7 @@ const DEMO_PROPERTIES: Record<string, object> = {
     signals: ["auction"], dealScore: 67, temperature: "warm",
     dataSources: {
       passingRent: 56400, erv: 65800, serviceCharge: 4700,
-      assumptions: { passingRent: { value: 56400, source: "estimated" }, erv: { value: 65800, source: "market" }, capRate: { value: 0.075, source: "market" }, serviceCharge: { value: 4700, source: "estimated" }, voidMonths: { value: 6, source: "estimated" } },
+      assumptions: { passingRent: { value: 56400, source: "estimated" }, erv: { value: 65800, source: "market" }, capRate: { value: 0.075, source: "market" }, serviceCharge: { value: 4700, source: "estimated" }, voidMonths: 6 },
       valuations: { incomeCap: { value: 744000, method: "Income capitalisation", capRate: 0.075, noi: 55800 }, blended: { value: 645000, confidence: 0.68, method: "blended" }, askingPrice: 580000, discount: 10 },
       returns: { capRate: 7.5, noi: 55800, irr5yr: 12.4, cashOnCash: 7.2, equityMultiple: 1.86 },
       comps: [
