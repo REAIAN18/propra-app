@@ -237,3 +237,11 @@
 .skeletonValue { height: 16px; width: 60%; border-radius: 4px; margin-top: 4px; }
 .skeletonGrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
 .skeletonItem { display: flex; flex-direction: column; gap: 6px; }
+
+/* ── ERROR STATE ── */
+.errorPage { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px; padding: 40px 24px; gap: 12px; text-align: center; }
+.errorIcon { font-size: 32px; opacity: .8; }
+.errorTitle { font-size: 16px; font-weight: 600; color: var(--tx); margin: 0; }
+.errorMessage { font-size: 13px; color: var(--tx3); margin: 0; max-width: 380px; line-height: 1.5; }
+.retryBtn { margin-top: 4px; padding: 8px 18px; border-radius: 8px; background: var(--acc); border: none; color: #fff; font-size: 12px; font-weight: 600; cursor: pointer; font-family: var(--sans); transition: opacity .15s; }
+.retryBtn:hover { opacity: .85; }
