@@ -5,7 +5,8 @@
  * Assembles HeroPanel (T06), Gallery (T08), BuildingSpec (T09), EPC (T10), AISummary (T20).
  */
 
-import { HeroPanel, AISummary } from "@/lib/dealscope/components";
+import { HeroPanel, AISummary, Gallery } from "@/lib/dealscope/components";
+import type { GalleryItem } from "@/lib/dealscope/components";
 import type { RawDeal } from "./types";
 import s from "../dossier.module.css";
 
@@ -32,7 +33,12 @@ export function PropertyTab({ deal, onBack, onExportMemo }: Props) {
   const ai = ds.aiAnalysis as Record<string, unknown> | undefined;
   const listing = ds.listing as Record<string, unknown> | undefined;
   const epcData = ds.epcData as Record<string, unknown> | undefined;
-  const images = (ds.images as string[] | undefined) ?? [];
+  const rawImages = (ds.images as string[] | undefined) ?? [];
+  const galleryItems: GalleryItem[] = rawImages.map((url, i) => ({
+    label: `View ${i + 1}`,
+    source: i === 0 ? "Satellite" : "Photo",
+    url,
+  }));
   const features = (ai?.keyFeatures as string[] | undefined) ?? [];
   const description = (listing?.description ?? listing?.summary ?? ai?.summary) as string | undefined;
   const size = deal.buildingSizeSqft ?? deal.sqft;
@@ -127,21 +133,9 @@ export function PropertyTab({ deal, onBack, onExportMemo }: Props) {
       </div>
 
       {/* T08 — Image Gallery */}
-      {images.length > 0 && (
+      {galleryItems.length > 0 && (
         <div className={s.card}>
-          <div className={s.cardTitle}>Gallery</div>
-          <div className={s.gallery}>
-            {images.slice(0, 8).map((img, i) => (
-              <img
-                key={i}
-                src={img}
-                alt={`Property view ${i + 1}`}
-                className={s.galImg}
-                style={{ width: "100%", height: 78, objectFit: "cover" }}
-                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-              />
-            ))}
-          </div>
+          <Gallery items={galleryItems} />
         </div>
       )}
 
