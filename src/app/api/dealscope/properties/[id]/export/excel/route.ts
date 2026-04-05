@@ -87,7 +87,7 @@ export async function GET(
       ["Asking Price", fmt(deal.askingPrice || deal.guidePrice)],
       ["Source", deal.sourceTag || "—"],
       ["Broker / Agent", deal.brokerName || ai.agentName || "—"],
-      ["Deal Score", (deal as Record<string, any>).dealScore != null ? String((deal as Record<string, any>).dealScore) : "—"],
+      ["Deal Score", (deal as any).dealScore != null ? String((deal as any).dealScore) : "—"],
       ["Generated", new Date().toLocaleDateString("en-GB")],
     ];
     sumRows.forEach(([label, value]) => {
