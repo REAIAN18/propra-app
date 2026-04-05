@@ -71,83 +71,39 @@ export default function InsurancePage() {
       annualSaving: number;
     }>;
   } | null>(null);
+  const [insuranceBenchmarks, setInsuranceBenchmarks] = useState<{ min: number; max: number } | null>(null);
+  const [policies, setPolicies] = useState<PolicyData[]>([]);
 
-  // Fetch insurance risk data
+  // Fetch insurance risk + summary data
   useEffect(() => {
-    fetch("/api/user/insurance-risk")
-      .then((res) => res.json())
-      .then((data) => setInsuranceRisk(data))
-      .catch((err) => console.error("Failed to fetch insurance risk data:", err));
+    Promise.all([
+      fetch("/api/user/insurance-risk").then(r => r.json()),
+      fetch("/api/user/insurance-summary").then(r => r.json()),
+    ]).then(([riskData, summaryData]) => {
+      setInsuranceRisk(riskData);
+      if (summaryData?.benchmarkMin && summaryData?.benchmarkMax) {
+        setInsuranceBenchmarks({ min: summaryData.benchmarkMin, max: summaryData.benchmarkMax });
+      }
+      if (Array.isArray(summaryData?.policies)) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        setPolicies(summaryData.policies.map((p: any) => ({
+          id: p.id,
+          propertyName: p.propertyAddress?.split(",")[0] ?? "Property",
+          propertyType: p.coverageType ?? "Commercial",
+          sqft: 0,
+          carrier: p.insurer ?? "—",
+          premium: p.premium ?? 0,
+          cover: p.sumInsured ?? 0,
+          deductible: p.excess ?? 0,
+          renewal: p.renewalDate
+            ? new Date(p.renewalDate).toLocaleDateString("en-US", { month: "short", year: "numeric" })
+            : "",
+          vsMarket: 0,
+          status: (p.premium === 0 ? "missing" : "overpaying") as PolicyData["status"],
+        })));
+      }
+    }).catch((err) => console.error("Failed to fetch insurance data:", err));
   }, []);
-
-  // Mock data - replace with API calls
-  const policies: PolicyData[] = [
-    {
-      id: "1",
-      propertyName: "Coral Gables Office Park",
-      propertyType: "Office",
-      sqft: 42000,
-      carrier: "Zurich",
-      premium: 18400,
-      cover: 16000000,
-      deductible: 25000,
-      renewal: "Dec 2026",
-      vsMarket: 22,
-      status: "overpaying",
-    },
-    {
-      id: "2",
-      propertyName: "Brickell Retail Center",
-      propertyType: "Retail",
-      sqft: 18000,
-      carrier: "AIG",
-      premium: 24800,
-      cover: 11000000,
-      deductible: 10000,
-      renewal: "Aug 2026",
-      vsMarket: 18,
-      status: "overpaying",
-    },
-    {
-      id: "3",
-      propertyName: "Orlando Medical Office",
-      propertyType: "Medical",
-      sqft: 15000,
-      carrier: "Nationwide",
-      premium: 16200,
-      cover: 8000000,
-      deductible: 10000,
-      renewal: "Sep 2026",
-      vsMarket: 15,
-      status: "overpaying",
-    },
-    {
-      id: "4",
-      propertyName: "Tampa Industrial Park",
-      propertyType: "Industrial",
-      sqft: 28000,
-      carrier: "Hartford",
-      premium: 18400,
-      cover: 9000000,
-      deductible: 25000,
-      renewal: "Mar 2027",
-      vsMarket: 0,
-      status: "bound",
-    },
-    {
-      id: "5",
-      propertyName: "Ft Lauderdale Flex Space",
-      propertyType: "Flex",
-      sqft: 22000,
-      carrier: "",
-      premium: 0,
-      cover: 0,
-      deductible: 0,
-      renewal: "",
-      vsMarket: 0,
-      status: "missing",
-    },
-  ];
 
   const quotes: QuoteData[] = [
     {
@@ -189,10 +145,12 @@ export default function InsurancePage() {
   ];
 
   const totalPremium = policies.reduce((sum, p) => sum + p.premium, 0);
-  const marketRate = 72100;
-  const overpaying = 21300;
-  const coverageGaps = 2;
-  const savedThisYear = 3700;
+  const marketRate = insuranceBenchmarks
+    ? Math.round((insuranceBenchmarks.min + insuranceBenchmarks.max) / 2)
+    : 0;
+  const overpaying = marketRate > 0 ? Math.max(0, totalPremium - marketRate) : 0;
+  const coverageGaps = insuranceRisk?.coverageGaps?.filter(g => g.severity !== "green").length ?? 0;
+  const savedThisYear = 0; // populated once a policy has been retendered via CoverForce
 
   return (
     <>
@@ -304,7 +262,7 @@ export default function InsurancePage() {
               <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
                 <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: "6px" }}>Total Premium</div>
                 <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-.02em", lineHeight: "1" }}>${(totalPremium / 1000).toFixed(1)}k <small style={{ fontFamily: "var(--sans)", fontSize: "10px", color: "var(--tx3)", fontWeight: "400" }}>/yr</small></div>
-                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>5 policies across 5 assets</div>
+                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>{policies.length} {policies.length === 1 ? "policy" : "policies"} across {policies.length} assets</div>
               </div>
               <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
                 <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: "6px" }}>Market Rate</div>
@@ -314,29 +272,39 @@ export default function InsurancePage() {
               <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
                 <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: "6px" }}>Overpaying</div>
                 <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-.02em", lineHeight: "1" }}>${(overpaying / 1000).toFixed(1)}k <small style={{ fontFamily: "var(--sans)", fontSize: "10px", color: "var(--tx3)", fontWeight: "400" }}>/yr</small></div>
-                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}><span style={{ color: "var(--red)" }}>23% above market avg</span></div>
+                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
+                  {marketRate > 0 && overpaying > 0 ? (
+                    <span style={{ color: "var(--red)" }}>{Math.round((overpaying / marketRate) * 100)}% above market avg</span>
+                  ) : "—"}
+                </div>
               </div>
               <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
                 <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: "6px" }}>Coverage Gaps</div>
                 <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-.02em", lineHeight: "1" }}>{coverageGaps}</div>
-                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}><span style={{ color: "var(--amb)" }}>1 missing · 1 underinsured</span></div>
+                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
+                  {coverageGaps > 0 ? <span style={{ color: "var(--amb)" }}>{policies.filter(p => p.status === "missing").length} missing · check details</span> : "No gaps found"}
+                </div>
               </div>
               <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
                 <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: "6px" }}>Saved This Year</div>
-                <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-.02em", lineHeight: "1" }}>${(savedThisYear / 1000).toFixed(1)}k</div>
-                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}><span style={{ color: "var(--grn)" }}>Tampa retendered</span></div>
+                <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-.02em", lineHeight: "1" }}>{savedThisYear > 0 ? `$${(savedThisYear / 1000).toFixed(1)}k` : "—"}</div>
+                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
+                  {savedThisYear > 0 ? <span style={{ color: "var(--grn)" }}>via CoverForce rebind</span> : "Retender a policy to save"}
+                </div>
               </div>
             </div>
 
-            {/* Bound Banner */}
-            <div style={{ display: "flex", alignItems: "center", gap: "14px", padding: "16px 20px", background: "var(--grn-lt)", border: "1px solid var(--grn-bdr)", borderRadius: "10px", marginBottom: "14px" }}>
-              <div style={{ width: "36px", height: "36px", borderRadius: "9px", background: "var(--grn)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: "14px", flexShrink: "0" }}>✓</div>
-              <div style={{ flex: "1" }}>
-                <div style={{ font: "600 13px var(--sans)", color: "var(--tx)" }}>Tampa Industrial — retendered and bound via CoverForce</div>
-                <div style={{ font: "400 11px var(--sans)", color: "var(--tx2)", marginTop: "1px" }}>Zurich ($22.1k) → Hartford ($18.4k) · Bound 12 Mar 2026 · Same cover, lower premium</div>
+            {/* Bound Banner — only shows when a policy has been retendered via CoverForce */}
+            {savedThisYear > 0 && (
+              <div style={{ display: "flex", alignItems: "center", gap: "14px", padding: "16px 20px", background: "var(--grn-lt)", border: "1px solid var(--grn-bdr)", borderRadius: "10px", marginBottom: "14px" }}>
+                <div style={{ width: "36px", height: "36px", borderRadius: "9px", background: "var(--grn)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: "14px", flexShrink: "0" }}>✓</div>
+                <div style={{ flex: "1" }}>
+                  <div style={{ font: "600 13px var(--sans)", color: "var(--tx)" }}>Policy retendered and bound via CoverForce</div>
+                  <div style={{ font: "400 11px var(--sans)", color: "var(--tx2)", marginTop: "1px" }}>Same cover, lower premium</div>
+                </div>
+                <div style={{ fontFamily: "var(--serif)", fontSize: "18px", color: "var(--grn)" }}>${savedThisYear}/yr saved</div>
               </div>
-              <div style={{ fontFamily: "var(--serif)", fontSize: "18px", color: "var(--grn)" }}>${savedThisYear}/yr saved</div>
-            </div>
+            )}
 
             {/* Risks & Coverage Gaps + Ways to Reduce Premium (2-column grid) */}
             <div className="intelligence-grid">
