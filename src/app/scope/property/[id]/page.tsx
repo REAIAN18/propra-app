@@ -356,7 +356,48 @@ export default function PropertyDossierPage() {
   }, [id]);
 
   if (loading) {
-    return <AppShell><div style={{ padding: 32, textAlign: "center", color: "var(--tx3)", fontSize: 13 }}>Loading property…</div></AppShell>;
+    return (
+      <AppShell>
+        <div className={s.skeletonContainer}>
+          <div className={s.skeletonHeader}>
+            <div className={`${s.skeleton} ${s.skeletonPhoto}`} />
+            <div className={s.skeletonInfo}>
+              <div className={`${s.skeleton} ${s.skeletonTitle}`} />
+              <div className={`${s.skeleton} ${s.skeletonSpec}`} />
+              <div className={`${s.skeleton} ${s.skeletonSpec}`} style={{ width: "30%" }} />
+            </div>
+            <div className={s.skeletonInfo} style={{ flex: "0 0 auto", gap: 8 }}>
+              <div className={`${s.skeleton} ${s.skeletonBadge}`} />
+              <div className={`${s.skeleton} ${s.skeletonBadge}`} />
+            </div>
+          </div>
+          <div className={s.skeletonTabs}>
+            {[80, 80, 96, 80, 108].map((w, i) => (
+              <div key={i} className={`${s.skeleton} ${s.skeletonTab}`} style={{ width: w }} />
+            ))}
+          </div>
+          <div className={s.skeletonContent}>
+            <div className={`${s.skeleton} ${s.skeletonTitle}`} style={{ width: 130, height: 18 }} />
+            <div className={s.skeletonGrid}>
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className={s.skeletonCard}>
+                  <div className={`${s.skeleton} ${s.skeletonCardLabel}`} />
+                  <div className={`${s.skeleton} ${s.skeletonCardValue}`} />
+                </div>
+              ))}
+            </div>
+            <div className={s.skeletonGrid}>
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className={s.skeletonCard}>
+                  <div className={`${s.skeleton} ${s.skeletonCardLabel}`} />
+                  <div className={`${s.skeleton} ${s.skeletonCardValue}`} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </AppShell>
+    );
   }
   if (error || !deal) {
     return (

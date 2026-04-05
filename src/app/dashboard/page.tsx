@@ -585,6 +585,145 @@ export default function DashboardPage() {
           )}
         </div>
 
+        {/* Risk Alerts */}
+        {rawPortfolio && (() => {
+          const today = new Date();
+          const expiringLeases = rawPortfolio.assets.flatMap(a => a.leases).filter(l => l.daysToExpiry <= 90 && l.daysToExpiry >= 0);
+          const expiredCompliance = rawPortfolio.assets.flatMap(a => a.compliance).filter(c => c.status === "expired" || c.status === "expiring_soon");
+          const leasesRentAtRisk = expiringLeases.reduce((s, l) => s + l.rentPerSqft * l.sqft, 0);
+          const complianceFineExposure = expiredCompliance.reduce((s, c) => s + c.fineExposure, 0);
+          const sym = portfolio!.currency === "USD" ? "$" : "£";
+          if (expiringLeases.length === 0 && expiredCompliance.length === 0) return null;
+          return (
+            <div style={{ marginBottom: "24px" }}>
+              {expiringLeases.length > 0 && (
+                <Link href="/rent-clock" style={{ textDecoration: "none", display: "block", marginBottom: "8px" }}>
+                  <div style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                    background: "var(--s1, #111116)", border: "1px solid var(--red-bdr, rgba(248,113,113,.22))",
+                    borderRadius: "10px", padding: "12px 16px", gap: "12px",
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--red, #f87171)", flexShrink: 0, animation: "pulse 2s infinite" }} />
+                      <div>
+                        <div style={{ font: "500 13px 'DM Sans', sans-serif", color: "var(--tx, #e4e4ec)", lineHeight: 1.3 }}>
+                          {expiringLeases.length === 1 ? expiringLeases[0].tenant : `${expiringLeases.length} leases expiring`} — lease{expiringLeases.length > 1 ? "s" : ""} expiring
+                        </div>
+                        <div style={{ font: "300 11px 'DM Sans', sans-serif", color: "var(--tx3, #555568)" }}>
+                          {expiringLeases.length === 1 ? `${expiringLeases[0].daysToExpiry} days` : "within 90 days"} — renewal letter ready to send
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px", flexShrink: 0 }}>
+                      <span style={{ font: "500 10px 'JetBrains Mono', monospace", padding: "3px 8px", borderRadius: 5, background: "var(--red-lt, rgba(248,113,113,.08))", color: "var(--red, #f87171)", border: "1px solid var(--red-bdr, rgba(248,113,113,.22))" }}>
+                        {expiringLeases[0].daysToExpiry}d
+                      </span>
+                      {leasesRentAtRisk > 0 && (
+                        <span style={{ font: "500 13px 'JetBrains Mono', monospace", color: "var(--red, #f87171)" }}>
+                          {fmt(leasesRentAtRisk, portfolio!.currency)} at risk
+                        </span>
+                      )}
+                      <span style={{ color: "var(--tx3)", fontSize: 14 }}>→</span>
+                    </div>
+                  </div>
+                </Link>
+              )}
+              {expiredCompliance.length > 0 && (
+                <Link href="/compliance" style={{ textDecoration: "none", display: "block" }}>
+                  <div style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                    background: "var(--s1, #111116)", border: "1px solid var(--amb-bdr, rgba(251,191,36,.22))",
+                    borderRadius: "10px", padding: "12px 16px", gap: "12px",
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--amb, #fbbf24)", flexShrink: 0 }} />
+                      <div>
+                        <div style={{ font: "500 13px 'DM Sans', sans-serif", color: "var(--tx, #e4e4ec)", lineHeight: 1.3 }}>
+                          {expiredCompliance.length} compliance {expiredCompliance.length === 1 ? "item" : "items"} expired or expiring
+                        </div>
+                        <div style={{ font: "300 11px 'DM Sans', sans-serif", color: "var(--tx3, #555568)" }}>
+                          {expiredCompliance.filter(c => c.status === "expired").length > 0 ? "Certificates lapsed — " : ""}can void insurance coverage
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px", flexShrink: 0 }}>
+                      <span style={{ font: "500 10px 'JetBrains Mono', monospace", padding: "3px 8px", borderRadius: 5, background: "var(--amb-lt, rgba(251,191,36,.08))", color: "var(--amb, #fbbf24)", border: "1px solid var(--amb-bdr, rgba(251,191,36,.22))" }}>
+                        {expiredCompliance.length} items
+                      </span>
+                      {complianceFineExposure > 0 && (
+                        <span style={{ font: "500 13px 'JetBrains Mono', monospace", color: "var(--amb, #fbbf24)" }}>
+                          {fmt(complianceFineExposure, portfolio!.currency)} exposure
+                        </span>
+                      )}
+                      <span style={{ color: "var(--tx3)", fontSize: 14 }}>→</span>
+                    </div>
+                  </div>
+                </Link>
+              )}
+            </div>
+          );
+        })()}
+
+        {/* Insight — Hold & Optimise Recommendation */}
+        {portfolio && portfolio.noi > 0 && (() => {
+          const exitNOI = portfolio.noi * Math.pow(1.03, 3);
+          const exitValue = exitNOI / 0.07;
+          const sym = portfolio.currency === "USD" ? "$" : "£";
+          const fmtM = (v: number) => v >= 1_000_000 ? `${sym}${(v / 1_000_000).toFixed(1)}M` : fmt(v, portfolio.currency);
+          if (exitValue <= portfolio.totalValue) return null;
+          return (
+            <div style={{
+              background: "var(--s1, #111116)", border: "1px solid var(--bdr, #252533)",
+              borderRadius: "12px", padding: "20px 22px",
+              display: "flex", alignItems: "flex-start", justifyContent: "space-between",
+              gap: "16px", marginBottom: "24px",
+            }}>
+              <div>
+                <div style={{ font: "500 9px/1 'JetBrains Mono', monospace", color: "var(--acc, #7c6af0)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "6px" }}>
+                  Recommendation
+                </div>
+                <div style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: "18px", color: "var(--tx, #e4e4ec)", marginBottom: "6px" }}>
+                  Hold &amp; optimise for 3 years
+                </div>
+                <div style={{ font: "300 12px 'DM Sans', sans-serif", color: "var(--tx3, #555568)", lineHeight: 1.5, maxWidth: 360 }}>
+                  Based on 3%/yr NOI growth and a 7% exit cap rate. Raise rents, cut costs, add ancillary income — then sell at peak value.
+                </div>
+              </div>
+              <div style={{ textAlign: "right", flexShrink: 0 }}>
+                <div style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: "22px", color: "var(--tx, #e4e4ec)", lineHeight: 1 }}>
+                  {fmtM(exitValue)}
+                  <span style={{ font: "500 9px/1 'JetBrains Mono', monospace", color: "var(--grn, #34d399)", background: "var(--grn-lt)", border: "1px solid var(--grn-bdr)", borderRadius: 4, padding: "2px 5px", marginLeft: 6, verticalAlign: "middle" }}>EST</span>
+                </div>
+                <div style={{ font: "300 11px 'DM Sans', sans-serif", color: "var(--tx3, #555568)", marginTop: 3 }}>
+                  vs {fmtM(portfolio.totalValue)} today
+                </div>
+                <Link href="/hold-sell" style={{ textDecoration: "none" }}>
+                  <button style={{
+                    marginTop: 10, padding: "6px 14px",
+                    background: "var(--acc, #7c6af0)", color: "#fff",
+                    border: "none", borderRadius: 6, cursor: "pointer",
+                    font: "500 12px 'DM Sans', sans-serif",
+                  }}>
+                    Explore scenarios →
+                  </button>
+                </Link>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* Share Hint */}
+        <div style={{
+          font: "300 12px 'DM Sans', sans-serif", color: "var(--tx3, #555568)",
+          marginBottom: "28px", lineHeight: 1.6,
+        }}>
+          Need to share this portfolio with a lender, insurer, or partner?{" "}
+          <Link href="/portal" style={{ color: "var(--acc, #7c6af0)", fontWeight: 500 }}>
+            Create a portal link →
+          </Link>{" "}
+          — they see only what you choose, and you track every view.
+        </div>
+
         {/* Portfolio section label */}
         <div
           style={{
