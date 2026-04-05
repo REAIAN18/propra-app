@@ -3,9 +3,12 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
+import { HeroPanel } from "@/components/dealscope/HeroPanel";
+import type { HeroPanelSignal } from "@/components/dealscope/HeroPanel";
 import { DealScore } from "@/components/dealscope/DealScore";
 import { RiskFlags } from "@/components/dealscope/RiskFlags";
 import { ComparablesTable } from "@/components/dealscope/ComparablesTable";
+import { PlanningTab } from "./tabs/PlanningTab";
 import type { Comparable } from "@/components/dealscope/ComparablesTable";
 import { MultipleValuations } from "@/components/dealscope/MultipleValuations";
 import type { ValuationScenario } from "@/components/dealscope/MultipleValuations";
@@ -42,7 +45,7 @@ type RawDeal = {
   dataSources?: Record<string, unknown>;
 };
 
-const TABS = ["Overview", "Financials", "Comparables", "Due Diligence"] as const;
+const TABS = ["Overview", "Financials", "Comparables", "Planning", "Due Diligence"] as const;
 type Tab = typeof TABS[number];
 
 function fmtCcy(n: number | undefined | null): string {
@@ -374,32 +377,25 @@ export default function PropertyDossierPage() {
   return (
     <AppShell>
       <div className={s.page}>
-        <div className={s.header}>
-          <button className={s.backBtn} onClick={() => router.back()}>← Back to results</button>
-          <div className={s.headerMain}>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <h1 className={s.addr}>{deal.address}</h1>
-              <div className={s.specs}>
-                {deal.assetType && <span><strong>{deal.assetType}</strong></span>}
-                {prop.size && <span>{prop.size.toLocaleString()} sqft</span>}
-                {prop.builtYear && <span>Built {prop.builtYear}</span>}
-                {deal.epcRating && <span>EPC {deal.epcRating}</span>}
-                {deal.tenure && <span>{deal.tenure}</span>}
-              </div>
-              {(deal.signals?.length || deal.hasInsolvency || deal.hasLisPendens) ? (
-                <div style={{ marginTop: 6 }}>
-                  <RiskFlags signals={deal.signals} hasInsolvency={deal.hasInsolvency} hasLisPendens={deal.hasLisPendens} hasPlanningApplication={deal.hasPlanningApplication} inFloodZone={deal.inFloodZone} />
-                </div>
-              ) : null}
-            </div>
-            <div className={s.summaryPanel}>
-              <DealScore score={verdict.dealScore} label="Deal score" sublabel={verdict.verdict} />
-              <div className={s.sep} style={{ margin: "8px 0" }} />
-              <div className={s.row}><span className={s.rowL}>Asking</span><span className={`${s.rowV} ${s.mono}`}>{deal.askingPrice ? `£${(deal.askingPrice / 1_000_000).toFixed(2)}m` : "—"}</span></div>
-              <div className={s.row}><span className={s.rowL}>Verdict</span><span className={s.rowV} style={{ color: verdictColor, fontWeight: 600 }}>{verdict.verdict}</span></div>
-            </div>
-          </div>
-        </div>
+        <HeroPanel
+          property={{
+            address: deal.address,
+            assetType: deal.assetType,
+            buildingSizeSqft: deal.buildingSizeSqft ?? deal.sqft,
+            yearBuilt: deal.yearBuilt,
+            epcRating: deal.epcRating,
+            tenure: deal.tenure,
+            askingPrice: deal.askingPrice,
+            guidePrice: deal.guidePrice,
+            dealScore: verdict.dealScore,
+            signals: (deal.signals ?? []).map((name): HeroPanelSignal => ({ name, type: "amb" })),
+            hasInsolvency: deal.hasInsolvency,
+            hasLisPendens: deal.hasLisPendens,
+            dataSources: deal.dataSources,
+          }}
+          onBack={() => router.back()}
+          onContact={() => setActiveTab("Overview")}
+        />
 
         <div style={{ padding: "0 20px" }}>
           <div className={s.tabs}>
@@ -411,6 +407,7 @@ export default function PropertyDossierPage() {
             {activeTab === "Overview"       && <OverviewTab      deal={deal} prop={prop} />}
             {activeTab === "Financials"     && <FinancialsTab    prop={prop} />}
             {activeTab === "Comparables"    && <ComparablesTab   deal={deal} />}
+            {activeTab === "Planning"       && <PlanningTab      deal={deal} />}
             {activeTab === "Due Diligence"  && <DueDiligenceTab  deal={deal} />}
           </div>
         </div>
