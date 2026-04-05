@@ -22,11 +22,56 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   const tenantId = (await params).id;
+
+  if (!session?.user?.id) {
+    // Demo fallback for unauthenticated users
+    return NextResponse.json({
+      tenant: {
+        id: tenantId,
+        name: "Meridian Law Group",
+        email: null,
+        sector: "Legal Services",
+        unit: "Suite 3A",
+        sqft: 6000,
+        annualRent: 189000,
+        rentPerSqft: 31.5,
+        marketERV: 33 * 6000,
+        covenantScore: "Strong",
+        covenantLevel: "strong",
+        arrears: 0,
+        paymentTrend: "stable",
+        healthScore: 82,
+        leaseStart: "2022-03-01",
+        leaseEnd: "2027-02-28",
+        breakDate: null,
+        reviewDate: "2025-03-01",
+        daysToExpiry: 1828,
+        daysToBreak: null,
+        daysToReview: null,
+        propertyName: "FL Mixed Portfolio",
+        propertyId: "demo-1",
+        currency: "USD",
+        sym: "$",
+      },
+      paymentHistory: [
+        { period: "2026-03", status: "paid" },
+        { period: "2026-02", status: "paid" },
+        { period: "2026-01", status: "paid" },
+        { period: "2025-12", status: "paid" },
+        { period: "2025-11", status: "paid" },
+        { period: "2025-10", status: "paid" },
+        { period: "2025-09", status: "paid" },
+        { period: "2025-08", status: "paid" },
+        { period: "2025-07", status: "paid" },
+        { period: "2025-06", status: "paid" },
+        { period: "2025-05", status: "paid" },
+        { period: "2025-04", status: "paid" },
+      ],
+      engagements: [],
+      timeline: [],
+    });
+  }
 
   // Fetch tenant with all related data
   const tenant = await prisma.tenant.findUnique({
