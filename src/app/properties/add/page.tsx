@@ -6,30 +6,61 @@ import Link from "next/link";
 
 type Step = 1 | 2 | 3;
 
+type LookupResult = {
+  assessorData: {
+    assessedValueTotal: number | null;
+    lastSalePrice: number | null;
+    buildingSqft: number | null;
+    yearBuilt: number | null;
+  } | null;
+  floorAreaSqft: number | null;
+  epcRating: string | null;
+  isUK: boolean;
+} | null;
+
+function fmtValue(n: number | null): string {
+  if (!n) return "—";
+  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `$${Math.round(n / 1000)}k`;
+  return `$${n}`;
+}
+
+function fmtSqft(n: number | null): string {
+  if (!n) return "—";
+  return `${n.toLocaleString()} sqft`;
+}
+
 export default function AddPropertyPage() {
   const router = useRouter();
   const [step, setStep] = useState<Step>(1);
   const [address, setAddress] = useState("");
   const [enrichmentProgress, setEnrichmentProgress] = useState(0);
+  const [lookupResult, setLookupResult] = useState<LookupResult>(null);
 
-  function handleAddressSubmit() {
+  async function handleAddressSubmit() {
     if (!address.trim()) return;
-    
-    // Move to step 2 (enrichment)
+
     setStep(2);
-    
-    // Simulate enrichment process
+    setEnrichmentProgress(0);
+
+    // Animate progress while waiting for the real API
     let progress = 0;
     const interval = setInterval(() => {
-      progress += 20;
+      progress = Math.min(progress + 12, 85);
       setEnrichmentProgress(progress);
-      
-      if (progress >= 100) {
-        clearInterval(interval);
-        // Move to step 3 after enrichment
-        setTimeout(() => setStep(3), 500);
-      }
-    }, 800);
+    }, 600);
+
+    try {
+      const res = await fetch(`/api/property/lookup?address=${encodeURIComponent(address)}`);
+      const data: LookupResult = res.ok ? await res.json() : null;
+      setLookupResult(data);
+    } catch {
+      setLookupResult(null);
+    } finally {
+      clearInterval(interval);
+      setEnrichmentProgress(100);
+      setTimeout(() => setStep(3), 500);
+    }
   }
 
   function skipToDashboard() {
@@ -480,12 +511,19 @@ export default function AddPropertyPage() {
 
           {/* Key metrics grid */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "14px", marginBottom: "24px" }}>
-            {[
-              { label: "Estimated Value", value: "$9.8M", sub: "+12% vs comps", est: true, pos: true },
-              { label: "Market Cap Rate", value: "7.2%", sub: "vs 7.5% area avg", pos: true },
-              { label: "Market Rent", value: "$28/sqft", sub: "ERV estimate", est: true },
-              { label: "Nearby Planning", value: "3 apps", sub: "in 500m radius" },
-            ].map((metric, i) => (
+            {((): Array<{ label: string; value: string; sub: string; est: boolean; pos: boolean }> => {
+              const ad = lookupResult?.assessorData;
+              const estValue = ad?.assessedValueTotal ?? ad?.lastSalePrice ?? null;
+              const sqft = ad?.buildingSqft ?? lookupResult?.floorAreaSqft ?? null;
+              const yearBuilt = ad?.yearBuilt ?? null;
+              const epc = lookupResult?.epcRating ?? null;
+              return [
+                { label: "Assessed Value", value: fmtValue(estValue), sub: estValue ? "from assessor records" : "Upload docs to unlock", est: !!estValue, pos: false },
+                { label: "Building Size", value: fmtSqft(sqft), sub: sqft ? "gross floor area" : "Upload docs to unlock", est: false, pos: false },
+                { label: "Year Built", value: yearBuilt ? String(yearBuilt) : "—", sub: yearBuilt ? "construction year" : "Not found in records", est: false, pos: false },
+                { label: lookupResult?.isUK ? "EPC Rating" : "Building Class", value: epc ?? "—", sub: epc ? "energy performance" : "Upload policy to unlock", est: false, pos: false },
+              ];
+            })().map((metric, i) => (
               <div
                 key={i}
                 style={{
