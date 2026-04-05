@@ -99,7 +99,7 @@ export async function PATCH(
       (k) => body[k] !== undefined
     );
 
-    let newDs = { ...ds, userOverrides: newOverrides };
+    const newDs = { ...ds, userOverrides: newOverrides };
 
     if (needsRecalc) {
       const sqft = body.buildingSizeSqft ?? existing.buildingSizeSqft ?? ds.assumptions?.sqft?.value ?? 2500;
