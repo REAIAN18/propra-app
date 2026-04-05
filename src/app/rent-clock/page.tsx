@@ -246,6 +246,138 @@ export default function RentClockPage() {
               </div>
             )}
 
+            {/* LEASE EVENTS — Visual clock + upcoming list */}
+            {(() => {
+              const WINDOW_DAYS = 720; // 24 months
+              // Build event list for clock markers
+              type ClockEvent = { id: string; days: number; label: string; type: "break" | "review" | "expiry"; tenantName: string };
+              const clockEvents: ClockEvent[] = reviews.slice(0, 12).map(r => {
+                const isBreak = r.breakDate && new Date(r.breakDate) < new Date(r.expiryDate);
+                const days = Math.max(0, r.daysToExpiry);
+                return {
+                  id: r.id,
+                  days,
+                  type: isBreak ? "break" : (days > 365 ? "expiry" : "review"),
+                  label: isBreak ? `Break ${days}d` : `Review ${days}d`,
+                  tenantName: r.tenantName,
+                };
+              });
+
+              const SIZE = 220;
+              const R = 88; // ring radius
+              const cx = SIZE / 2;
+              const cy = SIZE / 2;
+
+              return (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {/* SVG Clock */}
+                  <div className="rounded-xl overflow-hidden" style={{ background: "var(--s1)", border: "1px solid var(--bdr)" }}>
+                    <div className="px-5 py-3.5 flex items-center justify-between" style={{ borderBottom: "1px solid var(--bdr)" }}>
+                      <h4 className="text-[13px] font-semibold" style={{ color: "var(--tx)" }}>Rent Clock</h4>
+                      <span className="text-[11px]" style={{ color: "var(--tx3)" }}>Next 24 months</span>
+                    </div>
+                    <div className="flex flex-col items-center py-6">
+                      <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`}>
+                        {/* Outer ring */}
+                        <circle cx={cx} cy={cy} r={R} fill="none" stroke="var(--bdr)" strokeWidth="1.5" />
+                        {/* Month tick marks */}
+                        {Array.from({ length: 24 }, (_, i) => {
+                          const angle = ((i / 24) * 360 - 90) * (Math.PI / 180);
+                          const inner = R - 5;
+                          const outer = R;
+                          return (
+                            <line
+                              key={i}
+                              x1={cx + Math.cos(angle) * inner}
+                              y1={cy + Math.sin(angle) * inner}
+                              x2={cx + Math.cos(angle) * outer}
+                              y2={cy + Math.sin(angle) * outer}
+                              stroke="var(--bdr)"
+                              strokeWidth={i % 6 === 0 ? 2 : 1}
+                            />
+                          );
+                        })}
+                        {/* Event markers */}
+                        {clockEvents.filter(e => e.days > 0 && e.days <= WINDOW_DAYS).map(e => {
+                          const angle = ((e.days / WINDOW_DAYS) * 360 - 90) * (Math.PI / 180);
+                          const mr = R - 12;
+                          const mx = cx + Math.cos(angle) * mr;
+                          const my = cy + Math.sin(angle) * mr;
+                          const color = e.type === "break" ? "var(--red)" : e.type === "review" ? "var(--amb)" : "var(--grn)";
+                          return (
+                            <g key={e.id}>
+                              <circle cx={mx} cy={my} r={5} fill={color} opacity={0.9} />
+                            </g>
+                          );
+                        })}
+                        {/* Center */}
+                        <text x={cx} y={cy - 6} textAnchor="middle" fill="var(--tx)" style={{ font: "600 22px var(--serif)" }}>
+                          {reviews.length}
+                        </text>
+                        <text x={cx} y={cy + 12} textAnchor="middle" fill="var(--tx3)" style={{ font: "400 9px var(--sans)" }}>
+                          lease events
+                        </text>
+                        {/* 12 o'clock label */}
+                        <text x={cx} y={cy - R - 8} textAnchor="middle" fill="var(--tx3)" style={{ font: "400 8px var(--mono)" }}>
+                          now
+                        </text>
+                        <text x={cx + R + 8} y={cy + 4} textAnchor="start" fill="var(--tx3)" style={{ font: "400 8px var(--mono)" }}>
+                          12mo
+                        </text>
+                      </svg>
+                      {/* Legend */}
+                      <div className="flex items-center gap-4 mt-2">
+                        {[
+                          { color: "var(--red)", label: "Break clause" },
+                          { color: "var(--amb)", label: "Review due" },
+                          { color: "var(--grn)", label: "Expiry / future" },
+                        ].map(l => (
+                          <div key={l.label} className="flex items-center gap-1.5">
+                            <div style={{ width: 7, height: 7, borderRadius: "50%", background: l.color }} />
+                            <span style={{ font: "400 10px var(--sans)", color: "var(--tx3)" }}>{l.label}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Upcoming list */}
+                  <div className="rounded-xl overflow-hidden" style={{ background: "var(--s1)", border: "1px solid var(--bdr)" }}>
+                    <div className="px-5 py-3.5 flex items-center justify-between" style={{ borderBottom: "1px solid var(--bdr)" }}>
+                      <h4 className="text-[13px] font-semibold" style={{ color: "var(--tx)" }}>Upcoming Reviews</h4>
+                    </div>
+                    <div>
+                      {reviews.slice(0, 6).map(r => {
+                        const isBreak = r.breakDate && new Date(r.breakDate) < new Date(r.expiryDate);
+                        const dType = isBreak ? "break" : "review";
+                        const urgColor = r.daysToExpiry < 90 ? "var(--red)" : r.daysToExpiry < 180 ? "var(--amb)" : "var(--tx3)";
+                        const badgeLabel = isBreak ? `BREAK ${r.daysToExpiry}d` : `REVIEW ${r.daysToExpiry}d`;
+                        return (
+                          <div key={r.id} className="px-5 py-3 flex items-center gap-3" style={{ borderBottom: "1px solid var(--bdr-lt)" }}>
+                            <div className="flex-1 min-w-0">
+                              <div className="text-[12px] font-medium" style={{ color: "var(--tx)" }}>{r.tenantName}</div>
+                              <div className="text-[10px]" style={{ color: "var(--tx3)" }}>{r.propertyAddress ?? "Property"} · {dType}</div>
+                            </div>
+                            <span className="shrink-0 text-[9px] font-semibold px-2 py-0.5 rounded" style={{ background: `${urgColor}18`, color: urgColor, border: `1px solid ${urgColor}40` }}>
+                              {badgeLabel}
+                            </span>
+                            <span className="shrink-0 text-[11px]" style={{ fontFamily: "var(--mono)", color: "var(--tx3)", minWidth: "56px", textAlign: "right" }}>
+                              {fmt(r.passingRent)}/yr
+                            </span>
+                            {r.gap && r.gap > 0 && (
+                              <span className="shrink-0 text-[11px] font-semibold" style={{ color: "var(--grn)", minWidth: "48px", textAlign: "right" }}>
+                                +{fmt(r.gap)}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* RENT VS MARKET */}
             {reviews.some((r) => r.ervLive && r.ervLive > 0) && (() => {
               const maxRent = Math.max(...reviews.map((r) => Math.max(r.passingRent, r.ervLive ?? 0)));
