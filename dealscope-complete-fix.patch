@@ -1,0 +1,348 @@
+From 35c23310b161704928c03fae81e2308711270319 Mon Sep 17 00:00:00 2001
+From: Claude <claude@anthropic.com>
+Date: Sun, 5 Apr 2026 08:07:40 +0000
+Subject: [PATCH 1/2] fix(dealscope): Add calculation modules + fix API data
+ extraction
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+- Created IRR, CAPEX, equity, verdict calculation modules
+- Fixed API route to properly extract ERV from multiple sources
+- Property object now prioritizes user overrides > assumptions > market estimates
+- Regency House should now show: IRR ~0.8%, CAPEX £0, verdict CONDITIONAL
+---
+ .../api/dealscope/properties/[id]/route.ts    | 35 +++++++---
+ src/lib/dealscope/calculations/capex.ts       | 61 +++++++++++++++++
+ src/lib/dealscope/calculations/equity.ts      | 41 ++++++++++++
+ src/lib/dealscope/calculations/irr.ts         | 67 +++++++++++++++++++
+ src/lib/dealscope/calculations/verdict.ts     | 42 ++++++++++++
+ 5 files changed, 238 insertions(+), 8 deletions(-)
+ create mode 100644 src/lib/dealscope/calculations/capex.ts
+ create mode 100644 src/lib/dealscope/calculations/equity.ts
+ create mode 100644 src/lib/dealscope/calculations/irr.ts
+ create mode 100644 src/lib/dealscope/calculations/verdict.ts
+
+diff --git a/src/app/api/dealscope/properties/[id]/route.ts b/src/app/api/dealscope/properties/[id]/route.ts
+index e6427bc..20eb564 100644
+--- a/src/app/api/dealscope/properties/[id]/route.ts
++++ b/src/app/api/dealscope/properties/[id]/route.ts
+@@ -41,18 +41,37 @@ export async function GET(
+     // CRITICAL FIX: Call new calculation functions instead of using cached data
+     const ds = (deal.dataSources as any) || {};
+     const assumptions = ds.assumptions || {};
++    const userOverrides = ds.userOverrides || {};
++    
++    // Build property object for calculations - prioritize user overrides, then assumptions, then estimates
++    const sqft = deal.buildingSizeSqft || assumptions.sqft?.value || 0;
++    const askingPrice = deal.askingPrice || deal.guidePrice || 0;
++    
++    // Get ERV from multiple sources
++    const ervFromOverrides = userOverrides.erv?.value;
++    const ervFromAssumptions = assumptions.erv?.value;
++    const ervFromMarket = sqft * 28; // £28/sqft market rate
++    const erv = ervFromOverrides || ervFromAssumptions || ervFromMarket;
++    
++    // Get passing rent
++    const passingRentFromOverrides = userOverrides.passingRent?.value;
++    const passingRentFromAssumptions = assumptions.passingRent?.value;
++    const passingRent = passingRentFromOverrides || passingRentFromAssumptions || 0;
++    
++    // Get other values
++    const businessRates = userOverrides.businessRates?.value || assumptions.businessRates?.value || 0;
++    const serviceCharge = userOverrides.serviceCharge?.value || assumptions.serviceCharge?.value || 0;
+     
+-    // Build property object for calculations
+     const propertyForCalc = {
+-      askingPrice: deal.askingPrice || deal.guidePrice || 0,
+-      size: deal.buildingSizeSqft || assumptions.sqft?.value || 0,
+-      erv: assumptions.erv?.value || 0,
+-      passingRent: assumptions.passingRent?.value || 0,
+-      businessRates: assumptions.businessRates?.value || 0,
+-      serviceCharge: assumptions.serviceCharge?.value || 0,
++      askingPrice,
++      size: sqft,
++      erv,
++      passingRent,
++      businessRates,
++      serviceCharge,
+       description: deal.description || "",
+       builtYear: deal.yearBuilt || 1980,
+-      expectedVoid: 14, // Default
++      expectedVoid: 14,
+     };
+ 
+     // Calculate fresh values
+diff --git a/src/lib/dealscope/calculations/capex.ts b/src/lib/dealscope/calculations/capex.ts
+new file mode 100644
+index 0000000..c9c7bbf
+--- /dev/null
++++ b/src/lib/dealscope/calculations/capex.ts
+@@ -0,0 +1,61 @@
++export interface CAPEXResult {
++  capex: number;
++  reason: string;
++  confidence: 'LOW' | 'MEDIUM' | 'HIGH';
++}
++
++export function calculateCAPEX(property: any): CAPEXResult {
++  const description = property.description || '';
++  
++  const refurbPatterns = [
++    /refurbished\s+(?:in\s+)?(\d{4})/i,
++    /refurb[^\d]*(\d{4})/i,
++    /completed\s+(?:in\s+)?(\d{4})/i,
++    /renovated\s+(?:in\s+)?(\d{4})/i,
++  ];
++
++  let refurbYear: number | null = null;
++  for (const pattern of refurbPatterns) {
++    const match = description.match(pattern);
++    if (match) {
++      refurbYear = parseInt(match[1]);
++      break;
++    }
++  }
++
++  const currentYear = new Date().getFullYear();
++
++  if (refurbYear && (currentYear - refurbYear) <= 5) {
++    return {
++      capex: 0,
++      reason: `Property refurbished in ${refurbYear}. No immediate CAPEX required.`,
++      confidence: 'HIGH'
++    };
++  }
++
++  const ageInYears = currentYear - (property.builtYear || 1980);
++  let capexPSF = 0;
++  let reason = '';
++
++  if (ageInYears > 40) {
++    capexPSF = 75;
++    reason = `Property ${ageInYears} years old, major refurb needed`;
++  } else if (ageInYears > 25) {
++    capexPSF = 55;
++    reason = `Property ${ageInYears} years old, significant upgrades needed`;
++  } else if (ageInYears > 15) {
++    capexPSF = 35;
++    reason = `Property ${ageInYears} years old, moderate refurb needed`;
++  } else {
++    capexPSF = 15;
++    reason = `Property ${ageInYears} years old, minor works only`;
++  }
++
++  const capex = (property.size || 0) * capexPSF;
++
++  return {
++    capex,
++    reason,
++    confidence: refurbYear ? 'HIGH' : 'MEDIUM'
++  };
++}
+diff --git a/src/lib/dealscope/calculations/equity.ts b/src/lib/dealscope/calculations/equity.ts
+new file mode 100644
+index 0000000..d86829a
+--- /dev/null
++++ b/src/lib/dealscope/calculations/equity.ts
+@@ -0,0 +1,41 @@
++import { calculateCAPEX } from './capex';
++
++export interface EquityMultipleResult {
++  equityMultiple: number;
++  totalCostIn: number;
++  exitValue: number;
++}
++
++export function calculateEquityMultiple(property: any): EquityMultipleResult {
++  const purchasePrice = property.askingPrice || 0;
++  const sdlt = calculateSDLT(purchasePrice);
++  const legalFees = 15000;
++  const surveyFees = 8000;
++  const capexResult = calculateCAPEX(property);
++  
++  const totalCostIn = purchasePrice + sdlt + legalFees + surveyFees + capexResult.capex;
++
++  const erv = property.erv || (property.size || 0) * 28;
++  const opex = erv * 0.15;
++  const noi = erv - opex;
++  const exitYield = 0.08;
++  const grossExitValue = noi / exitYield;
++  
++  const agentFees = grossExitValue * 0.015;
++  const exitLegalFees = 10000;
++  const netExitValue = grossExitValue - agentFees - exitLegalFees;
++
++  const equityMultiple = netExitValue / totalCostIn;
++
++  return {
++    equityMultiple,
++    totalCostIn,
++    exitValue: netExitValue
++  };
++}
++
++function calculateSDLT(price: number): number {
++  if (price <= 150000) return 0;
++  if (price <= 250000) return (price - 150000) * 0.02;
++  return 2000 + (price - 250000) * 0.05;
++}
+diff --git a/src/lib/dealscope/calculations/irr.ts b/src/lib/dealscope/calculations/irr.ts
+new file mode 100644
+index 0000000..15c9279
+--- /dev/null
++++ b/src/lib/dealscope/calculations/irr.ts
+@@ -0,0 +1,67 @@
++export interface CashFlow {
++  year: number;
++  amount: number;
++  description: string;
++}
++
++export interface IRRResult {
++  irr: number;
++  cashFlows: CashFlow[];
++  confidence: 'LOW' | 'MEDIUM' | 'HIGH';
++}
++
++export function calculateIRR(property: any): IRRResult {
++  const purchasePrice = property.askingPrice || 0;
++  const sdlt = calculateSDLT(purchasePrice);
++  const totalCostIn = purchasePrice + sdlt + 15000 + 8000;
++
++  const voidMonths = property.expectedVoid || 14;
++  const businessRatesMonthly = (property.businessRates || 0) / 12;
++  const totalVoidCost = businessRatesMonthly * voidMonths + (2000 + 800 + 1500) * voidMonths;
++
++  const erv = property.erv || (property.size || 0) * 28;
++  const totalLettingCost = erv * 0.15 + 5000 + (erv / 12) * 12 + (property.size || 0) * 5;
++
++  const cashFlows: CashFlow[] = [
++    { year: 0, amount: -totalCostIn, description: 'Acquisition' },
++    { year: 1, amount: -(totalVoidCost + totalLettingCost), description: 'Void + letting' }
++  ];
++
++  const noi = erv - erv * 0.15;
++  for (let year = 2; year <= 10; year++) {
++    cashFlows.push({ year, amount: noi, description: `Year ${year} NOI` });
++  }
++
++  const exitValue = noi / 0.08;
++  const exitProceeds = exitValue - exitValue * 0.015 - 10000;
++  cashFlows[cashFlows.length - 1].amount += exitProceeds;
++
++  const irr = solveIRR(cashFlows.map(cf => cf.amount));
++  const confidence = property.passingRent > 0 ? 'HIGH' : 'MEDIUM';
++
++  return { irr, cashFlows, confidence };
++}
++
++function solveIRR(cashFlows: number[]): number {
++  let rate = 0.1;
++  for (let i = 0; i < 1000; i++) {
++    let npv = 0, dnpv = 0;
++    for (let t = 0; t < cashFlows.length; t++) {
++      npv += cashFlows[t] / Math.pow(1 + rate, t);
++      dnpv -= t * cashFlows[t] / Math.pow(1 + rate, t + 1);
++    }
++    if (Math.abs(npv) < 0.00001) return rate;
++    if (dnpv === 0) return rate;
++    const newRate = rate - npv / dnpv;
++    if (newRate < -0.99) rate = -0.99;
++    else if (newRate > 10) rate = 10;
++    else rate = newRate;
++  }
++  return rate;
++}
++
++function calculateSDLT(price: number): number {
++  if (price <= 150000) return 0;
++  if (price <= 250000) return (price - 150000) * 0.02;
++  return 2000 + (price - 250000) * 0.05;
++}
+diff --git a/src/lib/dealscope/calculations/verdict.ts b/src/lib/dealscope/calculations/verdict.ts
+new file mode 100644
+index 0000000..c585bfd
+--- /dev/null
++++ b/src/lib/dealscope/calculations/verdict.ts
+@@ -0,0 +1,42 @@
++import { calculateIRR } from './irr';
++
++export type VerdictType = 'STRONG_BUY' | 'CONDITIONAL' | 'REJECT';
++
++export interface VerdictResult {
++  verdict: VerdictType;
++  targetPrice: number;
++  reasoning: string;
++}
++
++export function calculateVerdict(property: any): VerdictResult {
++  const irrResult = calculateIRR(property);
++  const irr = irrResult.irr;
++  const askingPrice = property.askingPrice || 0;
++
++  if (irr >= 0.15) {
++    return {
++      verdict: 'STRONG_BUY',
++      targetPrice: askingPrice,
++      reasoning: `Strong IRR of ${(irr * 100).toFixed(1)}%. Proceed at asking price.`
++    };
++  }
++
++  if (irr >= 0.10) {
++    return {
++      verdict: 'STRONG_BUY',
++      targetPrice: askingPrice,
++      reasoning: `Good IRR of ${(irr * 100).toFixed(1)}%. Acceptable at asking price.`
++    };
++  }
++
++  const targetIRR = 0.10;
++  const irrGap = targetIRR - irr;
++  const priceReduction = irrGap * askingPrice * 10;
++  const targetPrice = Math.max(askingPrice - priceReduction, askingPrice * 0.75);
++
++  return {
++    verdict: 'CONDITIONAL',
++    targetPrice: targetPrice,
++    reasoning: `IRR of ${(irr * 100).toFixed(1)}% is below target. Negotiate to £${Math.round(targetPrice / 1000000)}m for 10% IRR.`
++  };
++}
+-- 
+2.43.0
+
+
+From 09107f55cd989e713043887ed89c662d7fb740b5 Mon Sep 17 00:00:00 2001
+From: Claude <claude@anthropic.com>
+Date: Sun, 5 Apr 2026 08:09:33 +0000
+Subject: [PATCH 2/2] fix(dealscope): Correct API data structure for frontend
+ display
+
+- Changed irr10yr to percentage (irr * 100)
+- Moved calculations to correct ricsAnalysis structure
+- Frontend now reads correct values from API response
+---
+ src/app/api/dealscope/properties/[id]/route.ts | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
+
+diff --git a/src/app/api/dealscope/properties/[id]/route.ts b/src/app/api/dealscope/properties/[id]/route.ts
+index 20eb564..3730dd6 100644
+--- a/src/app/api/dealscope/properties/[id]/route.ts
++++ b/src/app/api/dealscope/properties/[id]/route.ts
+@@ -87,11 +87,8 @@ export async function GET(
+         ...ds.ricsAnalysis,
+         capex: capexResult.capex,
+         capexReason: capexResult.reason,
+-        returns: {
+-          irr: irrResult.irr,
+-          equityMultiple: equityResult.equityMultiple,
+-          niy: null, // Will calculate separately if needed
+-        },
++        irr10yr: irrResult.irr * 100, // Convert to percentage
++        equityMultiple: equityResult.equityMultiple,
+         verdict: {
+           rating: verdictResult.verdict.toLowerCase().replace('_', ' '),
+           play: verdictResult.verdict,
+-- 
+2.43.0
+
