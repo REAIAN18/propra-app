@@ -9,12 +9,52 @@ import { calculateHoldScenario, defaultHoldInputs } from "@/lib/hold-sell-model"
 import { getFallbackCapRate, calculateIncomeCap, blendValuation } from "@/lib/avm";
 import { scoreCompsConfidence } from "@/lib/dealscope-comps";
 
+const DEMO_PROPERTIES: Record<string, object> = {
+  "demo-meri-1": {
+    id: "demo-meri-1", address: "Meridian Business Park, Unit 7", assetType: "Industrial",
+    buildingSizeSqft: 8200, askingPrice: 520000, epcRating: "D", tenure: "Freehold",
+    yearBuilt: 2003, occupancyPct: 100, sourceTag: "admin", daysOnMarket: 12,
+    hasInsolvency: false, hasPlanningApplication: false, inFloodZone: false,
+    signals: ["admin", "mees"], dealScore: 62, temperature: "warm",
+    dataSources: {
+      assumptions: { passingRent: { value: 49200, source: "estimated" }, erv: { value: 57400, source: "market" }, capRate: { value: 0.075, source: "market" }, serviceCharge: { value: 4100, source: "estimated" }, voidMonths: { value: 3, source: "estimated" } },
+      valuations: { incomeCap: { value: 657333, method: "Income capitalisation", capRate: 0.075, noi: 48800 }, blended: { value: 590000, confidence: 0.72, method: "blended" }, askingPrice: 520000, discount: 12 },
+      returns: { capRate: 7.5, noi: 48800, irr5yr: 11.2, cashOnCash: 6.8, equityMultiple: 1.74 },
+      comps: [
+        { address: "Medway Industrial Estate, Unit 4", price: 495000, sqft: 7800, date: "2024-11-01", assetType: "Industrial", source: "Rightmove" },
+        { address: "Rochester Gateway, Block B", price: 540000, sqft: 8500, date: "2024-09-15", assetType: "Industrial", source: "CoStar" },
+      ],
+      listing: { description: "Well-specified industrial unit on established Kent business park. Refurbished in 2019. EPC D." },
+    },
+  },
+  "demo-maid-2": {
+    id: "demo-maid-2", address: "Maidstone Enterprise Zone, Plot B3", assetType: "Industrial",
+    buildingSizeSqft: 9400, askingPrice: 580000, epcRating: "E", tenure: "Freehold",
+    yearBuilt: 1998, occupancyPct: 100, sourceTag: "auction", daysOnMarket: 3,
+    hasInsolvency: false, hasPlanningApplication: true, inFloodZone: false,
+    signals: ["auction"], dealScore: 67, temperature: "warm",
+    dataSources: {
+      assumptions: { passingRent: { value: 56400, source: "estimated" }, erv: { value: 65800, source: "market" }, capRate: { value: 0.075, source: "market" }, serviceCharge: { value: 4700, source: "estimated" }, voidMonths: { value: 6, source: "estimated" } },
+      valuations: { incomeCap: { value: 744000, method: "Income capitalisation", capRate: 0.075, noi: 55800 }, blended: { value: 645000, confidence: 0.68, method: "blended" }, askingPrice: 580000, discount: 10 },
+      returns: { capRate: 7.5, noi: 55800, irr5yr: 12.4, cashOnCash: 7.2, equityMultiple: 1.86 },
+      comps: [
+        { address: "Maidstone Commercial Quarter, Unit 2", price: 560000, sqft: 9100, date: "2024-10-20", assetType: "Industrial", source: "CoStar" },
+      ],
+      listing: { description: "Detached industrial building with planning for extension. Auction deadline imminent." },
+    },
+  },
+};
+
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
+
+    if (id.startsWith("demo-") && DEMO_PROPERTIES[id]) {
+      return NextResponse.json(DEMO_PROPERTIES[id]);
+    }
 
     const deal = await prisma.scoutDeal.findUnique({
       where: { id },
