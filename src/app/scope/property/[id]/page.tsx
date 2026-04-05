@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { HeroPanel } from "@/components/dealscope/HeroPanel";
-import type { HeroPanelSignal } from "@/components/dealscope/HeroPanel";
 import { DealScore } from "@/components/dealscope/DealScore";
 import { RiskFlags } from "@/components/dealscope/RiskFlags";
 import { ComparablesTable } from "@/components/dealscope/ComparablesTable";
@@ -17,6 +16,8 @@ import type { ValuationScenario } from "@/components/dealscope/MultipleValuation
 import { ServiceCharges } from "@/components/dealscope/ServiceCharges";
 import type { ServiceChargeItem } from "@/components/dealscope/ServiceCharges";
 import { LettingScenariosTable } from "@/components/dealscope/LettingScenariosTable";
+import { EnvironmentalRiskBars } from "@/components/dealscope/EnvironmentalRiskBars";
+import type { EnvironmentalRisk } from "@/components/dealscope/EnvironmentalRiskBars";
 import { calculateIRR } from "@/lib/dealscope/calculations/irr";
 import { calculateCAPEX } from "@/lib/dealscope/calculations/capex";
 import { calculateEquityMultiple } from "@/lib/dealscope/calculations/equity";
@@ -342,6 +343,17 @@ function DueDiligenceTab({ deal }: { deal: RawDeal }) {
           <Row l="Owner" v={deal.ownerName} />
         </div>
       )}
+
+      <div className={`${s.card} ${s.anim} ${s.a2}`}>
+        <div className={s.cardTitle}>Environmental risk profile</div>
+        <EnvironmentalRiskBars risks={
+          (() => {
+            const envData = ds.environmentalRisks as Record<string, number> | undefined;
+            if (!envData) return undefined;
+            return Object.entries(envData).map(([label, pct]) => ({ label, pct: Math.round(pct * 100) })) as EnvironmentalRisk[];
+          })()
+        } />
+      </div>
     </>
   );
 }
@@ -436,7 +448,7 @@ export default function PropertyDossierPage() {
             askingPrice: deal.askingPrice,
             guidePrice: deal.guidePrice,
             dealScore: verdict.dealScore,
-            signals: (deal.signals ?? []).map((name): HeroPanelSignal => ({ name, type: "amb" })),
+            signals: deal.signals,
             hasInsolvency: deal.hasInsolvency,
             hasLisPendens: deal.hasLisPendens,
             dataSources: deal.dataSources,

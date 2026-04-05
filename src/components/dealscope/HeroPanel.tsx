@@ -25,10 +25,16 @@ export interface HeroPanelProperty {
   address: string;
   assetType?: string;
   buildingSizeSqft?: number;
+  yearBuilt?: number;
+  epcRating?: string;
   tenure?: string;
   occupancyPct?: number;
   askingPrice?: number;
   guidePrice?: number;
+  dealScore?: number;
+  signals?: string[];
+  hasInsolvency?: boolean;
+  hasLisPendens?: boolean;
   dataSources?: Record<string, any>;
 }
 

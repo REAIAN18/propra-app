@@ -18,3 +18,11 @@ export type { ValuationScenario } from "@/components/dealscope/MultipleValuation
 export { ServiceCharges } from "@/components/dealscope/ServiceCharges";
 export type { ServiceChargeItem } from "@/components/dealscope/ServiceCharges";
 export { InlineEdit } from "@/components/dealscope/InlineEdit";
+export { Gallery } from "@/components/dealscope/Gallery";
+export type { GalleryItem } from "@/components/dealscope/Gallery";
+export { PlanningApplications } from "@/components/dealscope/PlanningApplications";
+export type { PlanningApplication, PlanningStatus } from "@/components/dealscope/PlanningApplications";
+export { EnvironmentalRiskBars } from "@/components/dealscope/EnvironmentalRiskBars";
+export type { EnvironmentalRisk } from "@/components/dealscope/EnvironmentalRiskBars";
+export { LettingScenariosTable } from "@/components/dealscope/LettingScenariosTable";
+export type { LettingScenario } from "@/components/dealscope/LettingScenariosTable";
