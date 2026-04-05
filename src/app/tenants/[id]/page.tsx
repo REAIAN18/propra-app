@@ -305,8 +305,8 @@ export default function TenantDetailPage() {
                 <div style={{ font: "500 9px/1 monospace", color: "var(--tx3, #555568)", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "12px", paddingTop: "4px" }}>Arrears Management</div>
                 <div style={{ background: "var(--s1, #111116)", border: "1px solid var(--bdr, #252533)", borderRadius: "10px", overflow: "hidden", marginBottom: "14px" }}>
                   <div style={{ padding: "14px 18px", borderBottom: "1px solid var(--bdr, #252533)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <h4 style={{ font: "600 13px sans-serif", color: "var(--tx, #e4e4ec)" }}>Current Arrears: ${tenant.arrears.toLocaleString()}</h4>
-                    <span style={{ font: "500 11px sans-serif", color: "var(--acc, #7c6af0)" }}>14 days overdue</span>
+                    <h4 style={{ font: "600 13px sans-serif", color: "var(--tx, #e4e4ec)" }}>Current Arrears: {tenant.sym}{tenant.arrears.toLocaleString()}</h4>
+                    <span style={{ font: "500 11px sans-serif", color: "var(--red, #f87171)" }}>Outstanding</span>
                   </div>
                   <div style={{ padding: "18px" }}>
                     <EscalationSteps current={tenant.arrearsEscalation} />
@@ -320,13 +320,13 @@ export default function TenantDetailPage() {
                       </div>
                       <div style={{ marginBottom: "12px", position: "relative" }}>
                         <div style={{ position: "absolute", left: "-21px", top: "3px", width: "8px", height: "8px", borderRadius: "50%", background: "var(--grn, #34d399)", border: "2px solid var(--bg, #09090b)" }} />
-                        <div style={{ font: "500 11px sans-serif", color: "var(--tx, #e4e4ec)" }}>Friendly reminder sent</div>
-                        <div style={{ font: "300 10px sans-serif", color: "var(--tx3, #555568)" }}>Mar 18 · Email reminder sent via Resend. Opened but no response.</div>
+                        <div style={{ font: "500 11px sans-serif", color: "var(--tx, #e4e4ec)" }}>Friendly reminder</div>
+                        <div style={{ font: "300 10px sans-serif", color: "var(--tx3, #555568)" }}>Send a payment reminder via email to prompt the tenant.</div>
                       </div>
                       <div style={{ position: "relative" }}>
                         <div style={{ position: "absolute", left: "-21px", top: "3px", width: "8px", height: "8px", borderRadius: "50%", background: "var(--tx3, #555568)", border: "2px solid var(--bg, #09090b)" }} />
-                        <div style={{ font: "500 11px sans-serif", color: "var(--tx, #e4e4ec)" }}>Rent due date</div>
-                        <div style={{ font: "300 10px sans-serif", color: "var(--tx3, #555568)" }}>Mar 1 · ${tenant.arrears.toLocaleString()} due. Not received.</div>
+                        <div style={{ font: "500 11px sans-serif", color: "var(--tx, #e4e4ec)" }}>Rent overdue</div>
+                        <div style={{ font: "300 10px sans-serif", color: "var(--tx3, #555568)" }}>{tenant.sym}{tenant.arrears.toLocaleString()} outstanding. Payment not received.</div>
                       </div>
                     </div>
 
