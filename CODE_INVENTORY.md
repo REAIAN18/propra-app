@@ -1,7 +1,7 @@
 # RealHQ — Code Inventory
 
 > READ THIS BEFORE WRITING ANY CODE.
-> 23 lib files, 70+ API routes, 21 components, 6 hooks, 33 pages, 54 models, 30 emails, 8 crons.
+> 23 lib files, 80+ API routes, 20 components, 6 hooks, 35 pages, 54 models, 30 emails, 8 crons.
 > RESTYLE. REWIRE. EXTEND. Never rebuild what works.
 
 ## Lib Files (src/lib/) — 26 files
@@ -41,8 +41,8 @@ health.ts(22) checkHealth()
 /api/scout/ deals pipeline loopnet-sync
 /api/insurance/ config quotes
 /api/energy/ quotes(GET+POST Octopus)
-/api/quotes/ insurance energy bind
-/api/user/ 28 sub-routes: assets portfolio insurance-summary insurance-risk energy-summary compliance-summary compliance/renew financing-summary hold-sell-scenarios income-opportunities income-opportunities/activate tenants tenants/actions rent-reviews leases/materialise lease-summary lettings documents noi-bridge monthly-financial transactions work-orders contractors planning export ask-context ask requests acquisitions action-queue
+/api/quotes/ insurance energy bind refinance(POST) sale-lead(POST)
+/api/user/ 30 sub-routes: assets portfolio insurance-summary insurance-risk energy-summary compliance-summary compliance/renew financing-summary hold-sell-scenarios income-opportunities income-opportunities/activate tenants tenants/actions rent-reviews leases/materialise lease-summary lettings documents noi-bridge monthly-financial financial-budget transactions work-orders contractors planning export ask-context ask requests acquisitions action-queue cash-flow-forecast loans
 /api/dealscope/ enrich(POST) pipeline(GET) import/price-paid(POST CSV) import/ccod(POST CSV) test/import-sample(POST)
 /api/macro/ sofr(Federal Reserve)
 /api/dashboard/ summary(KPIs)
@@ -95,5 +95,12 @@ CSS: use --bg --s1 --acc --tx. NOT --color-* or --rhq-*
 ## Env Vars (19)
 
 DATABASE_URL DIRECT_URL GOOGLE_MAPS_API_KEY ATTOM_API_KEY ANTHROPIC_API_KEY AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_REGION COVERFORCE_ENABLED COVERFORCE_API_KEY RESEND_API_KEY AUTH_EMAIL_FROM OUTREACH_EMAIL_FROM NEXT_PUBLIC_APP_URL ADMIN_EMAIL REALHQ_PHYSICAL_ADDRESS CRON_SECRET COMPANIES_HOUSE_API_KEY EPC_API_KEY
+
+## New Pages (added)
+
+/financials — portfolio P&L overview: KPI bar, NOI waterfall, budget vs actual, rent collection, cash flow, capex plan, debt summary
+/lettings/[id] — letting detail: KPIs, enquiry list with covenant grades, HoTs action
+/assets/[id]/tenants/[tenantId] — tenant detail page (from missing-pages-design)
+/transactions/[roomId] — transaction detail: stage pipeline, task checklists, document room, parties, costs
 
 ## DO NOT: create duplicates, rebuild APIs, replace components, delete src/lib/, modify migrations, use old CSS vars, push to main
