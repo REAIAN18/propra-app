@@ -3,7 +3,6 @@
 export const dynamic = "force-dynamic";
 
 import { useState, useEffect } from "react";
-import { useSession, signOut } from "next-auth/react";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
 import { usePortfolio } from "@/hooks/usePortfolio";
@@ -56,7 +55,7 @@ function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
 
 // ── Main Page ─────────────────────────────────────────────────────────────
 export default function SettingsPage() {
-  const { data: session } = useSession();
+  const [user, setUser] = useState<{ name: string | null; email: string | null; id: string | null } | null>(null);
   const { portfolioId } = useNav();
   const { portfolio } = usePortfolio(portfolioId);
   const [prefs, setPrefs] = useState<NotifPrefs>(DEFAULT_PREFS);
@@ -68,6 +67,11 @@ export default function SettingsPage() {
     geography: string;
   } | null>(null);
 
+
+  // Fetch user profile
+  useEffect(() => {
+    fetch("/api/user/me").then(r => r.ok ? r.json() : null).then(d => { if (d) setUser(d); }).catch(() => {});
+  }, []);
 
   // Load notification prefs from localStorage
   useEffect(() => {
@@ -106,7 +110,6 @@ export default function SettingsPage() {
     });
   }
 
-  const user = session?.user;
   const currencyLabel = portfolio.currency === "GBP" ? "GBP (£)" : "USD ($)";
 
   return (
@@ -231,13 +234,13 @@ export default function SettingsPage() {
           </div>
 
           {/* Sign out */}
-          {user && (
-            <button
-              onClick={() => signOut({ callbackUrl: "/" })}
-              style={{ width: "100%", height: "42px", display: "flex", alignItems: "center", justifyContent: "center", background: "transparent", color: "var(--tx3)", border: "1px solid var(--bdr)", borderRadius: "10px", font: "500 13px/1 var(--sans)", cursor: "pointer" }}
+          {user?.id && (
+            <Link
+              href="/api/auth/signout"
+              style={{ width: "100%", height: "42px", display: "flex", alignItems: "center", justifyContent: "center", background: "transparent", color: "var(--tx3)", border: "1px solid var(--bdr)", borderRadius: "10px", font: "500 13px/1 var(--sans)", cursor: "pointer", textDecoration: "none" }}
             >
               Sign out
-            </button>
+            </Link>
           )}
         </main>
       </AppShell>
