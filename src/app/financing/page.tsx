@@ -567,7 +567,7 @@ export default function FinancingPage() {
   const quarters: { label: string; loans: AssetLoan[] }[] = Array.from({ length: 12 }, (_, i) => {
     const startDay = i * 91;
     const endDay = (i + 1) * 91;
-    const d = new Date(2026, 2, 19 + startDay); // 2026-03-19 + startDay
+    const d = new Date(Date.now() + startDay * 86400000);
     const label = `Q${Math.ceil((d.getMonth() + 1) / 3)}'${String(d.getFullYear()).slice(2)}`;
     return {
       label,

@@ -31,6 +31,7 @@ interface KPIs {
   activeOrders: number;
   ytdSpend: number;
   budgetRemaining: number;
+  annualBudget: number;
   overdue: number;
   avgRating: number;
 }
@@ -88,6 +89,7 @@ export default function WorkOrdersPage() {
     activeOrders: 0,
     ytdSpend: 0,
     budgetRemaining: 0,
+    annualBudget: 0,
     overdue: 0,
     avgRating: 0,
   });
@@ -122,8 +124,7 @@ export default function WorkOrdersPage() {
       .filter((o) => normalizeStatus(o.status) === "complete")
       .reduce((sum, o) => sum + getOrderCost(o), 0);
 
-    // Use portfolio-configured budget with fallback
-    const annualBudget = portfolio.annualMaintenanceBudget ?? 78000;
+    const annualBudget = portfolio.annualMaintenanceBudget ?? 0;
     const budgetRemaining = annualBudget - ytdSpend;
 
     // Calculate overdue orders (not complete and past target start date)
@@ -149,7 +150,7 @@ export default function WorkOrdersPage() {
       ? ratingsGiven.reduce((sum, r) => sum + r, 0) / ratingsGiven.length
       : 0;
 
-    setKpis({ activeOrders, ytdSpend, budgetRemaining, overdue, avgRating });
+    setKpis({ activeOrders, ytdSpend, budgetRemaining, annualBudget, overdue, avgRating });
   }
 
   function getOrdersByStatus(status: WorkOrderStatus): WorkOrder[] {
@@ -195,10 +196,16 @@ export default function WorkOrdersPage() {
             label="YTD Spend"
             value={fmt(kpis.ytdSpend, "$")}
             note={
-              kpis.budgetRemaining > 0 ? `${Math.round((kpis.ytdSpend / 78000) * 100)}% of budget` : "Over budget"
+              kpis.annualBudget > 0
+                ? `${Math.round((kpis.ytdSpend / kpis.annualBudget) * 100)}% of budget`
+                : kpis.ytdSpend > 0 ? "No budget set" : "No spend yet"
             }
           />
-          <KPI label="Budget Remaining" value={fmt(kpis.budgetRemaining, "$")} note="of $78k annual maintenance" />
+          <KPI
+            label="Budget Remaining"
+            value={kpis.annualBudget > 0 ? fmt(kpis.budgetRemaining, "$") : "—"}
+            note={kpis.annualBudget > 0 ? `of ${fmt(kpis.annualBudget, "$")} annual` : "Set budget in settings"}
+          />
           <KPI
             label="Overdue"
             value={kpis.overdue.toString()}
