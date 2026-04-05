@@ -52,6 +52,34 @@ function fmtDays(days: number) {
   return `${(days / 365).toFixed(1)}yr`;
 }
 
+function covenantFromHealth(score: number): string {
+  if (score >= 85) return "A+";
+  if (score >= 70) return "A";
+  if (score >= 55) return "B";
+  if (score >= 40) return "C";
+  return "D";
+}
+
+function covenantColor(grade: string): { color: string; bg: string; border: string } {
+  const g = grade?.[0];
+  if (g === "A") return { color: "var(--grn)", bg: "rgba(52,211,153,0.1)", border: "rgba(52,211,153,0.3)" };
+  if (g === "B") return { color: "var(--acc)", bg: "rgba(124,106,240,0.1)", border: "rgba(124,106,240,0.3)" };
+  if (g === "C") return { color: "var(--amb)", bg: "rgba(251,191,36,0.1)", border: "rgba(251,191,36,0.3)" };
+  return { color: "var(--red)", bg: "rgba(248,113,113,0.1)", border: "rgba(248,113,113,0.3)" };
+}
+
+function collectionStatus(t: TenantRow): { label: string; color: string; bg: string; dotColor: string; daysLate?: number } {
+  if (t.leaseStatus === "expired" || t.daysToExpiry === 0) {
+    return { label: "VACANT", color: "var(--tx3)", bg: "var(--s3)", dotColor: "var(--tx3)" };
+  }
+  const recent = t.paymentHistory?.[0];
+  if (recent?.status === "late") {
+    return { label: "LATE", color: "var(--amb)", bg: "rgba(251,191,36,0.1)", dotColor: "var(--amb)", daysLate: 14 };
+  }
+  // Default: current lease = paid
+  return { label: "PAID", color: "var(--grn)", bg: "rgba(52,211,153,0.1)", dotColor: "var(--grn)" };
+}
+
 // ── Sparkline (static 12-month payment history) ───────────────────────────────
 function PaymentSparkline({ status }: { status: string }) {
   const bars = Array.from({ length: 12 }, (_, i) => {
@@ -98,6 +126,7 @@ interface TenantRow {
   breakDate?: string;
   reviewDate?: string;
   paymentHistory?: Array<{ period: string; status: string }>;
+  covenantGrade?: string;
 }
 
 function buildTenants(portfolioData: Portfolio): TenantRow[] {
@@ -353,6 +382,19 @@ function TenantRow({
             </div>
             <div className="text-xs mt-0.5" style={{ color: "var(--tx3)" }}>annual rent</div>
           </div>
+
+          {/* Covenant grade */}
+          {(() => {
+            const grade = row.covenantGrade ?? covenantFromHealth(row.healthScore);
+            const cc = covenantColor(grade);
+            return (
+              <div className="hidden md:flex items-center justify-center">
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded" style={{ background: cc.bg, color: cc.color, border: `1px solid ${cc.border}` }}>
+                  {grade}
+                </span>
+              </div>
+            );
+          })()}
 
           {/* Expiry */}
           <div className="text-right hidden md:block">
@@ -753,6 +795,7 @@ export default function TenantsPage() {
           breakDate:         t.breakDate ?? undefined,
           reviewDate:        t.reviewDate ?? undefined,
           paymentHistory:    t.paymentHistory,
+          covenantGrade:     t.covenantGrade ?? undefined,
         }));
         setUserSym(apiSym);
         setUserTenants(rows.sort((a, b) => a.daysToExpiry - b.daysToExpiry));
@@ -835,6 +878,45 @@ export default function TenantsPage() {
             body={`RealHQ monitors every lease event and engages tenants 12+ months before expiry to avoid void risk. ${atRisk.length > 0 ? `${atRisk.length} tenant${atRisk.length !== 1 ? "s" : ""} need attention now.` : "All leases currently within safe renewal windows."}`}
           />
         )}
+
+        {/* ── Rent Collection Summary ─────────────────────────────────────── */}
+        {!isLoading && tenants.length > 0 && (() => {
+          const activeTenants = tenants.filter(t => t.leaseStatus !== "expired" && t.daysToExpiry !== 0);
+          const totalMonthly = activeTenants.reduce((s, t) => s + t.annualRent / 12, 0);
+          const now = new Date();
+          const monthLabel = now.toLocaleString("en-US", { month: "long", year: "numeric" });
+
+          return (
+            <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--bdr)", backgroundColor: "var(--s1)" }}>
+              <div className="px-5 py-3.5 flex items-center justify-between" style={{ borderBottom: "1px solid var(--bdr)" }}>
+                <h4 className="text-[13px] font-semibold" style={{ color: "var(--tx)" }}>This Month&apos;s Rent</h4>
+                <span className="text-[11px]" style={{ fontFamily: "var(--mono)", color: "var(--tx3)" }}>
+                  {fmt(totalMonthly, sym)} / {fmt(totalMonthly, sym)} due — {monthLabel}
+                </span>
+              </div>
+              {tenants.map(t => {
+                const cs = collectionStatus(t);
+                const monthly = t.annualRent / 12;
+                const isVacant = cs.label === "VACANT";
+                return (
+                  <div key={t.id} className="px-5 py-3 flex items-center gap-3" style={{ borderBottom: "1px solid var(--bdr-lt)", opacity: isVacant ? 0.55 : 1 }}>
+                    <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: cs.dotColor, flexShrink: 0 }} />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[12px] font-medium" style={{ color: isVacant ? "var(--tx3)" : "var(--tx)" }}>{t.tenant}</div>
+                      {cs.daysLate && <div className="text-[10px]" style={{ color: "var(--amb)" }}>{cs.daysLate} days overdue · {fmt(monthly, sym)} outstanding</div>}
+                    </div>
+                    <span className="text-[11px]" style={{ fontFamily: "var(--mono)", color: "var(--tx3)", minWidth: "72px", textAlign: "right" }}>
+                      {isVacant ? "—" : fmt(monthly, sym)}/mo
+                    </span>
+                    <span className="text-[9px] font-semibold px-2 py-0.5 rounded" style={{ background: cs.bg, color: cs.color, border: `1px solid ${cs.color}22`, minWidth: "52px", textAlign: "center" }}>
+                      {cs.label}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
 
         {/* ── Upcoming Events — Next 12 Months ────────────────────────────── */}
         {!isLoading && tenants.length > 0 && (() => {
@@ -1039,6 +1121,7 @@ export default function TenantsPage() {
               <div className="w-1 shrink-0" />
               <div className="flex-1 pl-3">Tenant · Asset</div>
               <div className="w-28 text-right">Annual rent</div>
+              <div className="w-14 text-center">Covenant</div>
               <div className="w-20 text-right">Expiry</div>
               <div className="w-24 text-right pr-1">Health</div>
               <div className="w-4" />
