@@ -256,6 +256,10 @@ export default function ScopePage() {
             >
               {uploadingPDF ? "Uploading..." : "Upload PDF"}
             </button>
+            <span className={styles.hintOr}>or</span>
+            <Link href="/scope/search-company" className={styles.hint}>
+              Search by company
+            </Link>
           </div>
 
           <input
