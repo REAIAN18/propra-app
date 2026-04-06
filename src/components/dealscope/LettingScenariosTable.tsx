@@ -29,16 +29,17 @@ const SCENARIO_COLOR: Record<string, string> = {
   Bull: "var(--grn)",
 };
 
-const DEFAULT_SCENARIOS: LettingScenario[] = [
-  { label: "Bear", rentPsf: 5.5,  rentPa: 45100, voidMonths: 12, yield: 7.5, netIncomePa: 22300, exitValue: 600000, irr: 9.4,  equityMultiple: 1.38 },
-  { label: "Base", rentPsf: 6.5,  rentPa: 53300, voidMonths: 3,  yield: 6.5, netIncomePa: 28845, exitValue: 760000, irr: 18.2, equityMultiple: 1.93 },
-  { label: "Bull", rentPsf: 8.00, rentPa: 65600, voidMonths: 1,  yield: 5.5, netIncomePa: 38400, exitValue: 960000, irr: 26.7, equityMultiple: 2.56 },
-];
-
 export function LettingScenariosTable({
-  scenarios = DEFAULT_SCENARIOS,
+  scenarios = [],
   title = "Letting scenarios",
 }: LettingScenariosTableProps) {
+  if (!scenarios || scenarios.length === 0) {
+    return (
+      <div style={{ padding: 10, background: "var(--s2)", borderRadius: 6, border: "1px dashed var(--s3)", fontSize: 11, color: "var(--tx3)", textAlign: "center" }}>
+        No letting scenario data available
+      </div>
+    );
+  }
   return (
     <div>
       {title && (

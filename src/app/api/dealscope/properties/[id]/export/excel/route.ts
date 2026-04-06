@@ -14,7 +14,9 @@ export const maxDuration = 30;
 const fmt = (n: number | null | undefined, prefix = "£") =>
   n != null ? `${prefix}${n.toLocaleString("en-GB")}` : "—";
 const pct = (n: number | null | undefined) =>
-  n != null ? `${n}%` : "—";
+  n != null ? `${Number(n).toFixed(1)}%` : "—";
+const mult = (n: number | null | undefined) =>
+  n != null ? `${Number(n).toFixed(2)}×` : "—";
 
 export async function GET(
   req: NextRequest,
@@ -126,7 +128,7 @@ export async function GET(
       ["Net Initial Yield", pct(returns.capRate)],
       ["5-yr IRR", pct(returns.irr5yr)],
       ["Cash-on-Cash", pct(returns.cashOnCash)],
-      ["Equity Multiple", returns.equityMultiple ? `${returns.equityMultiple}×` : "—"],
+      ["Equity Multiple", mult(returns.equityMultiple)],
       ["Equity Needed", fmt(returns.equityNeeded)],
     ];
     retRows.forEach(([metric, value]) => fin.addRow({ metric, value, source: "" }));
@@ -201,9 +203,9 @@ export async function GET(
     scenarios.forEach((s) => {
       scSheet.addRow({
         name: s.name || "—",
-        irr: s.irr ? `${s.irr}%` : "—",
-        em: s.equityMultiple ? `${s.equityMultiple}×` : "—",
-        yield: s.cashYield ? `${s.cashYield}%` : "—",
+        irr: s.irr != null ? pct(s.irr) : "—",
+        em: s.equityMultiple != null ? mult(s.equityMultiple) : "—",
+        yield: s.cashYield != null ? pct(s.cashYield) : "—",
         npv: s.npv ? fmt(s.npv) : "—",
       });
     });
