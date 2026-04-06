@@ -17,7 +17,8 @@ export function calculateEquityMultiple(property: Property): EquityMultipleResul
 
   const totalCostIn = purchasePrice + sdlt + legalFees + surveyFees + capexResult.capex;
 
-  const erv = property.erv || property.passingRent || (property.size || 0) * 28;
+  // Fallback ERV: use £20/sqft for secondary commercial (conservative market default)
+  const erv = property.erv || property.passingRent || (property.size || 0) * 20;
   const opex = erv * 0.15;
   const noi = erv - opex;
   const exitYield = 0.08;

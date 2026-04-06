@@ -39,7 +39,8 @@ export function calculateIRR(property: Property): IRRResult {
 
   const totalVoidCost = Object.values(voidCosts).reduce((sum, val) => sum + val, 0);
 
-  const erv = property.erv || property.passingRent || (property.size || 0) * 28;
+  // Fallback ERV: use £20/sqft for secondary commercial (conservative market default)
+  const erv = property.erv || property.passingRent || (property.size || 0) * 20;
   const monthlyRent = erv / 12;
 
   const lettingCosts = {
