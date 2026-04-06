@@ -102,9 +102,11 @@ function fmtK(v: number | null | undefined): string {
   return `£${v.toLocaleString()}`;
 }
 
-function fmtPct(v: number | null | undefined): string {
+function fmtPct(v: number | string | null | undefined): string {
   if (v == null) return "—";
-  return `${v.toFixed(1)}%`;
+  const n = Number(v);
+  if (isNaN(n)) return "—";
+  return `${n.toFixed(1)}%`;
 }
 
 function escHtml(s: string | null | undefined): string {
@@ -462,14 +464,14 @@ function renderExecSummary(d: MemoData): string {
       <div class="metric-box highlight">
         <div class="metric-label">5yr IRR</div>
         <div class="metric-value">${fmtPct(r?.irr5yr)}</div>
-        <div class="metric-sub">Equity ×${r?.equityMultiple?.toFixed(2) || "—"}</div>
+        <div class="metric-sub">Equity ×${r?.equityMultiple != null ? Number(r.equityMultiple).toFixed(2) : "—"}</div>
       </div>
     </div>
 
     <div class="metrics-grid" style="grid-template-columns: repeat(4, 1fr);">
       <div class="metric-box">
         <div class="metric-label">DSCR</div>
-        <div class="metric-value">${r?.dscr?.toFixed(2) || "—"}×</div>
+        <div class="metric-value">${r?.dscr != null ? Number(r.dscr).toFixed(2) : "—"}×</div>
       </div>
       <div class="metric-box">
         <div class="metric-label">Yield on Cost</div>
@@ -886,7 +888,7 @@ function renderSensitivity(d: MemoData): string {
             <td class="mono">${s.rentAdj > 0 ? "+" : ""}${s.rentAdj}%</td>
             <td class="mono">${fmtPct(s.niy)}</td>
             <td class="mono" style="color: ${s.irr >= 15 ? "#00AA44" : s.irr >= 8 ? "#CC8800" : "#CC0000"}">${fmtPct(s.irr)}</td>
-            <td class="mono">${s.equityMultiple?.toFixed(2) || "—"}×</td>
+            <td class="mono">${s.equityMultiple != null ? Number(s.equityMultiple).toFixed(2) : "—"}×</td>
           </tr>`).join("")}
       </tbody>
     </table>` : ""}
@@ -925,10 +927,10 @@ function renderSensitivity(d: MemoData): string {
 
       <div class="verdict-summary">
         <div class="summary-item">
-          <strong>Expected Return:</strong> ${fmtPct(r?.irr5yr)} IRR, ${r?.equityMultiple?.toFixed(2) || "—"}× equity multiple (5yr hold)
+          <strong>Expected Return:</strong> ${fmtPct(r?.irr5yr)} IRR, ${r?.equityMultiple != null ? Number(r.equityMultiple).toFixed(2) : "—"}× equity multiple (5yr hold)
         </div>
         <div class="summary-item">
-          <strong>DSCR:</strong> ${r?.dscr?.toFixed(2) || "—"}× debt service coverage
+          <strong>DSCR:</strong> ${r?.dscr != null ? Number(r.dscr).toFixed(2) : "—"}× debt service coverage
         </div>
         ${v?.targetOfferRange ? `
         <div class="summary-item">

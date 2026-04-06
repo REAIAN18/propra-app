@@ -15,9 +15,17 @@ function Row({ l, v, mono, color }: { l: string; v: string; mono?: boolean; colo
    TAB: TITLE & LEGAL
    Design: 02-dossier-full.html → "Title & Legal"
    ═══════════════════════════════════════════════════ */
+const ILLUSTRATIVE_BANNER = (
+  <div style={{ display:"flex",alignItems:"center",gap:10,padding:"10px 14px",background:"rgba(251,191,36,.08)",border:"1px solid rgba(251,191,36,.25)",borderRadius:6,marginBottom:16,fontSize:12,color:"var(--tx2)" }}>
+    <span style={{ fontSize:14 }}>⚠</span>
+    <span><strong style={{ color:"var(--amb)" }}>ILLUSTRATIVE DATA</strong> — live data not yet available for this section. Values shown are for layout demonstration only.</span>
+  </div>
+);
+
 export function TitleTab() {
   return (
     <>
+      {ILLUSTRATIVE_BANNER}
       <div className={s.grid2}>
         <div className={s.card}>
           <div className={s.cardTitle}>Title details (Land Registry)</div>
@@ -87,6 +95,7 @@ export function TitleTab() {
 export function EnvironmentalTab() {
   return (
     <>
+      {ILLUSTRATIVE_BANNER}
       <div className={s.grid2}>
         <div className={s.card}>
           <div className={s.cardTitle}>Flood risk (Environment Agency)</div>
@@ -137,6 +146,7 @@ export function EnvironmentalTab() {
 export function OwnershipTab() {
   return (
     <>
+      {ILLUSTRATIVE_BANNER}
       <div className={s.grid2}>
         <div className={s.card}>
           <div className={s.cardTitle}>Company profile (Companies House)</div>
@@ -293,6 +303,7 @@ export function FinancialsTab() {
 export function MarketTab() {
   return (
     <>
+      {ILLUSTRATIVE_BANNER}
       <div className={s.ai}>
         <div className={s.aiLabel}>Market summary</div>
         <div className={s.aiText}>South East industrial is the strongest UK commercial sector. Medway corridor vacancy at 3.2% — cyclical low. Prime yields 5.0–5.5% despite rate headwinds. Admin-sale discount (25–35%) creates rare entry point into supply-constrained market. Base rate 4.50%, 2 further cuts priced for 2026.</div>
@@ -388,6 +399,7 @@ export function ApproachTab() {
 
   return (
     <>
+      {ILLUSTRATIVE_BANNER}
       <div className={s.grid2}>
         <div>
           <div className={s.card}>

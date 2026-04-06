@@ -38,7 +38,17 @@ export function PropertyTab({ deal }: Props) {
     url,
   }));
   const features = (ai?.keyFeatures as string[] | undefined) ?? [];
-  const description = (listing?.description ?? listing?.summary ?? ai?.summary) as string | undefined;
+  const rawDesc = (listing?.description ?? listing?.summary ?? ai?.summary) as string | undefined;
+  // Strip out raw table data that sometimes appears after prose in scraped listing descriptions
+  const description = rawDesc
+    ? rawDesc
+        .split(/\n/)
+        .filter(line => !/^(Name\/Floor|Available Area|Name\s+Floor|\d+,\d+\s+[\d.]+\s+On\s)/i.test(line.trim()))
+        .join('\n')
+        .split(/\bAvailable Area\b/i)[0]
+        .trim()
+        .substring(0, 1200) || undefined
+    : undefined;
   const size = deal.buildingSizeSqft ?? deal.sqft;
 
   return (
