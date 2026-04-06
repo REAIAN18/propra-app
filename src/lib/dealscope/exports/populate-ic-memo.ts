@@ -32,6 +32,18 @@ export interface DealSourceData {
   guidePrice?: number;
 }
 
+/** Safely extract a numeric value that may be stored as a plain number or as
+ *  an assumption object `{ value: number, source: string }`. */
+function numVal(v: unknown): number | undefined {
+  if (v == null) return undefined;
+  if (typeof v === "number") return isNaN(v) ? undefined : v;
+  if (typeof v === "object" && v !== null && typeof (v as Record<string, unknown>).value === "number") {
+    const n = (v as Record<string, unknown>).value as number;
+    return isNaN(n) ? undefined : n;
+  }
+  return undefined;
+}
+
 function toProperty(deal: DealSourceData): Property {
   const ds = (deal.dataSources ?? {}) as Record<string, unknown>;
   const assumptions = ds.assumptions as Record<string, unknown> | undefined;
@@ -44,11 +56,11 @@ function toProperty(deal: DealSourceData): Property {
     builtYear: deal.yearBuilt,
     epcRating: deal.epcRating,
     occupancyPct: deal.occupancyPct,
-    passingRent: (ds.passingRent ?? ds.currentRentPa ?? assumptions?.passingRent) as number | undefined,
-    erv: (ds.erv ?? ds.marketRentPa ?? assumptions?.erv) as number | undefined,
-    businessRates: (ds.businessRates ?? assumptions?.businessRates) as number | undefined,
-    serviceCharge: (ds.serviceCharge ?? assumptions?.serviceCharge) as number | undefined,
-    expectedVoid: (assumptions?.expectedVoidMonths ?? ds.expectedVoidMonths) as number | undefined,
+    passingRent: numVal(ds.passingRent) ?? numVal(ds.currentRentPa) ?? numVal(assumptions?.passingRent),
+    erv: numVal(ds.erv) ?? numVal(ds.marketRentPa) ?? numVal(assumptions?.erv),
+    businessRates: numVal(ds.businessRates) ?? numVal(assumptions?.businessRates),
+    serviceCharge: numVal(ds.serviceCharge) ?? numVal(assumptions?.serviceCharge),
+    expectedVoid: numVal(assumptions?.expectedVoidMonths) ?? numVal(ds.expectedVoidMonths),
     description: deal.dataSources ? JSON.stringify(deal.dataSources).toLowerCase() : undefined,
   };
 }
