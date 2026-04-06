@@ -1232,6 +1232,7 @@ model DealFinanceModel {
   totalCapital    Float
   leveragedIRR    Float?   // percentage
   cashOnCash      Float?   // percentage
+  equityMultiple  Float?   // e.g., 1.85
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

@@ -1,12 +1,9 @@
 /**
  * GET /api/scout/deals/:dealId/underwrite
- * Returns full 10-year DCF analysis with adjustable assumptions.
+ * Returns full 10-year DCF analysis with adjustable assumptions + sensitivity matrix.
  *
  * POST /api/scout/deals/:dealId/underwrite
  * Calculates or recalculates underwriting metrics for a Scout deal.
- *
- * Accepts optional user overrides for rent, vacancy, opex, and capex.
- * Stores result in ScoutUnderwriting (upsert on dealId).
  *
  * Calculation uses:
  *   - getFallbackCapRate / calculateIRR from avm.ts
@@ -24,6 +21,41 @@ import {
   calculateAnnualDebtService,
 } from "@/lib/data/scout-benchmarks";
 import { calculateHoldScenario, type HoldInputs } from "@/lib/hold-sell-model";
+
+// ---------------------------------------------------------------------------
+// Helper — compute IRR for a given cap rate and rent growth assumption
+// ---------------------------------------------------------------------------
+
+function computeSensitivityIRR(
+  equityNeeded: number,
+  passingRent: number,
+  vacancy: number,
+  opexPct: number,
+  capexAnnual: number,
+  capRate: number,
+  rentGrowth: number,
+  holdPeriodYears: number
+): number {
+  const inputs: HoldInputs = {
+    currentValue: equityNeeded,
+    passingRent,
+    marketERV: passingRent * 1.05,
+    vacancyAllowance: vacancy,
+    opexPct,
+    rentGrowthPct: rentGrowth,
+    capexAnnual,
+    exitYield: capRate,
+    holdPeriodYears,
+    discountRate: 0.08,
+  };
+  try {
+    const result = calculateHoldScenario(inputs);
+    const irr = result.irr * 100;
+    return isFinite(irr) ? irr : 0;
+  } catch {
+    return 0;
+  }
+}
 
 // ---------------------------------------------------------------------------
 // GET — full 10-year DCF analysis
@@ -127,7 +159,7 @@ export async function GET(
     if (y === holdPeriodYears) {
       const finalNOI = rentY * (1 - vacancy) * (1 - opexPct);
       const terminalValue = finalNOI / exitCapRate;
-      const remainingBalance = debtAmount * 0.7; // Simplified - approximate after 10 years
+      const remainingBalance = debtAmount * 0.7; // Simplified — approximate after 10 years
       cashFlowY += terminalValue - remainingBalance;
     }
 
@@ -141,6 +173,70 @@ export async function GET(
       cashFlow: cashFlowY,
     });
   }
+
+  // ── Sensitivity matrix (cap rate × rent growth) ────────────────────────
+  // 3 cap rate scenarios: low (−1%), mid (current), high (+1%)
+  // 3 growth scenarios: low (1%), mid (current), high (4%)
+  const capRateLow  = Math.max(exitCapRate - 0.01, 0.02);
+  const capRateMid  = exitCapRate;
+  const capRateHigh = exitCapRate + 0.01;
+  const growthLow   = 0.01;
+  const growthMid   = rentGrowthPct;
+  const growthHigh  = 0.04;
+
+  const capRates = [capRateLow, capRateMid, capRateHigh];
+  const growthRates = [growthLow, growthMid, growthHigh];
+
+  const sensitivityMatrix = capRates.map((cr) =>
+    growthRates.map((gr) =>
+      computeSensitivityIRR(
+        equityNeeded,
+        passingRent,
+        vacancy,
+        opexPct,
+        capexAnnual,
+        cr,
+        gr,
+        holdPeriodYears
+      )
+    )
+  );
+
+  // ── Save computed results to DealFinanceModel ──────────────────────────
+  const leveragedIRR = holdResult.irr * 100;
+  const equityMultiple = holdResult.equityMultiple;
+  const cashOnCash = holdResult.cashYield;
+
+  prisma.dealFinanceModel.upsert({
+    where: { dealId },
+    create: {
+      dealId,
+      userId: session.user.id,
+      loanAmount: debtAmount,
+      loanRate: interestRate * 100,
+      loanTerm: loanTermYears,
+      ltvPct: ltv * 100,
+      equityRequired: equityNeeded,
+      totalCapital: purchasePrice,
+      leveragedIRR: isFinite(leveragedIRR) ? leveragedIRR : null,
+      cashOnCash: isFinite(cashOnCash) ? cashOnCash : null,
+      equityMultiple: isFinite(equityMultiple) ? equityMultiple : null,
+    },
+    update: {
+      loanAmount: debtAmount,
+      loanRate: interestRate * 100,
+      loanTerm: loanTermYears,
+      ltvPct: ltv * 100,
+      equityRequired: equityNeeded,
+      totalCapital: purchasePrice,
+      leveragedIRR: isFinite(leveragedIRR) ? leveragedIRR : null,
+      cashOnCash: isFinite(cashOnCash) ? cashOnCash : null,
+      equityMultiple: isFinite(equityMultiple) ? equityMultiple : null,
+      updatedAt: new Date(),
+    },
+  }).catch(() => {
+    // Non-blocking — don't fail the request if caching fails
+  });
 
   return NextResponse.json({
     deal: {
@@ -162,9 +258,9 @@ export async function GET(
       holdPeriodYears,
     },
     returns: {
-      leveragedIRR: holdResult.irr * 100,
-      equityMultiple: holdResult.equityMultiple,
-      cashOnCash: holdResult.cashYield,
+      leveragedIRR,
+      equityMultiple,
+      cashOnCash,
       npv: holdResult.npv,
     },
     financing: {
@@ -176,6 +272,22 @@ export async function GET(
       annualDebtService,
     },
     cashFlows: cashFlowDetails,
+    sensitivity: {
+      capRates: [
+        { label: "Low", value: capRateLow * 100 },
+        { label: "Mid", value: capRateMid * 100 },
+        { label: "High", value: capRateHigh * 100 },
+      ],
+      growthRates: [
+        { label: "1%", value: growthLow * 100 },
+        { label: `${(growthMid * 100).toFixed(1)}%`, value: growthMid * 100 },
+        { label: "4%", value: growthHigh * 100 },
+      ],
+      // matrix[capRateIdx][growthIdx] = IRR %
+      matrix: sensitivityMatrix,
+      currentCapRateIdx: 1,
+      currentGrowthIdx: 1,
+    },
   });
 }
 
@@ -254,7 +366,6 @@ export async function POST(
   const dscr = annualDebtService > 0 ? noinet / annualDebtService : null;
 
   // ── 5-Year IRR ──────────────────────────────────────────────────────────
-  // Levered cash flows: NOI minus debt service + terminal value at exit cap rate
   const RENT_GROWTH = 0.025;
   const cashFlows = [-askingPrice];
 
@@ -263,7 +374,7 @@ export async function POST(
     const noiY  = rentY * (1 - vacancyRate) * (1 - opexPct);
     const cf = y < 5
       ? noiY - annualDebtService
-      : noiY - annualDebtService + noiY / marketCapRate; // terminal value at market cap rate
+      : noiY - annualDebtService + noiY / marketCapRate;
     cashFlows.push(cf);
   }
 
