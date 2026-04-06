@@ -6,8 +6,7 @@
   "framework": "nextjs",
   "git": {
     "deploymentEnabled": {
-      "main": true,
-      "staging": true
+      "main": true
     }
   },
   "github": {
@@ -17,7 +16,7 @@
   "crons": [
     {
       "path": "/api/cron/dealscope-alerts",
-      "schedule": "*/15 * * * *"
+      "schedule": "0 * * * *"
     }
   ]
 }
