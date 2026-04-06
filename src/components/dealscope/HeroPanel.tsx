@@ -144,14 +144,14 @@ export function HeroPanel({
   }
   if (irr != null) {
     metrics.push({
-      label: "IRR",
+      label: "IRR (levered)",
       value: fmtPct(irr),
       color: irr >= 0.15 ? "green" : irr >= 0.10 ? "amber" : "red",
     });
   }
   if (em != null) {
     metrics.push({
-      label: "Equity Multiple",
+      label: "Equity Multiple (levered)",
       value: fmtMultiple(em),
       color: em >= 1.8 ? "green" : em >= 1.3 ? "amber" : "red",
     });

@@ -44,6 +44,9 @@ export function AISummary({ summary, play }: AISummaryProps) {
       >
         {summary}
       </p>
+      <p style={{ fontSize: 10, color: "#666", marginTop: 8, marginBottom: 0 }}>
+        Return figures quoted above are levered estimates.
+      </p>
     </div>
   );
 }
