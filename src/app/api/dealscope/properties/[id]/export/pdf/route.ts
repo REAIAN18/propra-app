@@ -11,6 +11,7 @@ import { prisma } from "@/lib/prisma";
 import { ICMemoTemplate } from "@/lib/dealscope/exports/ic-memo-template";
 import { populateICMemo } from "@/lib/dealscope/exports/populate-ic-memo";
 
+export const runtime = "nodejs";
 export const maxDuration = 30;
 
 export async function GET(
