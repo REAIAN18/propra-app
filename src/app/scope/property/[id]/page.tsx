@@ -49,6 +49,7 @@ type RawDeal = {
   daysOnMarket?: number;
   signals?: string[];
   dataSources?: Record<string, unknown>;
+  satelliteImageUrl?: string | null;
 };
 
 const TABS = ["Overview", "Property", "Planning", "Title & Legal", "Environmental", "Ownership", "Financials", "Comparables", "Market", "Approach", "Due Diligence"] as const;
@@ -330,11 +331,21 @@ function DueDiligenceTab({ deal }: { deal: RawDeal }) {
   );
 }
 
-function DossierSidebar({ deal }: { deal: RawDeal }) {
+function DossierSidebar({ deal, prop }: { deal: RawDeal; prop: Property }) {
   const ds = (deal.dataSources ?? {}) as Record<string, unknown>;
   const ai = ds.aiAnalysis as Record<string, unknown> | undefined;
   const mandateTag = (ds.mandate as string | undefined) ?? (ai?.mandateTag as string | undefined);
   const mandateMatch = (ai?.mandateMatch as string | undefined) ?? (ai?.mandateMatchReason as string | undefined);
+
+  const irrResult = calculateIRR(prop);
+  const equityResult = calculateEquityMultiple(prop);
+  const verdict = calculateVerdict(prop);
+  const projectedProfit = equityResult.exitValue - equityResult.totalCostIn;
+  const targetPrice = verdict.targetPrice ?? prop.askingPrice ?? 0;
+  const discountPct = prop.askingPrice && prop.askingPrice > 0
+    ? ((prop.askingPrice - targetPrice) / prop.askingPrice) * 100
+    : null;
+  const hasAcquisitionData = prop.askingPrice && prop.askingPrice > 0;
 
   const DATA_SOURCE_KEYS = [
     { key: "epcData",           label: "EPC" },
@@ -362,6 +373,21 @@ function DossierSidebar({ deal }: { deal: RawDeal }) {
 
   return (
     <>
+      {hasAcquisitionData && (
+        <div className={s.sideCard}>
+          <div className={s.cardTitle}>Acquisition metrics</div>
+          {[
+            { l: "Opportunity score", v: `${verdict.dealScore}/100`, color: verdict.dealScore >= 70 ? "green" as const : verdict.dealScore >= 40 ? "amber" as const : "red" as const },
+            { l: "Est. value", v: fmtCcy(equityResult.exitValue), color: undefined },
+            { l: "Target offer", v: fmtCcy(targetPrice), color: undefined },
+            { l: "Discount to market", v: discountPct != null ? `${discountPct.toFixed(1)}%` : "—", color: undefined },
+            { l: "Projected profit", v: fmtCcy(projectedProfit), color: projectedProfit > 0 ? "green" as const : "red" as const },
+            { l: "IRR (levered)", v: fmtPct(irrResult.irr), color: irrResult.irr >= 0.12 ? "green" as const : irrResult.irr >= 0.07 ? "amber" as const : "red" as const },
+            { l: "Timeline to exit", v: "10 yrs", color: undefined },
+          ].map(({ l, v, color }) => <Row key={l} l={l} v={v} color={color} mono />)}
+        </div>
+      )}
+
       <div className={s.sideCard}>
         <div className={s.cardTitle}>Mandate match</div>
         {mandateTag && <div className={s.mandateBadge}>{mandateTag}</div>}
@@ -555,6 +581,7 @@ export default function PropertyDossierPage() {
             hasInsolvency: deal.hasInsolvency,
             hasLisPendens: deal.hasLisPendens,
             dataSources: deal.dataSources,
+            satelliteImageUrl: deal.satelliteImageUrl,
           }}
           exporting={exporting}
           watched={watched}
@@ -596,7 +623,7 @@ export default function PropertyDossierPage() {
               </div>
             </div>
             <div className={s.dossierSide}>
-              <DossierSidebar deal={deal} />
+              <DossierSidebar deal={deal} prop={prop} />
             </div>
           </div>
         </div>

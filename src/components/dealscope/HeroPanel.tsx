@@ -4,6 +4,7 @@ import s from "./HeroPanel.module.css";
 import { VerdictBadge } from "./VerdictBadge";
 import { MetricCard } from "./MetricCard";
 import { AISummary } from "./AISummary";
+import { PropertyImageGallery } from "./PropertyImageGallery";
 
 /* ── Formatting helpers ── */
 function fmtCurrency(n: number): string {
@@ -36,6 +37,7 @@ export interface HeroPanelProperty {
   hasInsolvency?: boolean;
   hasLisPendens?: boolean;
   dataSources?: Record<string, any>;
+  satelliteImageUrl?: string | null;
 }
 
 interface HeroPanelProps {
@@ -80,6 +82,16 @@ export function HeroPanel({
   const verdict = ra?.verdict ?? da?.verdict;
   const returns = ra?.returns ?? da;
   const assumptions = ds.assumptions ?? {};
+
+  /* ── Derive gallery data ── */
+  const listing = (ds.listing ?? {}) as Record<string, unknown>;
+  const galleryImages: string[] = Array.isArray(ds.images)
+    ? (ds.images as string[])
+    : Array.isArray(listing.images)
+    ? (listing.images as string[])
+    : [];
+  const streetViewUrl: string | null =
+    typeof listing.streetView === "string" ? listing.streetView : null;
 
   /* ── Derive verdict display ── */
   const rating: string = verdict?.rating ?? "";
@@ -165,21 +177,28 @@ export function HeroPanel({
     <div className={s.heroPanel}>
       {/* ── Property header ── */}
       <div className={s.propertyHeader}>
-        <div className={s.propertyTitle}>
-          <h1>{property.address}</h1>
-          {metaTags.length > 0 && (
-            <div className={s.propertyMeta}>
-              {metaTags.map((tag, i) => (
-                <span key={i}>{tag}</span>
-              ))}
-            </div>
+        <PropertyImageGallery
+          satelliteUrl={property.satelliteImageUrl}
+          streetViewUrl={streetViewUrl}
+          listingImages={galleryImages}
+        />
+        <div className={s.propertyInfo}>
+          <div className={s.propertyTitle}>
+            <h1>{property.address}</h1>
+            {metaTags.length > 0 && (
+              <div className={s.propertyMeta}>
+                {metaTags.map((tag, i) => (
+                  <span key={i}>{tag}</span>
+                ))}
+              </div>
+            )}
+          </div>
+          {onBack && (
+            <button className={s.backBtn} onClick={onBack}>
+              ← Back to results
+            </button>
           )}
         </div>
-        {onBack && (
-          <button className={s.backBtn} onClick={onBack}>
-            ← Back to results
-          </button>
-        )}
       </div>
 
       {/* ── AI Summary ── */}
