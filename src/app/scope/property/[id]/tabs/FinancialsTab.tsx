@@ -95,9 +95,14 @@ export function FinancialsTab({ deal, prop }: Props) {
   const ds = (deal.dataSources ?? {}) as Record<string, unknown>;
   const irrResult = calculateIRR(prop);
   const equityResult = calculateEquityMultiple(prop);
+  // Single source of truth: prefer RICS analysis (comprehensive DCF) then enriched returns, then frontend calc
+  const authEM: number =
+    (ds.ricsAnalysis as Record<string, any>)?.returns?.equityMultiple ??
+    (ds.returns as Record<string, any>)?.equityMultiple ??
+    equityResult.equityMultiple;
   const verdict = calculateVerdict(prop);
 
-  // Valuation scenarios from equity result
+  // Valuation scenarios from equity result (use authoritative EM for relative scenario scaling)
   const scenarios: ValuationScenario[] = [
     { label: "Bear case",  valueLow: equityResult.exitValue * 0.75, valueMid: equityResult.exitValue * 0.80, valueHigh: equityResult.exitValue * 0.85, method: "Exit yield +150bps", confidence: "low" },
     { label: "Base case",  valueLow: equityResult.exitValue * 0.90, valueMid: equityResult.exitValue,        valueHigh: equityResult.exitValue * 1.10, method: "8% exit yield",      confidence: "medium" },
@@ -148,7 +153,7 @@ export function FinancialsTab({ deal, prop }: Props) {
   }
 
   const irrColor: "green" | "amber" | "red" = irrResult.irr >= 0.12 ? "green" : irrResult.irr >= 0.07 ? "amber" : "red";
-  const emColor: "green" | "amber" | "red" = equityResult.equityMultiple >= 1.8 ? "green" : equityResult.equityMultiple >= 1.2 ? "amber" : "red";
+  const emColor: "green" | "amber" | "red" = authEM >= 1.8 ? "green" : authEM >= 1.2 ? "amber" : "red";
   return (
     <>
       {/* Returns summary */}
@@ -156,7 +161,7 @@ export function FinancialsTab({ deal, prop }: Props) {
         <div className={s.cardTitle}>Returns summary</div>
         <div className={s.statRow}>
           <MetricCard label="IRR (10yr)"      value={fmtPct(irrResult.irr)}               subtitle={`Confidence: ${irrResult.confidence}`} color={irrColor} />
-          <MetricCard label="Equity multiple" value={fmtX(equityResult.equityMultiple)}    subtitle="Unlevered"                             color={emColor} />
+          <MetricCard label="Equity multiple" value={fmtX(authEM)}                         subtitle="Unlevered"                             color={emColor} />
           <MetricCard label="Deal score"      value={String(verdict.dealScore)}             subtitle={verdict.verdict} />
           <MetricCard label="Total cost in"   value={fmtCcy(equityResult.totalCostIn)}      subtitle="Inc. SDLT + fees" />        </div>
       </div>
@@ -227,7 +232,7 @@ export function FinancialsTab({ deal, prop }: Props) {
 
       {/* Letting scenarios */}
       {(() => {
-        const lettingScenarios = buildLettingScenarios(prop, irrResult, equityResult);
+        const lettingScenarios = buildLettingScenarios(prop, irrResult, { ...equityResult, equityMultiple: authEM });
         if (lettingScenarios.length === 0) return null;
         return (
           <div className={`${s.card} ${s.a3}`}>

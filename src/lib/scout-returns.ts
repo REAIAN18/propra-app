@@ -62,7 +62,7 @@ export function calculateDealReturns(deal: DealForReturns): DealReturnsMetrics {
   const marketERV = noi * 1.05; // Assume 5% upside to market ERV
 
   const holdInputs: HoldInputs = {
-    currentValue: equityNeeded, // We're analyzing from equity investment perspective
+    currentValue: price, // Unlevered: total acquisition cost as equity base
     passingRent,
     marketERV,
     vacancyAllowance: 0.05, // 5%
