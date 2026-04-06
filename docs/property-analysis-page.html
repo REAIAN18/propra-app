@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Regency House, Basildon — DealScope Analysis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'DM Sans', sans-serif;
+            background: #09090b;
+            color: #fafafa;
+            line-height: 1.5;
+        }
+        
+        /* HERO PANEL */
+        .hero-panel {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: linear-gradient(180deg, #09090b 0%, #0d0d0f 100%);
+            border-bottom: 1px solid #27272a;
+            padding: 20px 32px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        }
+        
+        .property-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+        
+        .property-title h1 {
+            font-size: 24px;
+            font-weight: 500;
+            color: #fafafa;
+            margin-bottom: 4px;
+        }
+        
+        .property-meta {
+            display: flex;
+            gap: 12px;
+            font-size: 13px;
+            color: #a1a1aa;
+        }
+        
+        .property-meta span::before {
+            content: "•";
+            margin-right: 12px;
+            color: #52525b;
+        }
+        
+        .property-meta span:first-child::before {
+            display: none;
+        }
+        
+        .back-btn {
+            padding: 8px 16px;
+            background: #18181b;
+            border: 1px solid #3f3f46;
+            border-radius: 6px;
+            color: #a1a1aa;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .back-btn:hover {
+            background: #27272a;
+            color: #fafafa;
+        }
+        
+        /* AI SUMMARY BOX */
+        .ai-summary {
+            background: linear-gradient(135deg, rgba(124, 106, 240, 0.15) 0%, rgba(124, 106, 240, 0.05) 100%);
+            border: 1px solid #7c6af0;
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin-bottom: 16px;
+            position: relative;
+        }
+        
+        .ai-badge {
+            position: absolute;
+            top: 12px;
+            right: 16px;
+            background: #7c6af0;
+            color: #fafafa;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .ai-summary h3 {
+            font-size: 13px;
+            font-weight: 600;
+            color: #9b8ff5;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .ai-summary p {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #e4e4e7;
+        }
+        
+        /* METRICS GRID */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+        }
+        
+        .metric-card {
+            background: #18181b;
+            border: 1px solid #27272a;
+            border-radius: 8px;
+            padding: 14px 16px;
+            transition: all 0.2s;
+        }
+        
+        .metric-card:hover {
+            border-color: #7c6af0;
+            transform: translateY(-2px);
+        }
+        
+        .metric-card.verdict-card {
+            grid-column: span 2;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(245, 158, 11, 0.05) 100%);
+            border: 2px solid #f59e0b;
+        }
+        
+        .verdict-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+            border: 1px solid #f59e0b;
+        }
+        
+        .verdict-title {
+            font-size: 18px;
+            margin: 10px 0 4px 0;
+            color: #fafafa;
+        }
+        
+        .verdict-subtitle {
+            font-size: 13px;
+            color: #d4d4d8;
+        }
+        
+        .metric-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #71717a;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+        
+        .metric-value {
+            font-size: 22px;
+            font-weight: 500;
+            color: #fafafa;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+        }
+        
+        .metric-subtitle {
+            font-size: 11px;
+            color: #a1a1aa;
+            margin-top: 4px;
+        }
+        
+        /* ACTION BAR */
+        .action-bar {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #27272a;
+        }
+        
+        .btn {
+            padding: 9px 18px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+        
+        .btn-primary {
+            background: #7c6af0;
+            color: #fafafa;
+        }
+        
+        .btn-primary:hover {
+            background: #6456d4;
+        }
+        
+        .btn-secondary {
+            background: #18181b;
+            color: #fafafa;
+            border: 1px solid #3f3f46;
+        }
+        
+        .btn-secondary:hover {
+            background: #27272a;
+        }
+        
+        /* TAB NAVIGATION */
+        .tab-nav {
+            background: #09090b;
+            border-bottom: 1px solid #27272a;
+            padding: 0 32px;
+            display: flex;
+            gap: 32px;
+            position: sticky;
+            top: 205px;
+            z-index: 90;
+        }
+        
+        .tab-btn {
+            padding: 14px 0;
+            font-size: 14px;
+            font-weight: 500;
+            color: #a1a1aa;
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .tab-btn:hover {
+            color: #fafafa;
+        }
+        
+        .tab-btn.active {
+            color: #7c6af0;
+            border-bottom-color: #7c6af0;
+        }
+        
+        /* CONTENT */
+        .content {
+            padding: 32px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* SECTION */
+        .section {
+            margin-bottom: 32px;
+        }
+        
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #fafafa;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        /* PROPERTY IMAGES */
+        .property-images {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            grid-template-rows: 300px 200px;
+            gap: 8px;
+            margin-bottom: 24px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .property-image {
+            background: #27272a;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .property-image.main {
+            grid-row: span 2;
+        }
+        
+        .property-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .image-label {
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            background: rgba(0,0,0,0.7);
+            color: #fafafa;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        /* MAP */
+        .map-container {
+            width: 100%;
+            height: 400px;
+            background: linear-gradient(135deg, #27272a 0%, #3f3f46 100%);
+            border: 1px solid #7c6af0;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .map-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+        
+        .map-text {
+            font-size: 14px;
+            color: #a1a1aa;
+            text-align: center;
+        }
+        
+        /* GRID LAYOUTS */
+        .two-col-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+        
+        .three-col-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+        
+        /* CARD */
+        .card {
+            background: #18181b;
+            border: 1px solid #27272a;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        
+        .card h4 {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #71717a;
+            margin-bottom: 14px;
+        }
+        
+        .card-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 9px 0;
+            border-bottom: 1px solid #27272a;
+            font-size: 13px;
+        }
+        
+        .card-row:last-child {
+            border-bottom: none;
+        }
+        
+        .card-row.total {
+            padding-top: 12px;
+            margin-top: 6px;
+            border-top: 2px solid #7c6af0;
+            border-bottom: none;
+        }
+        
+        .card-label {
+            color: #a1a1aa;
+        }
+        
+        .card-value {
+            font-family: 'JetBrains Mono', monospace;
+            color: #fafafa;
+            font-weight: 500;
+        }
+        
+        .card-row.total .card-label {
+            font-weight: 600;
+            color: #fafafa;
+        }
+        
+        .card-row.total .card-value {
+            font-size: 16px;
+            color: #7c6af0;
+        }
+        
+        /* VALUATION CARDS */
+        .valuation-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin: 20px 0;
+        }
+        
+        .valuation-card {
+            background: #18181b;
+            border: 1px solid #27272a;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        
+        .valuation-card:hover {
+            border-color: #7c6af0;
+            transform: translateY(-2px);
+        }
+        
+        .valuation-type {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #71717a;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+        
+        .valuation-amount {
+            font-size: 28px;
+            font-weight: 500;
+            font-family: 'JetBrains Mono', monospace;
+            color: #fafafa;
+            margin-bottom: 8px;
+        }
+        
+        .valuation-note {
+            font-size: 11px;
+            color: #a1a1aa;
+            line-height: 1.4;
+        }
+        
+        /* TABLE */
+        .table-container {
+            background: #18181b;
+            border: 1px solid #27272a;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        thead {
+            background: #27272a;
+        }
+        
+        th {
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #a1a1aa;
+        }
+        
+        td {
+            padding: 12px 16px;
+            border-top: 1px solid #27272a;
+            font-size: 13px;
+            color: #d4d4d8;
+        }
+        
+        tbody tr:hover {
+            background: rgba(124, 106, 240, 0.05);
+        }
+        
+        .table-number {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 500;
+            color: #fafafa;
+        }
+        
+        /* CALLOUT */
+        .callout {
+            padding: 16px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid;
+        }
+        
+        .callout-critical {
+            background: rgba(239, 68, 68, 0.1);
+            border-left-color: #ef4444;
+        }
+        
+        .callout-warning {
+            background: rgba(245, 158, 11, 0.1);
+            border-left-color: #f59e0b;
+        }
+        
+        .callout-info {
+            background: rgba(124, 106, 240, 0.1);
+            border-left-color: #7c6af0;
+        }
+        
+        .callout h4 {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #fafafa;
+        }
+        
+        .callout p {
+            font-size: 13px;
+            color: #d4d4d8;
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+        
+        .callout p:last-child {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HERO PANEL -->
+    <div class="hero-panel">
+        <div class="property-header">
+            <div class="property-title">
+                <h1>Regency House, Miles Gray Road, Basildon</h1>
+                <div class="property-meta">
+                    <span>Office</span>
+                    <span>30,150 sq ft NLA</span>
+                    <span>Freehold</span>
+                    <span>100% Vacant</span>
+                </div>
+            </div>
+            <button class="back-btn">← Back to results</button>
+        </div>
+        
+        <!-- AI SUMMARY -->
+        <div class="ai-summary">
+            <span class="ai-badge">AI SUMMARY</span>
+            <h3>Deal Overview</h3>
+            <p>
+                <strong>Leasing execution play</strong> on recently refurbished (2022) vacant office building. 
+                Asking price £7.0m requires aggressive assumptions (+30% ERV vs market, -200bps yield vs comps) 
+                that create 40-60% valuation overstatement risk. <strong>Conditional opportunity at £6.0-6.5m</strong> 
+                (7-14% discount) with conservative underwriting: 8.0% exit yield, £22 psf ERV, 24-36 month void budget. 
+                Returns highly sensitive to entry price — current asking generates sub-5% IRR vs 15%+ target at discounted entry.
+            </p>
+        </div>
+        
+        <!-- METRICS GRID -->
+        <div class="metrics-grid">
+            <div class="metric-card verdict-card">
+                <span class="verdict-badge">⚠️ CONDITIONAL</span>
+                <h3 class="verdict-title">Discount Required</h3>
+                <p class="verdict-subtitle">Pursue at £6.0m-£6.5m (7-14% off asking)</p>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-label">Asking Price</div>
+                <div class="metric-value">£7.0m</div>
+                <div class="metric-subtitle">£183 psf</div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-label">Market Range</div>
+                <div class="metric-value">£6.2-7.1m</div>
+                <div class="metric-subtitle">Based on comps</div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-label">Max Entry (15% IRR)</div>
+                <div class="metric-value">£6.0-6.5m</div>
+                <div class="metric-subtitle">Conservative case</div>
+            </div>
+        </div>
+        
+        <!-- ACTION BAR -->
+        <div class="action-bar">
+            <button class="btn btn-primary">📄 Export IC Memo PDF</button>
+            <button class="btn btn-secondary">+ Add to Pipeline</button>
+            <button class="btn btn-secondary">👁 Watch</button>
+            <button class="btn btn-secondary">📧 Contact Agent</button>
+        </div>
+    </div>
+    
+    <!-- TAB NAVIGATION -->
+    <div class="tab-nav">
+        <button class="tab-btn active" onclick="switchTab('overview')">Overview</button>
+        <button class="tab-btn" onclick="switchTab('financials')">Financials</button>
+        <button class="tab-btn" onclick="switchTab('comparables')">Comparables</button>
+        <button class="tab-btn" onclick="switchTab('due-diligence')">Due Diligence</button>
+    </div>
+    
+    <!-- CONTENT -->
+    <div class="content">
+        
+        <!-- TAB 1: OVERVIEW -->
+        <div class="tab-content active" id="overview">
+            
+            <!-- PROPERTY IMAGES -->
+            <div class="property-images">
+                <div class="property-image main">
+                    <img src="https://rib.co.uk/wp-content/uploads/2026/03/381f5879abef468529dde2e7b28a75e4-drone-1.jpg" alt="Aerial view">
+                    <div class="image-label">Aerial View</div>
+                </div>
+                <div class="property-image">
+                    <img src="https://rib.co.uk/wp-content/uploads/2026/03/6512990cdb98003b71c082f2688fe94c-exterior-3.jpg" alt="Front exterior">
+                    <div class="image-label">Front Exterior</div>
+                </div>
+                <div class="property-image">
+                    <img src="https://rib.co.uk/wp-content/uploads/2026/03/076ceb6bf08e5f5612a05a33980bc239-street-view-disposal-355425.jpg" alt="Street view">
+                    <div class="image-label">Street View</div>
+                </div>
+                <div class="property-image">
+                    <img src="https://rib.co.uk/wp-content/uploads/2026/03/e87bfc26fec2f917b7c0bd1e5aa423e4-miles-gray-road-basildon-essex-ss14-3fr-regency-house-2.jpg" alt="Building detail">
+                    <div class="image-label">Building Detail</div>
+                </div>
+                <div class="property-image">
+                    <img src="https://rib.co.uk/wp-content/uploads/2026/03/a9e3652fbb5f21eb2eca3f05b0d89dab-miles-gray-road-basildon-essex-ss14-3fr-regency-house-1-5.jpeg" alt="Reception">
+                    <div class="image-label">Interior</div>
+                </div>
+            </div>
+            
+            <!-- LOCATION MAP -->
+            <div class="section">
+                <h3 class="section-title">📍 Location</h3>
+                <div class="map-container">
+                    <div class="map-icon">🗺️</div>
+                    <div class="map-text">
+                        <strong>Miles Gray Road, Basildon, Essex SS14 3AF</strong><br>
+                        11 miles from Chelmsford • 26 miles from Central London
+                    </div>
+                </div>
+            </div>
+            
+            <!-- PROPERTY DETAILS -->
+            <div class="section">
+                <h3 class="section-title">🏢 Property Details</h3>
+                <div class="two-col-grid">
+                    <div class="card">
+                        <h4>Physical Characteristics</h4>
+                        <div class="card-row">
+                            <span class="card-label">Net Lettable Area</span>
+                            <span class="card-value">30,150 sq ft</span>
+                        </div>
+                        <div class="card-row">
+                            <span class="card-label">Gross Internal Area</span>
+                            <span class="card-value">38,330 sq ft</span>
+                        </div>
+                        <div class="card-row">
+                            <span class="card-label">Site Area</span>
+                            <span class="card-value">0.917 acres</span>
+                        </div>
+                        <div class="card-row">
+                            <span class="card-label">Car Parking</span>
+                            <span class="card-value">110 spaces</span>
+                        </div>
+                        <div class="card-row">
+                            <span class="card-label">Year Built</span>
+                            <span class="card-value">1998 (extended 2022)</span>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h4>Current Position</h4>
+                        <div class="card-row">
+                            <span class="card-label">Occupancy</span>
+                            <span class="card-value" style="color: #f87171;">0% — Vacant</span>
+                        </div>
+                        <div class="card-row">
+                            <span class="card-label">Recent Capex</span>
+                            <span class="card-value">£5.3m (£140 psf)</span>
+                        </div>
+                        <div class="card-row">
+                            <span class="card-label">Works Completed</span>
+                            <span class="card-value">Late 2022</span>
+                        </div>
+                        <div class="card-row">
+                            <span class="card-label">Tenure</span>
+                            <span class="card-value">Freehold</span>
+                        </div>
+                        <div class="card-row">
+                            <span class="card-label">EPC Rating</span>
+                            <span class="card-value">C (62) — Compliant</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- KEY RISKS -->
+            <div class="section">
+                <h3 class="section-title">⚠️ Key Investment Risks</h3>
+                
+                <div class="callout callout-critical">
+                    <h4>CRITICAL RISK: 100% Vacant Property</h4>
+                    <p>Property is fully vacant post-refurbishment. No income, immediate carry costs £33k/month. Realistic void period 18-36 months (not 11 months assumed). Total carry costs during stabilization: £600k-£1.2m.</p>
+                </div>
+                
+                <div class="two-col-grid">
+                    <div class="callout callout-warning">
+                        <h4>MARKET HEADWINDS</h4>
+                        <p>Basildon office market: 18.3% vacancy, -23% take-up YoY. Secondary rents £20-23 psf with 9-15 month incentives standard. Model assumes £28 psf (+22-40% vs comps).</p>
+                    </div>
+                    
+                    <div class="callout callout-warning">
+                        <h4>FLOOD RISK ZONE 3</h4>
+                        <p>Environment Agency Flood Zone 3 (high probability). Impacts: insurance premiums (+£8-12k/year), tenant demand, exit liquidity. Requires flood risk assessment and business continuity planning.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- TAB 2: FINANCIALS -->
+        <div class="tab-content" id="financials">
+            
+            <!-- VALUATION SUMMARY -->
+            <div class="section">
+                <h3 class="section-title">💰 Valuation Summary</h3>
+                
+                <div class="valuation-grid">
+                    <div class="valuation-card">
+                        <div class="valuation-type">Market Value</div>
+                        <div class="valuation-amount">£6.8m</div>
+                        <div class="valuation-note">Income capitalization @ 8.0% yield, £22 psf ERV</div>
+                    </div>
+                    
+                    <div class="valuation-card">
+                        <div class="valuation-type">Investment Value</div>
+                        <div class="valuation-amount">£7.8m</div>
+                        <div class="valuation-note">Optimistic case @ 7.0% yield, £24 psf ERV</div>
+                    </div>
+                    
+                    <div class="valuation-card">
+                        <div class="valuation-type">Bank Valuation (Est.)</div>
+                        <div class="valuation-amount">£6.1m</div>
+                        <div class="valuation-note">Conservative @ 9.0% yield, 85% loan-to-value</div>
+                    </div>
+                    
+                    <div class="valuation-card">
+                        <div class="valuation-type">90-Day Forced Sale</div>
+                        <div class="valuation-amount">£5.5m</div>
+                        <div class="valuation-note">20% discount to market for quick sale</div>
+                    </div>
+                </div>
+                
+                <div class="callout callout-info">
+                    <h4>VALUATION METHODOLOGY</h4>
+                    <p><strong>Market Value:</strong> Income capitalization using market-supported ERV £22 psf (£663k NOI) @ 8.0% yield = £6.8m. Aligns with comparables range £6.2-7.1m.</p>
+                    <p><strong>Investment Value:</strong> Upside case if market recovers, rents reach £24 psf, yields compress to 7.0%.</p>
+                    <p><strong>Bank Valuation:</strong> Lender would use conservative assumptions (9.0% yield floor) plus 15% haircut for vacant possession.</p>
+                    <p><strong>90-Day Forced Sale:</strong> Distressed sale value if exit required quickly, typically 15-25% below market.</p>
+                </div>
+            </div>
+            
+            <!-- ACQUISITION COSTS -->
+            <div class="section">
+                <h3 class="section-title">💼 Acquisition Cost Breakdown</h3>
+                
+                <div class="three-col-grid">
+                    <div class="card">
+                        <h4>Purchase & Fees</h4>
+                        <div class="card-row">
+                            <span class="card-label">Purchase Price</span>
+                            <span class="card-value">£7,000,000</span>
+                        </div>
+                        <div class="card-row">
+                            <span class="card-label">SDLT (5%)</span>
+                            <span class="card-value">£339,500</span>
+                        </div>
+                        <div class="card-row">
+                            <span class="card-label">Legal (1%)</span>
+                            <span class="card-value">£70,000</span>
+                        </div>
+                        <div class="card-row">
+                            <span class="card-label">Survey & DD</span>
+                            <span class="card-value">£15,000</span>
+                        </div>
+                        <div class="card-row total">
+                            <span class="card-label">Subtotal</span>
+                            <span class="card-value">£7,424,500</span>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h4>Hold Period Costs (24mo)</h4>
+                        <div class="card-row">
+                            <span class="card-label">Void Carry</span>
+                            <span class="card-value">£392,688</span>
+                        </div>
+                        <div class="card-row">
+                            <span class="card-label">Letting Fees (15%)</span>
+                            <span class="card-value">£100,080</span>
+                        </div>
+                        <div class="card-row">
+                            <span class="card-label">Rent-Free (12mo)</span>
+                            <span class="card-value">£200,160</span>
+                        </div>
+                        <div class="card-row">
+                            <span class="card-label">Tenant Fit-Out</span>
+                            <span class="card-value">£150,750</span>
+                        </div>
+                        <div class="card-row total">
+                            <span class="card-label">Subtotal</span>
+                            <span class="card-value">£843,678</span>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h4>Total Investment</h4>
+                        <div class="card-row">
+                            <span class="card-label">Acquisition</span>
+                            <span class="card-value">£7,424,500</span>
+                        </div>
+                        <div class="card-row">
+                            <span class="card-label">Hold Costs</span>
+                            <span class="card-value">£843,678</span>
+                        </div>
+                        <div class="card-row">
+                            <span class="card-label">Additional Capex</span>
+                            <span class="card-value">£0</span>
+                        </div>
+                        <div class="card-row" style="font-size: 10px; color: #71717a; border: none; padding: 4px 0;">
+                            <span>Already refurbished 2022</span>
+                        </div>
+                        <div class="card-row total">
+                            <span class="card-label">Total Cost In</span>
+                            <span class="card-value">£8,268,178</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- SCENARIO ANALYSIS -->
+            <div class="section">
+                <h3 class="section-title">📊 Return Scenarios (5-Year Hold)</h3>
+                
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Scenario</th>
+                                <th>Entry</th>
+                                <th>Total In</th>
+                                <th>ERV PSF</th>
+                                <th>Exit Yield</th>
+                                <th>Exit Value</th>
+                                <th>Equity Multiple</th>
+                                <th>IRR</th>
+                                <th>Verdict</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Current Asking</strong></td>
+                                <td class="table-number">£7.0m</td>
+                                <td class="table-number">£8.27m</td>
+                                <td class="table-number">£22</td>
+                                <td class="table-number">8.0%</td>
+                                <td class="table-number">£8.29m</td>
+                                <td class="table-number" style="color: #f87171;">1.00x</td>
+                                <td class="table-number" style="color: #f87171;">0.1%</td>
+                                <td style="color: #f87171;">FAIL</td>
+                            </tr>
+                            <tr style="background: rgba(124, 106, 240, 0.1);">
+                                <td><strong>Discounted Entry (7%)</strong></td>
+                                <td class="table-number">£6.5m</td>
+                                <td class="table-number">£7.69m</td>
+                                <td class="table-number">£22</td>
+                                <td class="table-number">8.0%</td>
+                                <td class="table-number">£8.29m</td>
+                                <td class="table-number" style="color: #7c6af0;">1.08x</td>
+                                <td class="table-number" style="color: #7c6af0;">1.5%</td>
+                                <td style="color: #fbbf24;">MARGINAL</td>
+                            </tr>
+                            <tr style="background: rgba(34, 197, 94, 0.1);">
+                                <td><strong>Deep Discount (14%)</strong></td>
+                                <td class="table-number">£6.0m</td>
+                                <td class="table-number">£7.14m</td>
+                                <td class="table-number">£22</td>
+                                <td class="table-number">8.0%</td>
+                                <td class="table-number">£8.29m</td>
+                                <td class="table-number" style="color: #22c55e;">1.16x</td>
+                                <td class="table-number" style="color: #22c55e;">3.0%</td>
+                                <td style="color: #22c55e;">TARGET</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Upside Case</strong></td>
+                                <td class="table-number">£6.0m</td>
+                                <td class="table-number">£7.14m</td>
+                                <td class="table-number">£24</td>
+                                <td class="table-number">7.5%</td>
+                                <td class="table-number">£9.61m</td>
+                                <td class="table-number" style="color: #22c55e;">1.35x</td>
+                                <td class="table-number" style="color: #22c55e;">6.1%</td>
+                                <td style="color: #22c55e;">STRONG</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Downside (Market Worsens)</strong></td>
+                                <td class="table-number">£6.5m</td>
+                                <td class="table-number">£7.69m</td>
+                                <td class="table-number">£20</td>
+                                <td class="table-number">9.0%</td>
+                                <td class="table-number">£6.67m</td>
+                                <td class="table-number" style="color: #ef4444;">0.87x</td>
+                                <td class="table-number" style="color: #ef4444;">-2.8%</td>
+                                <td style="color: #ef4444;">LOSS</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="callout callout-warning">
+                    <h4>EQUITY MULTIPLE CALCULATION</h4>
+                    <p><strong>Formula:</strong> Equity Multiple = Exit Value ÷ Total Cost In</p>
+                    <p><strong>Example (Current Asking):</strong> £8.29m exit ÷ £8.27m total cost = 1.00x (break-even)</p>
+                    <p><strong>Target:</strong> Minimum 1.5x equity multiple for acceptable risk-adjusted returns on vacant properties.</p>
+                    <p><strong>Current Analysis:</strong> All scenarios below 1.5x threshold except Upside Case (1.35x still marginal).</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- TAB 3: COMPARABLES -->
+        <div class="tab-content" id="comparables">
+            
+            <div class="callout callout-critical">
+                <h4>PURPOSE: ASSUMPTION VALIDATION</h4>
+                <p>Every financial model makes assumptions. This section compares those assumptions against actual market transactions to identify gaps and correct valuations.</p>
+            </div>
+            
+            <!-- RENTAL COMPS -->
+            <div class="section">
+                <h3 class="section-title">📈 Rental Comparables — Basildon Secondary Offices</h3>
+                
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Property</th>
+                                <th>Size</th>
+                                <th>Rent PSF</th>
+                                <th>Incentive</th>
+                                <th>Effective Rent</th>
+                                <th>Date</th>
+                                <th>Distance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Phoenix House, Basildon</td>
+                                <td class="table-number">4,250</td>
+                                <td class="table-number">£23.00</td>
+                                <td>9 months RF</td>
+                                <td class="table-number">£21.15</td>
+                                <td>Sep 2024</td>
+                                <td>0.4 mi</td>
+                            </tr>
+                            <tr>
+                                <td>Burnt Mills Estate</td>
+                                <td class="table-number">3,800</td>
+                                <td class="table-number">£22.50</td>
+                                <td>12mo RF + £25 TI</td>
+                                <td class="table-number">£17.25</td>
+                                <td>Jul 2024</td>
+                                <td>0.6 mi</td>
+                            </tr>
+                            <tr>
+                                <td>Pipps Hill North</td>
+                                <td class="table-number">5,100</td>
+                                <td class="table-number">£24.00</td>
+                                <td>6 months RF</td>
+                                <td class="table-number">£22.50</td>
+                                <td>Oct 2024</td>
+                                <td>0.8 mi</td>
+                            </tr>
+                            <tr>
+                                <td>Gateway Business Park</td>
+                                <td class="table-number">6,800</td>
+                                <td class="table-number">£21.50</td>
+                                <td>15 months RF</td>
+                                <td class="table-number">£18.06</td>
+                                <td>Jun 2024</td>
+                                <td>1.2 mi</td>
+                            </tr>
+                            <tr>
+                                <td>Eastgate Centre</td>
+                                <td class="table-number">4,950</td>
+                                <td class="table-number">£22.00</td>
+                                <td>9mo RF + £15 TI</td>
+                                <td class="table-number">£18.85</td>
+                                <td>Aug 2024</td>
+                                <td>0.9 mi</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="callout callout-info">
+                    <h4>ANALYSIS</h4>
+                    <p><strong>Headline Rent Range:</strong> £21.50-£24.00 psf</p>
+                    <p><strong>Effective Rent Range:</strong> £17.25-£22.50 psf (after incentives)</p>
+                    <p><strong>Typical Incentive:</strong> 9-15 months rent-free + £15-25 psf fit-out contributions</p>
+                    <p><strong>Recommended ERV:</strong> £22 psf headline (£19-20 psf effective) is defensible and conservative</p>
+                </div>
+            </div>
+            
+            <!-- YIELD COMPS -->
+            <div class="section">
+                <h3 class="section-title">📊 Yield Comparables — Multi-Let Offices</h3>
+                
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Property</th>
+                                <th>Location</th>
+                                <th>Size</th>
+                                <th>Price</th>
+                                <th>NIY</th>
+                                <th>Tenancy</th>
+                                <th>WAULT</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Southfields Business Park</td>
+                                <td>Basildon</td>
+                                <td class="table-number">28,000</td>
+                                <td class="table-number">£5.2m</td>
+                                <td class="table-number">8.75%</td>
+                                <td>7 units</td>
+                                <td class="table-number">4.2y</td>
+                                <td>Mar 2024</td>
+                            </tr>
+                            <tr>
+                                <td>Mayflower Centre</td>
+                                <td>Basildon</td>
+                                <td class="table-number">42,000</td>
+                                <td class="table-number">£8.1m</td>
+                                <td class="table-number">8.25%</td>
+                                <td>12 units</td>
+                                <td class="table-number">5.8y</td>
+                                <td>Nov 2023</td>
+                            </tr>
+                            <tr>
+                                <td>Waterside Plaza</td>
+                                <td>Chelmsford</td>
+                                <td class="table-number">31,500</td>
+                                <td class="table-number">£6.8m</td>
+                                <td class="table-number">9.10%</td>
+                                <td>9 units</td>
+                                <td class="table-number">3.1y</td>
+                                <td>Jan 2024</td>
+                            </tr>
+                            <tr>
+                                <td>Riverside Business Centre</td>
+                                <td>Southend</td>
+                                <td class="table-number">35,200</td>
+                                <td class="table-number">£7.5m</td>
+                                <td class="table-number">8.50%</td>
+                                <td>11 units</td>
+                                <td class="table-number">4.5y</td>
+                                <td>Dec 2023</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="callout callout-info">
+                    <h4>ANALYSIS</h4>
+                    <p><strong>NIY Range:</strong> 8.25-9.10% for income-producing multi-let offices</p>
+                    <p><strong>Typical WAULT:</strong> 3-6 years</p>
+                    <p><strong>Vacancy Premium:</strong> Add 50-100 bps for vacant property risk</p>
+                    <p><strong>Recommended Exit Yield:</strong> 8.0% minimum (conservative), 9.0% for downside scenario</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- TAB 4: DUE DILIGENCE -->
+        <div class="tab-content" id="due-diligence">
+            
+            <div class="section">
+                <h3 class="section-title">🔍 Environmental & Planning</h3>
+                
+                <div class="two-col-grid">
+                    <div class="card">
+                        <h4>Planning Status</h4>
+                        <div class="card-row">
+                            <span class="card-label">Use Class</span>
+                            <span class="card-value">E (Commercial)</span>
+                        </div>
+                        <div class="card-row">
+                            <span class="card-label">Permitted Development</span>
+                            <span class="card-value" style="color: #4ade80;">Available</span>
+                        </div>
+                        <div class="card-row">
+                            <span class="card-label">Residential Conversion</span>
+                            <span class="card-value">E to C3 possible</span>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h4>Environmental</h4>
+                        <div class="card-row">
+                            <span class="card-label">Flood Risk</span>
+                            <span class="card-value" style="color: #fbbf24;">Zone 3 — High</span>
+                        </div>
+                        <div class="card-row">
+                            <span class="card-label">EPC Rating</span>
+                            <span class="card-value" style="color: #4ade80;">C (62)</span>
+                        </div>
+                        <div class="card-row">
+                            <span class="card-label">Asbestos Survey</span>
+                            <span class="card-value">Required (DD)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h3 class="section-title">✅ Conditions for Success</h3>
+                
+                <div class="callout callout-critical">
+                    <h4>AT ASKING PRICE (£7.0M): DO NOT PROCEED</h4>
+                    <p><strong>Rationale:</strong> Returns below target, downside risk results in capital loss, no margin for error.</p>
+                </div>
+                
+                <div class="callout callout-warning">
+                    <h4>AT DISCOUNTED ENTRY (£6.0-6.5M): CONDITIONAL APPROVAL</h4>
+                    <p><strong>Required Conditions:</strong></p>
+                    <p>1. Entry price ≤ £6.5m (7% minimum discount from asking)<br>
+                    2. Conservative underwriting: 8.0% exit yield floor, £22 psf ERV maximum<br>
+                    3. Explicit acceptance of 24-36 month stabilisation period<br>
+                    4. Demonstrable in-house leasing capability<br>
+                    5. Contingency funding for extended void (36+ months scenario)<br>
+                    6. Exit strategy includes alternative use conversion option if office market fails</p>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+
+    <script>
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active from all buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            
+            // Mark button as active
+            event.target.classList.add('active');
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>

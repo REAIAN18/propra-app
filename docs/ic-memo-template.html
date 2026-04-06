@@ -1,0 +1,2072 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Investment Committee Memorandum - Regency House, Basildon</title>
+    <style>
+        /* =========================
+           PRINT-FIRST DESIGN
+           ========================= */
+        @page {
+            size: A4;
+            margin: 0;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        
+        body {
+            font-family: -apple-system, system-ui, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #09090b;
+            color: #fafafa;
+            line-height: 1.5;
+            font-size: 10pt;
+        }
+        
+        /* =========================
+           PAGE STRUCTURE
+           ========================= */
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 20mm 20mm 25mm 20mm;
+            margin: 0 auto;
+            background: #09090b;
+            page-break-after: always;
+            position: relative;
+            border-top: 3pt solid #7c6af0;
+        }
+        
+        .page-header {
+            position: absolute;
+            top: 12mm;
+            left: 20mm;
+            right: 20mm;
+            padding-bottom: 3mm;
+            border-bottom: 0.5pt solid #1a1a1a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .page-header-left {
+            font-size: 8pt;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5pt;
+            color: #7c6af0;
+        }
+        
+        .page-header-right {
+            font-size: 7pt;
+            color: #71717a;
+        }
+        
+        .page-footer {
+            position: absolute;
+            bottom: 15mm;
+            left: 20mm;
+            right: 20mm;
+            padding-top: 3mm;
+            border-top: 0.5pt solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            font-size: 7pt;
+            color: #666;
+        }
+        
+        .page-number::after {
+            content: counter(page);
+        }
+        
+        /* =========================
+           TYPOGRAPHY
+           ========================= */
+        h1 {
+            font-size: 24pt;
+            font-weight: 400;
+            margin-bottom: 6pt;
+            line-height: 1.2;
+            letter-spacing: -0.5pt;
+        }
+        
+        h2 {
+            font-size: 14pt;
+            font-weight: 600;
+            margin-top: 16pt;
+            margin-bottom: 10pt;
+            padding-bottom: 4pt;
+            border-bottom: 2pt solid #7c6af0;
+            text-transform: uppercase;
+            letter-spacing: 0.5pt;
+            color: #9b8ff5;
+        }
+        
+        h3 {
+            font-size: 11pt;
+            font-weight: 600;
+            margin-top: 12pt;
+            margin-bottom: 6pt;
+            color: #1a1a1a;
+        }
+        
+        h4 {
+            font-size: 9pt;
+            font-weight: 600;
+            margin-top: 8pt;
+            margin-bottom: 4pt;
+            text-transform: uppercase;
+            letter-spacing: 0.3pt;
+            color: #444;
+        }
+        
+        p {
+            margin-bottom: 6pt;
+            text-align: justify;
+            font-size: 9.5pt;
+            line-height: 1.5;
+        }
+        
+        .lead {
+            font-size: 10.5pt;
+            line-height: 1.6;
+            margin-bottom: 10pt;
+        }
+        
+        strong {
+            font-weight: 600;
+        }
+        
+        em {
+            font-style: italic;
+        }
+        
+        /* =========================
+           COVER PAGE
+           ========================= */
+        .cover-page {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 40mm 30mm;
+        }
+        
+        .cover-logo {
+            font-size: 18pt;
+            font-weight: 600;
+            letter-spacing: 2pt;
+            margin-bottom: 40mm;
+            text-transform: uppercase;
+        }
+        
+        .cover-type {
+            font-size: 10pt;
+            text-transform: uppercase;
+            letter-spacing: 1.5pt;
+            margin-bottom: 10mm;
+            color: #666;
+        }
+        
+        .cover-title {
+            font-size: 32pt;
+            font-weight: 400;
+            margin-bottom: 8mm;
+            line-height: 1.1;
+        }
+        
+        .cover-subtitle {
+            font-size: 14pt;
+            margin-bottom: 20mm;
+            color: #444;
+        }
+        
+        .cover-divider {
+            width: 80mm;
+            height: 0.5pt;
+            background: #1a1a1a;
+            margin: 15mm 0;
+        }
+        
+        .cover-status {
+            padding: 8pt 20pt;
+            border: 2pt solid #1a1a1a;
+            font-size: 12pt;
+            font-weight: 600;
+            margin-bottom: 15mm;
+            text-transform: uppercase;
+            letter-spacing: 0.5pt;
+        }
+        
+        .cover-status.conditional {
+            border-color: #d97706;
+            color: #d97706;
+        }
+        
+        .cover-metrics {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10mm;
+            width: 100%;
+            max-width: 140mm;
+            margin-top: 10mm;
+        }
+        
+        .cover-metric {
+            text-align: center;
+            padding: 8pt;
+            border: 0.5pt solid #e0e0e0;
+        }
+        
+        .cover-metric-label {
+            font-size: 7pt;
+            text-transform: uppercase;
+            letter-spacing: 0.5pt;
+            color: #666;
+            margin-bottom: 4pt;
+        }
+        
+        .cover-metric-value {
+            font-size: 16pt;
+            font-weight: 600;
+        }
+        
+        .cover-footer-text {
+            position: absolute;
+            bottom: 20mm;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 8pt;
+            color: #666;
+        }
+        
+        /* =========================
+           TABLES
+           ========================= */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 8pt 0 12pt 0;
+            font-size: 8.5pt;
+        }
+        
+        thead {
+            background: #f5f5f5;
+        }
+        
+        th {
+            text-align: left;
+            padding: 6pt 8pt;
+            font-weight: 600;
+            border-bottom: 1pt solid #1a1a1a;
+            font-size: 7.5pt;
+            text-transform: uppercase;
+            letter-spacing: 0.3pt;
+        }
+        
+        td {
+            padding: 5pt 8pt;
+            border-bottom: 0.25pt solid #e0e0e0;
+            vertical-align: top;
+        }
+        
+        tr:last-child td {
+            border-bottom: 0.5pt solid #1a1a1a;
+        }
+        
+        .table-number {
+            font-family: 'Courier New', monospace;
+            font-weight: 500;
+        }
+        
+        .table-highlight {
+            background: #f9f9f9;
+            font-weight: 600;
+        }
+        
+        .text-right {
+            text-align: right;
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        /* =========================
+           IMAGES & FIGURES
+           ========================= */
+        .figure {
+            margin: 10pt 0 14pt 0;
+            page-break-inside: avoid;
+        }
+        
+        .figure-container {
+            width: 100%;
+            background: #f9f9f9;
+            border: 0.5pt solid #e0e0e0;
+            padding: 8pt;
+            text-align: center;
+        }
+        
+        .figure-image {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .figure-caption {
+            margin-top: 6pt;
+            font-size: 7.5pt;
+            color: #666;
+            text-align: left;
+            font-style: italic;
+        }
+        
+        .figure-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8pt;
+            margin: 10pt 0;
+        }
+        
+        .figure-grid-item {
+            background: #f9f9f9;
+            border: 0.5pt solid #e0e0e0;
+            padding: 8pt;
+        }
+        
+        /* =========================
+           MAPS & LOCATION
+           ========================= */
+        .map-placeholder {
+            width: 100%;
+            height: 180pt;
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #2e7d32;
+            font-size: 9pt;
+            border: 0.5pt solid #81c784;
+        }
+        
+        .location-marker {
+            width: 100%;
+            height: 120pt;
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1565c0;
+            font-size: 8pt;
+            border: 0.5pt solid #64b5f6;
+            position: relative;
+        }
+        
+        /* =========================
+           CALLOUTS & BOXES
+           ========================= */
+        .callout {
+            padding: 8pt 10pt;
+            margin: 10pt 0;
+            border-left: 3pt solid #1a1a1a;
+            background: #f9f9f9;
+            page-break-inside: avoid;
+        }
+        
+        .callout-warning {
+            border-left-color: #d97706;
+            background: #fef3c7;
+        }
+        
+        .callout-danger {
+            border-left-color: #dc2626;
+            background: #fee2e2;
+        }
+        
+        .callout-info {
+            border-left-color: #2563eb;
+            background: #dbeafe;
+        }
+        
+        .callout-success {
+            border-left-color: #16a34a;
+            background: #dcfce7;
+        }
+        
+        .callout h4 {
+            margin-top: 0;
+            margin-bottom: 4pt;
+        }
+        
+        .callout p:last-child {
+            margin-bottom: 0;
+        }
+        
+        /* =========================
+           METRIC BOXES
+           ========================= */
+        .metrics-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6pt;
+            margin: 10pt 0;
+            page-break-inside: avoid;
+        }
+        
+        .metric-box {
+            padding: 8pt;
+            border: 0.5pt solid #e0e0e0;
+            background: #f9f9f9;
+            text-align: center;
+        }
+        
+        .metric-label {
+            font-size: 7pt;
+            text-transform: uppercase;
+            letter-spacing: 0.3pt;
+            color: #666;
+            margin-bottom: 3pt;
+        }
+        
+        .metric-value {
+            font-size: 14pt;
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .metric-subtitle {
+            font-size: 6.5pt;
+            color: #888;
+            margin-top: 2pt;
+        }
+        
+        /* =========================
+           STATUS BADGES
+           ========================= */
+        .badge {
+            display: inline-block;
+            padding: 2pt 6pt;
+            font-size: 7pt;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3pt;
+            border: 0.5pt solid;
+        }
+        
+        .badge-high {
+            border-color: #dc2626;
+            color: #dc2626;
+            background: #fee2e2;
+        }
+        
+        .badge-medium {
+            border-color: #d97706;
+            color: #d97706;
+            background: #fef3c7;
+        }
+        
+        .badge-low {
+            border-color: #16a34a;
+            color: #16a34a;
+            background: #dcfce7;
+        }
+        
+        /* =========================
+           LISTS
+           ========================= */
+        ul, ol {
+            margin: 6pt 0 10pt 16pt;
+        }
+        
+        li {
+            margin-bottom: 3pt;
+            font-size: 9pt;
+        }
+        
+        /* =========================
+           COMPARISON GRID
+           ========================= */
+        .comparison-grid {
+            margin: 10pt 0;
+            border: 0.5pt solid #e0e0e0;
+        }
+        
+        .comparison-header,
+        .comparison-row {
+            display: grid;
+            grid-template-columns: 2fr 1.2fr 1.2fr 1fr 1fr;
+            font-size: 8pt;
+        }
+        
+        .comparison-header {
+            background: #1a1a1a;
+            color: white;
+            font-weight: 600;
+        }
+        
+        .comparison-header > div {
+            padding: 5pt 6pt;
+            border-right: 0.5pt solid #444;
+        }
+        
+        .comparison-header > div:last-child {
+            border-right: none;
+        }
+        
+        .comparison-row {
+            border-bottom: 0.25pt solid #e0e0e0;
+        }
+        
+        .comparison-row:last-child {
+            border-bottom: none;
+        }
+        
+        .comparison-row > div {
+            padding: 5pt 6pt;
+            border-right: 0.25pt solid #e0e0e0;
+        }
+        
+        .comparison-row > div:last-child {
+            border-right: none;
+        }
+        
+        .gap-indicator {
+            display: inline-block;
+            padding: 1pt 4pt;
+            font-size: 7pt;
+            font-weight: 600;
+            border: 0.5pt solid;
+        }
+        
+        .gap-negative {
+            border-color: #dc2626;
+            color: #dc2626;
+            background: #fee2e2;
+        }
+        
+        .gap-positive {
+            border-color: #16a34a;
+            color: #16a34a;
+            background: #dcfce7;
+        }
+        
+        /* =========================
+           CHARTS & VISUALIZATIONS
+           ========================= */
+        .chart-bar {
+            margin: 8pt 0;
+        }
+        
+        .chart-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 8pt;
+            margin-bottom: 3pt;
+        }
+        
+        .chart-track {
+            width: 100%;
+            height: 12pt;
+            background: #e0e0e0;
+            position: relative;
+        }
+        
+        .chart-fill {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            background: linear-gradient(90deg, #dc2626 0%, #d97706 50%, #16a34a 100%);
+        }
+        
+        /* =========================
+           SECTION NUMBERING
+           ========================= */
+        .section-number {
+            display: inline-block;
+            width: 20pt;
+            font-weight: 600;
+        }
+        
+        /* =========================
+           PRINT SPECIFIC
+           ========================= */
+        @media print {
+            body {
+                background: white;
+            }
+            
+            .page {
+                margin: 0;
+                border: none;
+                box-shadow: none;
+            }
+            
+            .page-break {
+                page-break-after: always;
+            }
+            
+            .no-break {
+                page-break-inside: avoid;
+            }
+            
+            h2, h3 {
+                page-break-after: avoid;
+            }
+            
+            table, .figure, .callout {
+                page-break-inside: avoid;
+            }
+        }
+        
+        /* =========================
+           UTILITIES
+           ========================= */
+        .mt-1 { margin-top: 4pt; }
+        .mt-2 { margin-top: 8pt; }
+        .mt-3 { margin-top: 12pt; }
+        .mb-1 { margin-bottom: 4pt; }
+        .mb-2 { margin-bottom: 8pt; }
+        .mb-3 { margin-bottom: 12pt; }
+        .mb-0 { margin-bottom: 0; }
+        /* =========================
+           DEALSCOPE DARK THEME
+           ========================= */
+        
+        body { background: #09090b !important; color: #fafafa !important; }
+        .page { background: #09090b !important; border-top: 3pt solid #7c6af0 !important; }
+        .page-header-left { color: #7c6af0 !important; }
+        .page-header-right, .page-footer { color: #71717a !important; }
+        h1, h2, h3 { color: #fafafa !important; }
+        h2 { border-bottom-color: #7c6af0 !important; color: #9b8ff5 !important; }
+        h4 { color: #a1a1aa !important; }
+        p, li, td { color: #d4d4d8 !important; }
+        strong { color: #fafafa !important; }
+        table { background: #18181b !important; border-color: #27272a !important; }
+        thead { background: #27272a !important; }
+        th { color: #a1a1aa !important; border-bottom-color: #7c6af0 !important; }
+        td { border-color: #27272a !important; }
+        tr:hover { background: rgba(124, 106, 240, 0.05) !important; }
+        .table-highlight { background: rgba(124, 106, 240, 0.15) !important; }
+        .callout-info { border-left-color: #7c6af0 !important; background: rgba(124, 106, 240, 0.1) !important; }
+        .callout-warning { border-left-color: #f59e0b !important; background: rgba(245, 158, 11, 0.1) !important; }
+        .callout-danger { border-left-color: #ef4444 !important; background: rgba(239, 68, 68, 0.1) !important; }
+        .callout-success { border-left-color: #22c55e !important; background: rgba(34, 197, 94, 0.1) !important; }
+        .callout p, .callout h4 { color: #e4e4e7 !important; }
+        .metric-box { background: #18181b !important; border-color: #3f3f46 !important; }
+        .cover-page { background: linear-gradient(135deg, #09090b 0%, #18181b 100%) !important; border-top: 4pt solid #7c6af0 !important; }
+        .cover-logo { color: #7c6af0 !important; }
+        .cover-metric { background: #18181b !important; border-color: #3f3f46 !important; }
+        .map-placeholder, .location-marker { background: linear-gradient(135deg, #27272a 0%, #3f3f46 100%) !important; color: #7c6af0 !important; border-color: #7c6af0 !important; }
+        .comparison-grid { background: #18181b !important; border-color: #27272a !important; }
+        .comparison-header { background: #27272a !important; color: #a1a1aa !important; }
+        .comparison-row > div { color: #d4d4d8 !important; }
+        
+        @media print { 
+            body { background: white !important; color: black !important; }
+            .page { background: white !important; }
+            * { color: black !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===================================
+         COVER PAGE
+         =================================== -->
+    <div class="page cover-page">
+        <div class="cover-logo">DEALSCOPE</div>
+        <div class="cover-type">Investment Committee Memorandum</div>
+        <h1 class="cover-title">Regency House</h1>
+        <div class="cover-subtitle">Miles Gray Road, Basildon, Essex SS14 3AF</div>
+        
+        <div class="cover-divider"></div>
+        
+        <div class="cover-status conditional">⚠ CONDITIONAL OPPORTUNITY</div>
+        
+        <div class="cover-metrics">
+            <div class="cover-metric">
+                <div class="cover-metric-label">Asking Price</div>
+                <div class="cover-metric-value">£7.0m</div>
+            </div>
+            <div class="cover-metric">
+                <div class="cover-metric-label">Maximum Entry</div>
+                <div class="cover-metric-value">£6.0m – £6.5m</div>
+            </div>
+            <div class="cover-metric">
+                <div class="cover-metric-label">Asset Type</div>
+                <div class="cover-metric-value">Multi-Let Office</div>
+            </div>
+            <div class="cover-metric">
+                <div class="cover-metric-label">NLA</div>
+                <div class="cover-metric-value">30,150 sq ft</div>
+            </div>
+        </div>
+        
+        <div class="cover-footer-text">
+            Prepared by DealScope Analysis Engine<br>
+            Saturday, April 04, 2026
+        </div>
+    </div>
+
+    <!-- ===================================
+         EXECUTIVE SUMMARY
+         =================================== -->
+    <div class="page">
+        <div class="page-header">
+            <div class="page-header-left">Regency House, Basildon</div>
+            <div class="page-header-right">Investment Committee Memorandum</div>
+        </div>
+        
+        <h2>Executive Summary</h2>
+        
+        <p class="lead">
+            This memorandum presents the investment case for the acquisition of Regency House, 
+            a 30,150 sq ft multi-let office building in Basildon, Essex. The property is currently 
+            100% vacant following completion of a £5.3m refurbishment programme in 2022. This 
+            opportunity represents a <strong>leasing execution play</strong>, not a refurbishment 
+            or development opportunity.
+        </p>
+        
+        <h3>Investment Thesis</h3>
+        <p>
+            Value creation is predicated on successful letting of the vacant space at market rents 
+            (£22-24 psf effective) within an 18-24 month timeframe. The asset benefits from recent 
+            capital investment (Cat A specification throughout) but faces material leasing risk given 
+            secondary market dynamics: 18% vacancy rate, falling take-up (-23% YoY), and 95,000 sq ft 
+            of competing supply within a 1-mile radius.
+        </p>
+        
+        <h3>Pricing Analysis</h3>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Valuation Metric</th>
+                    <th class="text-right">Value</th>
+                    <th>Commentary</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Asking Price</td>
+                    <td class="text-right table-number">£7,000,000</td>
+                    <td>13% premium to base case stabilised value</td>
+                </tr>
+                <tr>
+                    <td>Bank Valuation (Conservative)</td>
+                    <td class="text-right table-number">£5,850,000</td>
+                    <td>ERV -10%, yield +75bps</td>
+                </tr>
+                <tr>
+                    <td>Stabilised Value (Market Yield)</td>
+                    <td class="text-right table-number">£6,200,000 – £7,100,000</td>
+                    <td>8.0-8.5% yield on £547k NOI</td>
+                </tr>
+                <tr class="table-highlight">
+                    <td><strong>Maximum Entry Price (15% IRR)</strong></td>
+                    <td class="text-right table-number"><strong>£6,000,000 – £6,500,000</strong></td>
+                    <td><strong>12-17% discount required</strong></td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <h3>Key Risks</h3>
+        
+        <div class="metrics-row">
+            <div class="metric-box">
+                <div class="badge badge-high">HIGH</div>
+                <div class="metric-label mt-1">Leasing Risk</div>
+                <div class="metric-subtitle">Large vacant asset, 18-36 month lease-up</div>
+            </div>
+            <div class="metric-box">
+                <div class="badge badge-high">HIGH</div>
+                <div class="metric-label mt-1">Yield Risk</div>
+                <div class="metric-subtitle">Office sector structural headwinds</div>
+            </div>
+            <div class="metric-box">
+                <div class="badge badge-high">HIGH</div>
+                <div class="metric-label mt-1">ERV Overstatement</div>
+                <div class="metric-subtitle">Market £22-24 psf, not £28 psf</div>
+            </div>
+            <div class="metric-box">
+                <div class="badge badge-medium">MEDIUM</div>
+                <div class="metric-label mt-1">Void Carry Costs</div>
+                <div class="metric-subtitle">£482k over 24 months</div>
+            </div>
+        </div>
+        
+        <div class="callout callout-danger no-break">
+            <h4>DECISION</h4>
+            <p><strong>At asking price (£7.0m): DO NOT PROCEED</strong></p>
+            <p>Insufficient margin for error. Returns dependent on aggressive assumptions (ERV +30% vs market, yield -200bps vs comps).</p>
+            <p class="mb-0"><strong>At discounted entry (£6.0m - £6.5m): CONDITIONAL</strong><br>
+            Subject to: (i) demonstrable leasing capability in Basildon market, (ii) conservative underwriting (8.5% exit yield), (iii) explicit acceptance of 18-36 month stabilisation period.</p>
+        </div>
+        
+        <div class="page-footer">
+            <div>DealScope IC Memorandum — Regency House, Basildon</div>
+            <div>Page <span class="page-number"></span></div>
+        </div>
+    </div>
+
+    <!-- ===================================
+         ASSET OVERVIEW & LOCATION
+         =================================== -->
+    <div class="page">
+        <div class="page-header">
+            <div class="page-header-left">Regency House, Basildon</div>
+            <div class="page-header-right">Investment Committee Memorandum</div>
+        </div>
+        
+        <h2>Asset Overview</h2>
+        
+        <h3>Location & Access</h3>
+        
+        <div class="figure">
+            <div class="figure-container">
+                <div class="map-placeholder">
+                    📍 LOCATION MAP<br>
+                    <span style="font-size: 7pt; margin-top: 4pt; display: block;">
+                    Regency House • Miles Gray Road, Basildon SS14 3AF<br>
+                    M25: 12 miles (20 mins) • Liverpool Street: 28 miles (45 mins rail)<br>
+                    A127: 0.5 miles • Basildon Station: 1.2 miles
+                    </span>
+                </div>
+            </div>
+            <div class="figure-caption">
+                <strong>Figure 1:</strong> Asset location showing proximity to strategic road network (A127, M25) 
+                and mainline rail connectivity (Liverpool Street 45 minutes). Basildon town centre 1.5 miles south-east.
+            </div>
+        </div>
+        
+        <p>
+            Regency House is located within Basildon's established Burnt Mills Industrial Estate, 
+            a mixed-use employment area comprising office, light industrial, and trade counter uses. 
+            The immediate catchment benefits from strong road connectivity via the A127 arterial route 
+            (M25 junction 12 miles west), though public transport reliance on bus services limits appeal 
+            to institutional occupiers. Basildon mainline station provides sub-hour connectivity to London 
+            Liverpool Street (typical journey time 43-48 minutes).
+        </p>
+        
+        <div class="figure-grid">
+            <div class="figure-grid-item">
+                <div class="location-marker">
+                    🏢 BUILDING EXTERIOR<br>
+                    <span style="font-size: 7pt;">Three-storey office building, glazed curtain wall facade, 
+                    110-space surface car park</span>
+                </div>
+                <div class="figure-caption mt-1">
+                    <strong>Image 1:</strong> Principal elevation facing Miles Gray Road. 
+                    Recent facade upgrade (2022) including new glazing, cladding panels.
+                </div>
+            </div>
+            <div class="figure-grid-item">
+                <div class="location-marker">
+                    🏗️ RECEPTION & COMMON AREAS<br>
+                    <span style="font-size: 7pt;">Upgraded reception lobby, LED lighting, 
+                    passenger lifts refurbished</span>
+                </div>
+                <div class="figure-caption mt-1">
+                    <strong>Image 2:</strong> Ground floor reception. Part of £5.3m refurbishment 
+                    programme completed Q2 2022.
+                </div>
+            </div>
+        </div>
+        
+        <h3>Physical Characteristics</h3>
+        
+        <table>
+            <tbody>
+                <tr>
+                    <td style="width: 40%;"><strong>Address</strong></td>
+                    <td>Regency House, Miles Gray Road, Basildon, Essex SS14 3AF</td>
+                </tr>
+                <tr>
+                    <td><strong>Tenure</strong></td>
+                    <td>Freehold (unencumbered)</td>
+                </tr>
+                <tr>
+                    <td><strong>Net Lettable Area (NLA)</strong></td>
+                    <td class="table-number">30,150 sq ft</td>
+                </tr>
+                <tr>
+                    <td><strong>Gross Internal Area (GIA)</strong></td>
+                    <td class="table-number">38,330 sq ft</td>
+                </tr>
+                <tr>
+                    <td><strong>Site Area</strong></td>
+                    <td class="table-number">2.1 acres</td>
+                </tr>
+                <tr>
+                    <td><strong>Car Parking</strong></td>
+                    <td>110 spaces (1:274 sq ft ratio) — surface parking</td>
+                </tr>
+                <tr>
+                    <td><strong>Configuration</strong></td>
+                    <td>Three storeys (ground, first, second), 6 divisible units (4,500 - 6,200 sq ft)</td>
+                </tr>
+                <tr>
+                    <td><strong>Specification</strong></td>
+                    <td>Cat A throughout, raised floors, suspended ceilings, air conditioning (VRF), LED lighting</td>
+                </tr>
+                <tr>
+                    <td><strong>Construction</strong></td>
+                    <td>Steel frame, brick/block elevations with curtain wall glazing, pitched roof</td>
+                </tr>
+                <tr>
+                    <td><strong>Year Built</strong></td>
+                    <td>1998 (refurbished 2022)</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <h3>Refurbishment Programme (2022)</h3>
+        
+        <p>
+            The asset underwent comprehensive refurbishment in 2022 (total investment £5.3m, equivalent 
+            to £140 psf). Scope included:
+        </p>
+        
+        <ul>
+            <li>Complete M&E upgrade: new VRF air conditioning, LED lighting, electrical distribution (£1.8m)</li>
+            <li>Facade renewal: curtain wall replacement, external cladding, insulation upgrade (£950k)</li>
+            <li>Common parts: reception refurbishment, WC upgrades, lifts modernisation (£800k)</li>
+            <li>Building services: new boilers, fire alarm system, BMS installation (£650k)</li>
+            <li>External works: car park resurfacing, landscaping, signage (£180k)</li>
+            <li>Professional fees, contingency (£920k)</li>
+        </ul>
+        
+        <div class="callout callout-warning no-break">
+            <h4>CRITICAL OBSERVATION</h4>
+            <p class="mb-0">
+                <strong>This is not a refurbishment opportunity.</strong> The £5.3m capital programme 
+                (completed 9 months prior) means the asset is physically stabilised. Value creation is 
+                therefore dependent on <strong>income execution</strong> (leasing), not physical 
+                transformation. Buyers are effectively acquiring post-capex pricing with leasing risk.
+            </p>
+        </div>
+        
+        <div class="page-footer">
+            <div>DealScope IC Memorandum — Regency House, Basildon</div>
+            <div>Page <span class="page-number"></span></div>
+        </div>
+    </div>
+
+    <!-- ===================================
+         PLANNING & ENVIRONMENTAL
+         =================================== -->
+    <div class="page">
+        <div class="page-header">
+            <div class="page-header-left">Regency House, Basildon</div>
+            <div class="page-header-right">Investment Committee Memorandum</div>
+        </div>
+        
+        <h2>Planning & Environmental Context</h2>
+        
+        <h3>Planning Status</h3>
+        
+        <table>
+            <tbody>
+                <tr>
+                    <td style="width: 40%;"><strong>Current Use Class</strong></td>
+                    <td>Class E (Commercial, Business and Service) — Use Classes Order 2020</td>
+                </tr>
+                <tr>
+                    <td><strong>Permitted Uses</strong></td>
+                    <td>Office, research & development, light industrial (subject to floorspace limits)</td>
+                </tr>
+                <tr>
+                    <td><strong>Local Planning Authority</strong></td>
+                    <td>Basildon Borough Council</td>
+                </tr>
+                <tr>
+                    <td><strong>Allocation (Local Plan)</strong></td>
+                    <td>E2 — Employment Area (Burnt Mills Industrial Estate)</td>
+                </tr>
+                <tr>
+                    <td><strong>Development Constraints</strong></td>
+                    <td>None identified (not in flood zone, conservation area, or green belt)</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <h4>Residential Conversion Potential</h4>
+        
+        <p>
+            Permitted Development rights (Class MA — office to residential conversion) were considered 
+            but are <strong>not viable</strong> for the following reasons:
+        </p>
+        
+        <ul>
+            <li><strong>Policy constraint:</strong> Basildon Local Plan (adopted 2024) withdrew PD rights 
+            for employment areas designated E2. Article 4 Direction in place since September 2023.</li>
+            <li><strong>Economic constraint:</strong> Residential values in Basildon (£280-320 psf) do not 
+            support conversion costs. Indicative appraisal suggests negative residual land value.</li>
+            <li><strong>Design constraint:</strong> 18m floor plate depth unsuitable for residential units 
+            without major structural intervention (estimated £200+ psf conversion cost).</li>
+        </ul>
+        
+        <div class="callout callout-info no-break">
+            <h4>CONCLUSION</h4>
+            <p class="mb-0">
+                No viable alternative use has been identified. The asset must be valued and 
+                underwritten on the basis of <strong>office use only</strong>. Any alternative use 
+                optionality should be treated as zero value.
+            </p>
+        </div>
+        
+        <h3>Environmental & ESG</h3>
+        
+        <table>
+            <tbody>
+                <tr>
+                    <td style="width: 40%;"><strong>EPC Rating</strong></td>
+                    <td><span class="badge badge-low">C (62)</span> — Valid until August 2032</td>
+                </tr>
+                <tr>
+                    <td><strong>MEES Compliance</strong></td>
+                    <td>✓ Compliant (minimum E rating required from April 2023)</td>
+                </tr>
+                <tr>
+                    <td><strong>Future MEES Risk</strong></td>
+                    <td>Proposed B rating minimum (2030) — asset compliant without further capex</td>
+                </tr>
+                <tr>
+                    <td><strong>Flood Risk</strong></td>
+                    <td>Zone 1 (low probability, <0.1% annual flood risk)</td>
+                </tr>
+                <tr>
+                    <td><strong>Contamination</strong></td>
+                    <td>Phase I Environmental Report (2022): No contamination identified, 
+                    no remediation required</td>
+                </tr>
+                <tr>
+                    <td><strong>Asbestos</strong></td>
+                    <td>Asbestos survey (2022): Trace ACMs identified in riser ducts, managed via 
+                    register, no remedial works required</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <h4>Carbon & Sustainability</h4>
+        
+        <ul>
+            <li>LED lighting throughout (est. 40% energy reduction vs previous halogen installation)</li>
+            <li>VRF air conditioning (higher efficiency vs legacy VAV system)</li>
+            <li>Individual metering per unit (tenant-recoverable utilities)</li>
+            <li>Cycle storage provision (20 spaces) — inadequate for institutional ESG criteria 
+            (1:1,500 sq ft vs best practice 1:500 sq ft)</li>
+            <li>EV charging: None currently installed. Pre-wiring in place for 10 charging points 
+            (estimated installation cost £25k)</li>
+        </ul>
+        
+        <div class="callout callout-warning no-break">
+            <h4>ESG OBSERVATION</h4>
+            <p class="mb-0">
+                While MEES-compliant, the asset does not meet institutional ESG standards for 
+                active travel infrastructure (cycle parking, showers) or EV charging provision. 
+                This may constrain exit buyer universe or require modest capex (est. £40-60k) 
+                to achieve institutional specification. No impact on valuation assumed at this stage.
+            </p>
+        </div>
+        
+        <div class="page-footer">
+            <div>DealScope IC Memorandum — Regency House, Basildon</div>
+            <div>Page <span class="page-number"></span></div>
+        </div>
+    </div>
+
+    <!-- ===================================
+         MARKET ANALYSIS — MACRO
+         =================================== -->
+    <div class="page">
+        <div class="page-header">
+            <div class="page-header-left">Regency House, Basildon</div>
+            <div class="page-header-right">Investment Committee Memorandum</div>
+        </div>
+        
+        <h2>Market Analysis</h2>
+        
+        <h3>Macroeconomic Context (Q1 2026)</h3>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Indicator</th>
+                    <th class="text-right">Current</th>
+                    <th class="text-right">6-Month Trend</th>
+                    <th>Impact on CRE</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>UK GDP Growth (YoY)</td>
+                    <td class="text-right table-number">+0.8%</td>
+                    <td class="text-right">↓ (from +1.2%)</td>
+                    <td>Weak — demand headwinds</td>
+                </tr>
+                <tr>
+                    <td>Bank of England Base Rate</td>
+                    <td class="text-right table-number">4.25%</td>
+                    <td class="text-right">→ (stable)</td>
+                    <td>Yield pressure persists</td>
+                </tr>
+                <tr>
+                    <td>10Y Gilt Yield</td>
+                    <td class="text-right table-number">4.12%</td>
+                    <td class="text-right">↑ (from 3.85%)</td>
+                    <td>Cost of capital rising</td>
+                </tr>
+                <tr>
+                    <td>Inflation (CPI)</td>
+                    <td class="text-right table-number">2.4%</td>
+                    <td class="text-right">↓ (from 3.1%)</td>
+                    <td>Moderating but elevated</td>
+                </tr>
+                <tr>
+                    <td>Unemployment Rate</td>
+                    <td class="text-right table-number">4.1%</td>
+                    <td class="text-right">↑ (from 3.9%)</td>
+                    <td>Labour market cooling</td>
+                </tr>
+                <tr>
+                    <td>Office Employment (UK)</td>
+                    <td class="text-right table-number">-1.2% YoY</td>
+                    <td class="text-right">↓</td>
+                    <td><strong>Structural headwind</strong></td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <h4>UK Office Market Overview</h4>
+        
+        <p>
+            The UK office sector continues to face structural demand challenges driven by hybrid working 
+            adoption (estimated 35-40% of pre-pandemic office attendance in secondary markets). Key trends:
+        </p>
+        
+        <ul>
+            <li><strong>Flight to quality:</strong> Tenant demand concentrated in Grade A stock with 
+            ESG credentials. Secondary assets face prolonged void periods and increased incentive 
+            packages (12-18 months rent-free typical vs 6-9 months pre-2020).</li>
+            <li><strong>Yield expansion:</strong> Secondary office yields out 150-200 bps since 2021 
+            (now 8-10% vs 6.5-8% pre-pandemic). Prime-secondary spread widening.</li>
+            <li><strong>Regional divergence:</strong> London and core regional cities (Manchester, 
+            Birmingham, Edinburgh) outperforming. Peripheral markets (e.g. Basildon, Slough, Reading) 
+            experiencing material vacancy increases.</li>
+        </ul>
+        
+        <h3>Regional Market (South Essex / Thames Gateway)</h3>
+        
+        <div class="metrics-row">
+            <div class="metric-box">
+                <div class="metric-label">Vacancy Rate</div>
+                <div class="metric-value" style="color: #dc2626;">14.2%</div>
+                <div class="metric-subtitle">vs 11.8% UK average</div>
+            </div>
+            <div class="metric-box">
+                <div class="metric-label">Take-Up (12m)</div>
+                <div class="metric-value" style="color: #dc2626;">-18%</div>
+                <div class="metric-subtitle">YoY decline</div>
+            </div>
+            <div class="metric-box">
+                <div class="metric-label">Prime Rent</div>
+                <div class="metric-value">£26 psf</div>
+                <div class="metric-subtitle">Stable 12 months</div>
+            </div>
+            <div class="metric-box">
+                <div class="metric-label">Prime Yield</div>
+                <div class="metric-value">7.25%</div>
+                <div class="metric-subtitle">+25bps vs 6 months</div>
+            </div>
+        </div>
+        
+        <p>
+            The South Essex / Thames Gateway office market (encompassing Basildon, Southend, Thurrock) 
+            has underperformed both London and national averages. Occupier demand is concentrated in 
+            sub-5,000 sq ft requirements from local SMEs and back-office functions. Institutional 
+            occupiers (requiring 10,000+ sq ft) are largely absent from the market.
+        </p>
+        
+        <h3>Basildon Submarket</h3>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th class="text-right">Value</th>
+                    <th>Commentary</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Total Stock</td>
+                    <td class="text-right table-number">~520,000 sq ft</td>
+                    <td>Limited stock, no Grade A development</td>
+                </tr>
+                <tr>
+                    <td>Vacancy Rate</td>
+                    <td class="text-right table-number">18.3%</td>
+                    <td>95,000 sq ft vacant (CoStar, Q4 2025)</td>
+                </tr>
+                <tr>
+                    <td>Take-Up (12 months)</td>
+                    <td class="text-right table-number">42,000 sq ft</td>
+                    <td>↓ 23% YoY — weakening demand</td>
+                </tr>
+                <tr>
+                    <td>Average Deal Size</td>
+                    <td class="text-right table-number">2,400 sq ft</td>
+                    <td>SME-dominated market</td>
+                </tr>
+                <tr>
+                    <td>Prime Rent</td>
+                    <td class="text-right table-number">£24-26 psf</td>
+                    <td>Stabilised (no growth 24 months)</td>
+                </tr>
+                <tr>
+                    <td>Secondary Rent</td>
+                    <td class="text-right table-number">£20-23 psf</td>
+                    <td>Headline (pre-incentive)</td>
+                </tr>
+                <tr>
+                    <td>Typical Incentive</td>
+                    <td class="text-right table-number">9-15 months</td>
+                    <td>Rent-free on 5-10 year leases</td>
+                </tr>
+                <tr>
+                    <td>Prime Yield</td>
+                    <td class="text-right table-number">7.0-7.5%</td>
+                    <td>Limited transaction evidence</td>
+                </tr>
+                <tr>
+                    <td>Secondary Yield</td>
+                    <td class="text-right table-number">8.0-9.0%</td>
+                    <td>Multi-let / covenant risk premium</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="callout callout-danger no-break">
+            <h4>MARKET CHARACTERISATION</h4>
+            <p><strong>Basildon office market is:</strong></p>
+            <ul>
+                <li><strong>Oversupplied:</strong> 18% vacancy rate, ~16 months supply at current absorption</li>
+                <li><strong>Demand-constrained:</strong> Take-up down 23% YoY, limited occupier depth</li>
+                <li><strong>Incentive-driven:</strong> 9-15 months rent-free typical (vs 6 months pre-2020)</li>
+                <li><strong>Yield-stressed:</strong> Secondary multi-let assets trading 8.5-9%+</li>
+            </ul>
+            <p class="mb-0">
+                <strong>Conclusion:</strong> Market conditions do not support aggressive ERV assumptions, 
+                yield compression, or rapid lease-up expectations. Conservative underwriting essential.
+            </p>
+        </div>
+        
+        <div class="page-footer">
+            <div>DealScope IC Memorandum — Regency House, Basildon</div>
+            <div>Page <span class="page-number"></span></div>
+        </div>
+    </div>
+
+    <!-- ===================================
+         COMPARABLE EVIDENCE
+         =================================== -->
+    <div class="page">
+        <div class="page-header">
+            <div class="page-header-left">Regency House, Basildon</div>
+            <div class="page-header-right">Investment Committee Memorandum</div>
+        </div>
+        
+        <h2>Comparable Evidence</h2>
+        
+        <h3>Rental Comparables</h3>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Property</th>
+                    <th>Size (sq ft)</th>
+                    <th class="text-right">Rent PSF</th>
+                    <th>Incentive</th>
+                    <th>Date</th>
+                    <th>Distance</th>
+                    <th style="font-size: 6.5pt;">Source</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Phoenix House</strong><br>Phoenix Close, Basildon</td>
+                    <td class="table-number">4,250</td>
+                    <td class="text-right table-number">£23.00</td>
+                    <td>9 months RF</td>
+                    <td>Sep 2024</td>
+                    <td>0.4 mi</td>
+                    <td>CoStar</td>
+                </tr>
+                <tr>
+                    <td><strong>Burnt Mills Estate</strong><br>Burnt Mills Road</td>
+                    <td class="table-number">3,800</td>
+                    <td class="text-right table-number">£22.50</td>
+                    <td>12 months RF<br>+ £25 psf TI</td>
+                    <td>Jul 2024</td>
+                    <td>0.6 mi</td>
+                    <td>EGi</td>
+                </tr>
+                <tr>
+                    <td><strong>Pipps Hill North</strong><br>Pipps Hill</td>
+                    <td class="table-number">5,100</td>
+                    <td class="text-right table-number">£24.00</td>
+                    <td>6 months RF</td>
+                    <td>Oct 2024</td>
+                    <td>0.8 mi</td>
+                    <td>Agent</td>
+                </tr>
+                <tr>
+                    <td><strong>Cranes Farm Road</strong><br>Cranes Farm Road</td>
+                    <td class="table-number">2,900</td>
+                    <td class="text-right table-number">£21.50</td>
+                    <td>15 months RF</td>
+                    <td>Aug 2024</td>
+                    <td>1.2 mi</td>
+                    <td>Rightmove</td>
+                </tr>
+                <tr>
+                    <td><strong>Southfields Business Park</strong><br>Southfields</td>
+                    <td class="table-number">6,400</td>
+                    <td class="text-right table-number">£23.50</td>
+                    <td>10 months RF<br>+ £20 psf TI</td>
+                    <td>Jun 2024</td>
+                    <td>1.0 mi</td>
+                    <td>CoStar</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="callout callout-info no-break">
+            <h4>RENTAL EVIDENCE ANALYSIS</h4>
+            <p><strong>Headline Rent Range:</strong> £21.50 – £24.00 psf (average £22.90 psf)</p>
+            <p><strong>Effective Rent Range:</strong> £17.25 – £22.00 psf (after incentives amortised)</p>
+            <p class="mb-0">
+                <strong>Conclusion:</strong> Market supports £22-24 psf <em>headline</em> rent for 
+                refurbished secondary offices. However, incentive packages (9-15 months + £20-30 psf 
+                fit-out contributions) reduce <strong>net effective rents to £17-22 psf</strong>. 
+                Any ERV assumption above £24 psf is not supported by market evidence.
+            </p>
+        </div>
+        
+        <h3>Yield Comparables (Investment Sales)</h3>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Property</th>
+                    <th>Size (sq ft)</th>
+                    <th class="text-right">Price</th>
+                    <th class="text-right">NIY</th>
+                    <th>Tenancy</th>
+                    <th>Date</th>
+                    <th style="font-size: 6.5pt;">Source</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Southfields Business Park</strong><br>Basildon</td>
+                    <td class="table-number">28,000</td>
+                    <td class="text-right table-number">£5,200,000</td>
+                    <td class="text-right table-number">8.75%</td>
+                    <td>Multi-let (7 units)<br>WAULT 4.2 yrs</td>
+                    <td>Mar 2024</td>
+                    <td>EGi Property Sales</td>
+                </tr>
+                <tr>
+                    <td><strong>Mayflower Centre</strong><br>Basildon</td>
+                    <td class="table-number">42,000</td>
+                    <td class="text-right table-number">£8,100,000</td>
+                    <td class="text-right table-number">8.25%</td>
+                    <td>Multi-let (12 units)<br>WAULT 5.8 yrs</td>
+                    <td>Nov 2023</td>
+                    <td>CoStar</td>
+                </tr>
+                <tr>
+                    <td><strong>Burnt Mills (Part)</strong><br>Basildon</td>
+                    <td class="table-number">18,500</td>
+                    <td class="text-right table-number">£3,900,000</td>
+                    <td class="text-right table-number">9.10%</td>
+                    <td>Multi-let (5 units)<br>WAULT 3.1 yrs</td>
+                    <td>Jun 2024</td>
+                    <td>Property Week</td>
+                </tr>
+                <tr>
+                    <td><strong>Pipps Hill Industrial Estate</strong><br>Basildon</td>
+                    <td class="table-number">35,000</td>
+                    <td class="text-right table-number">£6,750,000</td>
+                    <td class="text-right table-number">7.85%</td>
+                    <td>Single-let (B2/B8)<br>15 yrs unexpired</td>
+                    <td>Feb 2024</td>
+                    <td>EGi</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="callout callout-warning no-break">
+            <h4>YIELD EVIDENCE ANALYSIS</h4>
+            <p><strong>Multi-Let Office Yields:</strong> 8.25% – 9.10% (average 8.70%)</p>
+            <p><strong>Single-Let Industrial:</strong> 7.85% (not comparable — stronger covenant, 
+            longer lease, different use)</p>
+            <p class="mb-0">
+                <strong>Conclusion:</strong> Comparable multi-let office investments in Basildon 
+                trade at <strong>8.25-9.10% NIY</strong>. The lower bound (8.25%) reflects stronger 
+                WAULT (5.8 years) and larger lot size. For a vacant asset with leasing risk, 
+                underwriting to <strong>8.5-9.0% exit yield</strong> is appropriate. Any assumption 
+                below 8.0% implies yield compression not supported by market evidence.
+            </p>
+        </div>
+        
+        <div class="page-footer">
+            <div>DealScope IC Memorandum — Regency House, Basildon</div>
+            <div>Page <span class="page-number"></span></div>
+        </div>
+    </div>
+
+    <!-- ===================================
+         MARKET OUTLOOK (EXIT SCENARIO)
+         =================================== -->
+    <div class="page">
+        <div class="page-header">
+            <div class="page-header-left">Regency House, Basildon</div>
+            <div class="page-header-right">Investment Committee Memorandum</div>
+        </div>
+        
+        <h2>Market Outlook & Exit Scenario (2028-2030)</h2>
+        
+        <h3>Base Case Market Assumptions (3-5 Year Hold)</h3>
+        
+        <p>
+            Exit timing is assumed Q4 2028 to Q2 2030 (3-5 year hold period from acquisition). 
+            Market conditions at exit will determine achievable pricing and buyer universe. 
+            The following analysis presents base case, upside, and downside scenarios.
+        </p>
+        
+        <h4>Base Case: Market Stability</h4>
+        
+        <table>
+            <tbody>
+                <tr>
+                    <td style="width: 35%;"><strong>Interest Rate Environment</strong></td>
+                    <td>BoE Base Rate 3.5-4.0% (modest easing from current 4.25%)</td>
+                </tr>
+                <tr>
+                    <td><strong>Economic Growth</strong></td>
+                    <td>UK GDP +1.2-1.5% pa (trend growth, no recession)</td>
+                </tr>
+                <tr>
+                    <td><strong>Office Employment</strong></td>
+                    <td>Stabilised (no further decline, but no recovery to pre-pandemic levels)</td>
+                </tr>
+                <tr>
+                    <td><strong>Basildon Vacancy</strong></td>
+                    <td>16-18% (marginal improvement from current 18.3%)</td>
+                </tr>
+                <tr>
+                    <td><strong>Rental Growth</strong></td>
+                    <td>Flat to +2% pa (in line with inflation, no real growth)</td>
+                </tr>
+                <tr>
+                    <td><strong>Yield Movement</strong></td>
+                    <td>Stable 8.0-8.5% for stabilised multi-let offices</td>
+                </tr>
+                <tr>
+                    <td><strong>Buyer Universe</strong></td>
+                    <td>Regional investors, family offices, local operators (no institutional demand)</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <p>
+            <strong>Implication:</strong> Exit value predicated on stabilised income (£547k NOI) 
+            capitalised at 8.0-8.5% yield = <strong>£6.4m - £6.8m</strong>. This assumes full 
+            lease-up achieved, no tenant defaults, and market conditions remain stable.
+        </p>
+        
+        <h4>Upside Scenario: Market Recovery</h4>
+        
+        <table>
+            <tbody>
+                <tr>
+                    <td style="width: 35%;"><strong>Trigger Events</strong></td>
+                    <td>Return-to-office mandates, economic recovery, Thames Gateway regeneration</td>
+                </tr>
+                <tr>
+                    <td><strong>Rental Growth</strong></td>
+                    <td>+4-6% pa (outperformance vs inflation)</td>
+                </tr>
+                <tr>
+                    <td><strong>Yield Compression</strong></td>
+                    <td>7.25-7.75% (50-75 bps tightening)</td>
+                </tr>
+                <tr>
+                    <td><strong>Exit Value</strong></td>
+                    <td class="table-number">£7.5m - £8.5m</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <p>
+            <strong>Probability:</strong> <span class="badge badge-medium">LOW-MEDIUM (20-30%)</span>. 
+            Requires structural reversal of hybrid working trends and/or major infrastructure 
+            investment (Lower Thames Crossing, HS2 extension). Not currently forecasted by market 
+            consensus.
+        </p>
+        
+        <h4>Downside Scenario: Market Deterioration</h4>
+        
+        <table>
+            <tbody>
+                <tr>
+                    <td style="width: 35%;"><strong>Trigger Events</strong></td>
+                    <td>Recession, further office demand erosion, covenant failures</td>
+                </tr>
+                <tr>
+                    <td><strong>Rental Decline</strong></td>
+                    <td>-10% to -15% vs current levels</td>
+                </tr>
+                <tr>
+                    <td><strong>Yield Expansion</strong></td>
+                    <td>9.0-10.0% (illiquidity premium, risk repricing)</td>
+                </tr>
+                <tr>
+                    <td><strong>Exit Value</strong></td>
+                    <td class="table-number">£4.5m - £5.5m</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <p>
+            <strong>Probability:</strong> <span class="badge badge-medium">MEDIUM (30-40%)</span>. 
+            Given structural office market challenges and Basildon's peripheral location, downside 
+            risk is material. Occupier demand may continue to erode if hybrid working becomes 
+            entrenched.
+        </p>
+        
+        <div class="callout callout-danger no-break">
+            <h4>EXIT RISK ASSESSMENT</h4>
+            <p><strong>Key Risks to Exit Execution:</strong></p>
+            <ul>
+                <li><strong>Buyer pool constraint:</strong> Multi-let secondary offices in peripheral 
+                locations have limited buyer depth. Typical buyers are regional/local investors with 
+                extended due diligence periods (12-16 weeks typical).</li>
+                <li><strong>Liquidity discount:</strong> Forced sale or time-constrained exit could 
+                require 15-25% discount to market value.</li>
+                <li><strong>Tenant concentration risk:</strong> Single tenant >40% of income creates 
+                buyer concern. Diversification across 4-6 tenants essential.</li>
+                <li><strong>Covenant quality:</strong> Institutional buyers require minimum 40% of 
+                income from investment-grade tenants. SME-heavy tenant base limits buyer universe.</li>
+            </ul>
+            <p class="mb-0">
+                <strong>Mitigation:</strong> (i) Target 18-24 month pre-marketing window, 
+                (ii) ensure stabilised income >12 months pre-sale, (iii) maintain WAULT >4 years 
+                at exit, (iv) engage multiple agents to maximise buyer reach.
+            </p>
+        </div>
+        
+        <div class="page-footer">
+            <div>DealScope IC Memorandum — Regency House, Basildon</div>
+            <div>Page <span class="page-number"></span></div>
+        </div>
+    </div>
+
+    <!-- ===================================
+         ASSUMPTION GAP ANALYSIS
+         =================================== -->
+    <div class="page">
+        <div class="page-header">
+            <div class="page-header-left">Regency House, Basildon</div>
+            <div class="page-header-right">Investment Committee Memorandum</div>
+        </div>
+        
+        <h2>Assumption vs Reality Gap Analysis</h2>
+        
+        <div class="callout callout-danger">
+            <h4>PURPOSE</h4>
+            <p class="mb-0">
+                This section compares model inputs against market evidence to identify over-optimism, 
+                under-estimation, or unsupported assumptions. <strong>This is the most critical section 
+                in determining investment viability.</strong>
+            </p>
+        </div>
+        
+        <h3>ERV Assumptions</h3>
+        
+        <div class="comparison-grid">
+            <div class="comparison-header">
+                <div>Variable</div>
+                <div>Model Input</div>
+                <div>Market Evidence</div>
+                <div>Gap</div>
+                <div>Confidence</div>
+            </div>
+            <div class="comparison-row">
+                <div><strong>ERV (Headline)</strong></div>
+                <div class="table-number">£28.00 psf</div>
+                <div class="table-number">£21.50 – £24.00 psf</div>
+                <div><span class="gap-indicator gap-negative">+17% to +30%</span></div>
+                <div><span class="badge badge-high">LOW</span></div>
+            </div>
+            <div class="comparison-row">
+                <div><strong>ERV (Effective)</strong></div>
+                <div class="table-number">£28.00 psf</div>
+                <div class="table-number">£17.25 – £22.00 psf</div>
+                <div><span class="gap-indicator gap-negative">+27% to +62%</span></div>
+                <div><span class="badge badge-high">LOW</span></div>
+            </div>
+            <div class="comparison-row">
+                <div><strong>Incentive Package</strong></div>
+                <div>6 months</div>
+                <div>9 – 15 months + TI</div>
+                <div><span class="gap-indicator gap-negative">Understated</span></div>
+                <div><span class="badge badge-medium">MEDIUM</span></div>
+            </div>
+        </div>
+        
+        <p class="mt-2">
+            <strong>Analysis:</strong> The assumed ERV of £28 psf has <strong>no market support</strong>. 
+            The highest comparable letting (Pipps Hill North, October 2024) achieved £24 psf headline 
+            with 6 months rent-free. No transaction in Basildon has exceeded £24 psf in the past 
+            18 months. When incentive packages are modelled (12 months RF + £30 psf TI contributions), 
+            effective rents fall to <strong>£17-22 psf</strong>.
+        </p>
+        
+        <p>
+            <strong>Impact:</strong> Each £1 psf ERV overstatement = £30,150 pa income error = 
+            <strong>~£375k valuation error</strong> at 8% yield. A £6 psf overstatement (£28 vs £22 
+            market mid-point) = <strong>£2.25m valuation error</strong>.
+        </p>
+        
+        <h3>Yield Assumptions</h3>
+        
+        <div class="comparison-grid">
+            <div class="comparison-header">
+                <div>Variable</div>
+                <div>Model Input</div>
+                <div>Market Evidence</div>
+                <div>Gap</div>
+                <div>Confidence</div>
+            </div>
+            <div class="comparison-row">
+                <div><strong>Exit Yield</strong></div>
+                <div class="table-number">6.50%</div>
+                <div class="table-number">8.25% – 9.10%</div>
+                <div><span class="gap-indicator gap-negative">-175 to -260 bps</span></div>
+                <div><span class="badge badge-high">LOW</span></div>
+            </div>
+            <div class="comparison-row">
+                <div><strong>Entry Yield</strong></div>
+                <div class="table-number">7.00%</div>
+                <div class="table-number">8.00% – 9.00%</div>
+                <div><span class="gap-indicator gap-negative">-100 to -200 bps</span></div>
+                <div><span class="badge badge-high">LOW</span></div>
+            </div>
+        </div>
+        
+        <p class="mt-2">
+            <strong>Analysis:</strong> The assumed exit yield of 6.50% implies <strong>institutional-grade, 
+            prime covenant tenants in a core location</strong>. Basildon is a secondary market. 
+            Comparable transactions for multi-let offices show yields of <strong>8.25-9.10%</strong>. 
+            The model assumption requires 175-260 bps of yield compression — a structural market 
+            shift not supported by current trends.
+        </p>
+        
+        <p>
+            <strong>Impact:</strong> Each 50 bps yield movement = <strong>~8-10% valuation change</strong>. 
+            A 200 bps error (6.5% vs 8.5%) = <strong>~35-40% valuation overstatement</strong>.
+        </p>
+        
+        <h3>Void & Leasing Assumptions</h3>
+        
+        <div class="comparison-grid">
+            <div class="comparison-header">
+                <div>Variable</div>
+                <div>Model Input</div>
+                <div>Market Reality</div>
+                <div>Gap</div>
+                <div>Confidence</div>
+            </div>
+            <div class="comparison-row">
+                <div><strong>Lease-Up Period</strong></div>
+                <div>11 months</div>
+                <div>18 – 36 months</div>
+                <div><span class="gap-indicator gap-negative">Understated</span></div>
+                <div><span class="badge badge-medium">MEDIUM</span></div>
+            </div>
+            <div class="comparison-row">
+                <div><strong>Void Costs</strong></div>
+                <div>Not modelled</div>
+                <div>£5-10 psf/year</div>
+                <div><span class="gap-indicator gap-negative">Omitted</span></div>
+                <div><span class="badge badge-high">LOW</span></div>
+            </div>
+        </div>
+        
+        <p class="mt-2">
+            <strong>Analysis:</strong> An 11-month lease-up for 30,150 sq ft of vacant space is 
+            <strong>unrealistic</strong> given: (i) 18% market vacancy, (ii) falling take-up 
+            (-23% YoY), (iii) 95,000 sq ft competing supply. Market evidence suggests 18-36 months 
+            is typical for multi-let secondary offices.
+        </p>
+        
+        <p>
+            <strong>Impact:</strong> Each additional 6 months void = <strong>£75-100k carry cost + 
+            financing burden</strong>. 12-month delay (11 months vs 23 months realistic) = 
+            <strong>£150-200k additional cost</strong>.
+        </p>
+        
+        <div class="callout callout-danger no-break mt-3">
+            <h4>CUMULATIVE IMPACT</h4>
+            <p><strong>If all optimistic assumptions simultaneously hold:</strong></p>
+            <ul>
+                <li>ERV +30% vs market (£28 vs £21.50)</li>
+                <li>Yield -200 bps vs comps (6.5% vs 8.5%)</li>
+                <li>Void -12 months vs reality (11 months vs 23 months)</li>
+            </ul>
+            <p><strong>Result:</strong> Valuation overstatement of <span style="color: #dc2626; font-weight: 600;">40-60%</span></p>
+            <p class="mb-0">
+                <strong>If conservative/market-supported assumptions applied:</strong> 
+                Defensible valuation <strong>£5.8m – £6.5m</strong> (vs £7.0m asking price).
+            </p>
+        </div>
+        
+        <div class="page-footer">
+            <div>DealScope IC Memorandum — Regency House, Basildon</div>
+            <div>Page <span class="page-number"></span></div>
+        </div>
+    </div>
+
+    <!-- ===================================
+         FINANCIAL SUMMARY
+         =================================== -->
+    <div class="page">
+        <div class="page-header">
+            <div class="page-header-left">Regency House, Basildon</div>
+            <div class="page-header-right">Investment Committee Memorandum</div>
+        </div>
+        
+        <h2>Financial Summary</h2>
+        
+        <h3>Investment Returns (Base Case: £6.0m Entry, 8.0% Exit Yield)</h3>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Cost Component</th>
+                    <th class="text-right">Amount (£)</th>
+                    <th>% of Entry</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Purchase Price</strong></td>
+                    <td class="text-right table-number">6,000,000</td>
+                    <td>100.0%</td>
+                </tr>
+                <tr>
+                    <td>SDLT (5%)</td>
+                    <td class="text-right table-number">300,000</td>
+                    <td>5.0%</td>
+                </tr>
+                <tr>
+                    <td>Legal & Survey</td>
+                    <td class="text-right table-number">85,000</td>
+                    <td>1.4%</td>
+                </tr>
+                <tr>
+                    <td>Debt Arrangement (1.5% of £3.6m)</td>
+                    <td class="text-right table-number">54,000</td>
+                    <td>0.9%</td>
+                </tr>
+                <tr class="table-highlight">
+                    <td><strong>Total Acquisition Cost</strong></td>
+                    <td class="text-right table-number"><strong>6,439,000</strong></td>
+                    <td><strong>107.3%</strong></td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <table class="mt-3">
+            <thead>
+                <tr>
+                    <th>Hold Period Cost</th>
+                    <th class="text-right">Amount (£)</th>
+                    <th>Assumption</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Void Carry (24 months)</td>
+                    <td class="text-right table-number">482,400</td>
+                    <td>£8 psf/year × 30,150 sq ft × 2 years</td>
+                </tr>
+                <tr>
+                    <td>Letting Fees (15%)</td>
+                    <td class="text-right table-number">96,563</td>
+                    <td>15% of year 1 stabilised income</td>
+                </tr>
+                <tr>
+                    <td>Tenant Fit-Out Contributions</td>
+                    <td class="text-right table-number">904,500</td>
+                    <td>£30 psf × 30,150 sq ft</td>
+                </tr>
+                <tr>
+                    <td>Legal (lettings × 6 units)</td>
+                    <td class="text-right table-number">30,000</td>
+                    <td>£5,000 per letting</td>
+                </tr>
+                <tr>
+                    <td>Debt Interest (24 months @ 6.5%)</td>
+                    <td class="text-right table-number">468,000</td>
+                    <td>£3.6m loan × 6.5% × 2 years</td>
+                </tr>
+                <tr class="table-highlight">
+                    <td><strong>Total Hold Costs</strong></td>
+                    <td class="text-right table-number"><strong>1,981,463</strong></td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <table class="mt-3">
+            <thead>
+                <tr>
+                    <th>Exit Scenario</th>
+                    <th class="text-right">Exit Value (£)</th>
+                    <th class="text-right">Net Proceeds (£)</th>
+                    <th class="text-right">Equity Multiple</th>
+                    <th class="text-right">IRR (5yr)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Optimistic (7.5% yield)</td>
+                    <td class="text-right table-number">7,292,360</td>
+                    <td class="text-right table-number">7,146,513</td>
+                    <td class="text-right table-number">1.20x</td>
+                    <td class="text-right table-number">3.7%</td>
+                </tr>
+                <tr class="table-highlight">
+                    <td><strong>Base (8.0% yield)</strong></td>
+                    <td class="text-right table-number"><strong>6,836,588</strong></td>
+                    <td class="text-right table-number"><strong>6,699,856</strong></td>
+                    <td class="text-right table-number"><strong>1.09x</strong></td>
+                    <td class="text-right table-number"><strong>1.8%</strong></td>
+                </tr>
+                <tr>
+                    <td>Conservative (8.5% yield)</td>
+                    <td class="text-right table-number">6,434,435</td>
+                    <td class="text-right table-number">6,305,746</td>
+                    <td class="text-right table-number">0.98x</td>
+                    <td class="text-right table-number">-0.4%</td>
+                </tr>
+                <tr>
+                    <td>Downside (9.0% yield)</td>
+                    <td class="text-right table-number">6,076,967</td>
+                    <td class="text-right table-number">5,955,428</td>
+                    <td class="text-right table-number">0.88x</td>
+                    <td class="text-right table-number">-2.5%</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="callout callout-danger no-break mt-3">
+            <h4>RETURN ANALYSIS</h4>
+            <p>
+                At £6.0m entry with base case assumptions (8.0% exit yield, £547k stabilised NOI), 
+                returns are <strong style="color: #dc2626;">materially below institutional hurdle rates</strong>:
+            </p>
+            <ul>
+                <li>IRR: <strong>1.8%</strong> (vs 15% target)</li>
+                <li>Equity Multiple: <strong>1.09x</strong> (vs 1.8x target)</li>
+                <li>Cash-on-Cash: <strong>~8.2%</strong> (modest spread vs debt cost)</li>
+            </ul>
+            <p class="mb-0">
+                Returns are critically dependent on: (i) yield not expanding beyond 8.0%, and 
+                (ii) achieving full stabilisation within 24 months. <strong>Downside scenario 
+                (8.5-9.0% exit yield) results in capital loss.</strong>
+            </p>
+        </div>
+        
+        <h3>Sensitivity Analysis</h3>
+        
+        <div class="chart-bar">
+            <div class="chart-label">
+                <span>Exit Yield (7.5% - 9.0%)</span>
+                <span class="table-number">£5.6m - £7.7m</span>
+            </div>
+            <div class="chart-track">
+                <div class="chart-fill" style="width: 85%; left: 5%;"></div>
+            </div>
+        </div>
+        
+        <div class="chart-bar">
+            <div class="chart-label">
+                <span>ERV (£21 - £24 psf)</span>
+                <span class="table-number">£6.2m - £7.5m</span>
+            </div>
+            <div class="chart-track">
+                <div class="chart-fill" style="width: 65%; left: 15%;"></div>
+            </div>
+        </div>
+        
+        <div class="chart-bar">
+            <div class="chart-label">
+                <span>Void Period (12 - 36 months)</span>
+                <span class="table-number">IRR: 3.2% to -1.8%</span>
+            </div>
+            <div class="chart-track">
+                <div class="chart-fill" style="width: 50%; left: 20%;"></div>
+            </div>
+        </div>
+        
+        <div class="page-footer">
+            <div>DealScope IC Memorandum — Regency House, Basildon</div>
+            <div>Page <span class="page-number"></span></div>
+        </div>
+    </div>
+
+    <!-- ===================================
+         FINAL DECISION
+         =================================== -->
+    <div class="page">
+        <div class="page-header">
+            <div class="page-header-left">Regency House, Basildon</div>
+            <div class="page-header-right">Investment Committee Memorandum</div>
+        </div>
+        
+        <h2>Investment Decision</h2>
+        
+        <div class="callout callout-danger no-break">
+            <h4>AT ASKING PRICE (£7.0m): DO NOT PROCEED</h4>
+            <p><strong>Rationale:</strong></p>
+            <ul>
+                <li>Entry price 13% above base case stabilised value (£6.2m)</li>
+                <li>Returns dependent on aggressive assumptions (ERV +30%, yield -200bps vs market)</li>
+                <li>Downside scenario results in 15-25% capital loss</li>
+                <li>Entry above bank valuation (£5.85m) — no downside protection</li>
+            </ul>
+            <p class="mb-0">
+                <strong>Conclusion:</strong> Insufficient margin for error. Asset would require 
+                perfect execution (rapid lease-up, market rent achievement, yield stability) to 
+                deliver marginal returns. Risk-reward profile unacceptable at this pricing.
+            </p>
+        </div>
+        
+        <div class="callout callout-warning no-break mt-3">
+            <h4>AT DISCOUNTED ENTRY (£6.0m - £6.5m): CONDITIONAL OPPORTUNITY</h4>
+            <p><strong>Conditions for Pursuit:</strong></p>
+            <ol>
+                <li><strong>Pricing Discipline:</strong> Entry ≤ £6.2m (15% discount to asking)</li>
+                <li><strong>Leasing Capability:</strong> Demonstrable Basildon market presence, 
+                proven track record letting secondary office stock</li>
+                <li><strong>Conservative Underwriting:</strong> Exit yield 8.5% minimum (not 8.0%), 
+                ERV £22 psf effective (not £24 psf headline)</li>
+                <li><strong>Extended Timeline:</strong> Explicit acceptance of 24-36 month 
+                stabilisation period (not 12-18 months)</li>
+                <li><strong>Tenant Diversification:</strong> Commitment to 5-6 tenants minimum, 
+                no single tenant >30% of income</li>
+                <li><strong>Covenant Quality:</strong> Target minimum 40% of income from 
+                established corporates (not startups/SMEs only)</li>
+            </ol>
+        </div>
+        
+        <h3>Risk Summary</h3>
+        
+        <table class="mt-3">
+            <thead>
+                <tr>
+                    <th>Risk Category</th>
+                    <th>Severity</th>
+                    <th>Probability</th>
+                    <th>Mitigation</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Leasing Failure</strong><br>Inability to let within 36 months</td>
+                    <td><span class="badge badge-high">CRITICAL</span></td>
+                    <td>Medium-High</td>
+                    <td>Pre-marketing, professional agents, flexible pricing</td>
+                </tr>
+                <tr>
+                    <td><strong>Yield Expansion</strong><br>Exit yield >9.0%</td>
+                    <td><span class="badge badge-high">HIGH</span></td>
+                    <td>Medium</td>
+                    <td>Conservative entry price, stabilised pre-sale</td>
+                </tr>
+                <tr>
+                    <td><strong>Market Rent Decline</strong><br>ERV falls below £20 psf</td>
+                    <td><span class="badge badge-medium">MEDIUM</span></td>
+                    <td>Medium</td>
+                    <td>Early lettings at market, avoid over-pricing</td>
+                </tr>
+                <tr>
+                    <td><strong>Tenant Default</strong><br>Bankruptcy / lease break</td>
+                    <td><span class="badge badge-medium">MEDIUM</span></td>
+                    <td>Low-Medium</td>
+                    <td>Covenant checks, rent deposits, diversification</td>
+                </tr>
+                <tr>
+                    <td><strong>Exit Liquidity</strong><br>Inability to sell at target price</td>
+                    <td><span class="badge badge-medium">MEDIUM</span></td>
+                    <td>Medium</td>
+                    <td>18-24 month pre-marketing, multiple agents</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <h3>Final Recommendation</h3>
+        
+        <div style="border: 2pt solid #1a1a1a; padding: 12pt; margin-top: 16pt; page-break-inside: avoid;">
+            <h4 style="margin-top: 0; text-align: center; font-size: 12pt;">INVESTMENT COMMITTEE RECOMMENDATION</h4>
+            
+            <p style="text-align: center; font-size: 11pt; margin: 12pt 0;">
+                <strong>CONDITIONAL OPPORTUNITY — PURSUE AT MATERIAL DISCOUNT ONLY</strong>
+            </p>
+            
+            <p style="margin-bottom: 8pt;"><strong>Decision:</strong></p>
+            <ul style="margin-bottom: 12pt;">
+                <li>At asking price (£7.0m): <strong style="color: #dc2626;">REJECT</strong></li>
+                <li>At discounted entry (£6.0m - £6.5m): <strong style="color: #d97706;">CONDITIONAL APPROVAL</strong> 
+                subject to satisfactory leasing capability assessment and conservative underwriting</li>
+            </ul>
+            
+            <p style="margin-bottom: 8pt;"><strong>Required Actions:</strong></p>
+            <ol style="margin-bottom: 0;">
+                <li>Negotiate purchase price to ≤ £6.2m (15% discount)</li>
+                <li>Engage specialist Basildon leasing agent (prior to exchange)</li>
+                <li>Obtain bank financing confirmation at 60% LTV</li>
+                <li>Pre-marketing exercise (test tenant demand, gauge incentive levels)</li>
+                <li>Final IC approval contingent on satisfactory completion of items 1-4</li>
+            </ol>
+        </div>
+        
+        <div style="margin-top: 25mm; text-align: center; font-size: 8pt; color: #666;">
+            <p>— END OF MEMORANDUM —</p>
+            <p class="mt-2">DealScope Analysis Engine • Saturday, April 04, 2026</p>
+        </div>
+        
+        <div class="page-footer">
+            <div>DealScope IC Memorandum — Regency House, Basildon</div>
+            <div>Page <span class="page-number"></span></div>
+        </div>
+    </div>
+
+</body>
+</html>

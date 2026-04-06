@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DealScope Design System — Complete Component Library</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'DM Sans', sans-serif;
+            background: #09090b;
+            color: #fafafa;
+            padding: 40px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            font-size: 32px;
+            margin-bottom: 40px;
+            border-bottom: 2px solid #7c6af0;
+            padding-bottom: 16px;
+        }
+        
+        h2 {
+            font-size: 24px;
+            margin: 48px 0 24px 0;
+            color: #7c6af0;
+        }
+        
+        h3 {
+            font-size: 18px;
+            margin: 32px 0 16px 0;
+            color: #fafafa;
+        }
+        
+        .component-section {
+            background: #18181b;
+            border: 1px solid #27272a;
+            border-radius: 8px;
+            padding: 32px;
+            margin-bottom: 32px;
+        }
+        
+        .example {
+            margin: 24px 0;
+            padding: 24px;
+            background: #09090b;
+            border-radius: 8px;
+            border: 1px solid #27272a;
+        }
+        
+        code {
+            background: #27272a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+        }
+        
+        pre {
+            background: #18181b;
+            border: 1px solid #27272a;
+            border-radius: 8px;
+            padding: 16px;
+            overflow-x: auto;
+            margin: 16px 0;
+        }
+        
+        /* COLORS */
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin: 24px 0;
+        }
+        
+        .color-swatch {
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #27272a;
+        }
+        
+        .color-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        
+        .color-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: #a1a1aa;
+        }
+        
+        /* BUTTONS */
+        .btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            margin-right: 8px;
+            margin-bottom: 8px;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: #7c6af0;
+            color: #fafafa;
+        }
+        
+        .btn-primary:hover {
+            background: #6456d4;
+        }
+        
+        .btn-secondary {
+            background: #18181b;
+            color: #fafafa;
+            border: 1px solid #3f3f46;
+        }
+        
+        .btn-secondary:hover {
+            background: #27272a;
+        }
+        
+        .btn-success {
+            background: rgba(34, 197, 94, 0.15);
+            color: #4ade80;
+            border: 1px solid #22c55e;
+        }
+        
+        .btn-success:hover {
+            background: rgba(34, 197, 94, 0.25);
+        }
+        
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border: 1px solid #ef4444;
+        }
+        
+        .btn-warning {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fbbf24;
+            border: 1px solid #f59e0b;
+        }
+        
+        /* CARDS */
+        .card {
+            background: #18181b;
+            border: 1px solid #27272a;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 16px 0;
+        }
+        
+        .card h4 {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #71717a;
+            margin-bottom: 16px;
+        }
+        
+        .card-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #27272a;
+            font-size: 13px;
+        }
+        
+        .card-row:last-child {
+            border-bottom: none;
+        }
+        
+        /* BADGES */
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 4px;
+        }
+        
+        .badge-low {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border: 1px solid #ef4444;
+        }
+        
+        .badge-medium {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fbbf24;
+            border: 1px solid #f59e0b;
+        }
+        
+        .badge-high {
+            background: rgba(34, 197, 94, 0.15);
+            color: #4ade80;
+            border: 1px solid #22c55e;
+        }
+        
+        .verdict-badge {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
+        .verdict-conditional {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fbbf24;
+            border: 1px solid #f59e0b;
+        }
+        
+        .verdict-proceed {
+            background: rgba(34, 197, 94, 0.15);
+            color: #4ade80;
+            border: 1px solid #22c55e;
+        }
+        
+        .verdict-reject {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border: 1px solid #ef4444;
+        }
+        
+        /* CALLOUTS */
+        .callout {
+            padding: 16px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid;
+        }
+        
+        .callout-critical {
+            background: rgba(239, 68, 68, 0.1);
+            border-left-color: #ef4444;
+        }
+        
+        .callout-warning {
+            background: rgba(245, 158, 11, 0.1);
+            border-left-color: #f59e0b;
+        }
+        
+        .callout-info {
+            background: rgba(124, 106, 240, 0.1);
+            border-left-color: #7c6af0;
+        }
+        
+        .callout-success {
+            background: rgba(34, 197, 94, 0.1);
+            border-left-color: #22c55e;
+        }
+        
+        .callout h4 {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        /* TABLES */
+        .table-container {
+            background: #18181b;
+            border: 1px solid #27272a;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        thead {
+            background: #27272a;
+        }
+        
+        th {
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #a1a1aa;
+        }
+        
+        td {
+            padding: 12px 16px;
+            border-top: 1px solid #27272a;
+            font-size: 13px;
+            color: #d4d4d8;
+        }
+        
+        tbody tr:hover {
+            background: rgba(124, 106, 240, 0.05);
+        }
+        
+        /* INPUTS */
+        .input {
+            width: 100%;
+            padding: 10px 14px;
+            background: #18181b;
+            border: 1px solid #3f3f46;
+            border-radius: 6px;
+            color: #fafafa;
+            font-size: 14px;
+            margin: 8px 0;
+            transition: border 0.2s;
+        }
+        
+        .input:focus {
+            outline: none;
+            border-color: #7c6af0;
+        }
+        
+        .input::placeholder {
+            color: #71717a;
+        }
+        
+        /* METRIC CARDS */
+        .metric-card {
+            background: #18181b;
+            border: 1px solid #27272a;
+            border-radius: 8px;
+            padding: 16px;
+            transition: all 0.2s;
+            margin: 16px 0;
+        }
+        
+        .metric-card:hover {
+            border-color: #7c6af0;
+            transform: translateY(-2px);
+        }
+        
+        .metric-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #71717a;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        .metric-value {
+            font-size: 24px;
+            font-weight: 500;
+            color: #fafafa;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .metric-subtitle {
+            font-size: 12px;
+            color: #a1a1aa;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>DealScope Design System — Complete Component Library</h1>
+        <p style="color: #a1a1aa; margin-bottom: 40px;">
+            This document contains ALL UI components, colors, typography, and patterns used in DealScope.
+            Copy and paste HTML/CSS directly — zero interpretation needed.
+        </p>
+        
+        <!-- COLORS -->
+        <div class="component-section">
+            <h2>🎨 Color Palette</h2>
+            <p style="color: #a1a1aa; margin-bottom: 24px;">
+                All colors from RealHQ design system. Copy hex values exactly.
+            </p>
+            
+            <div class="color-grid">
+                <div class="color-swatch" style="background: #09090b; border: 2px solid #27272a;">
+                    <div class="color-label">Background</div>
+                    <div class="color-value">#09090b</div>
+                </div>
+                
+                <div class="color-swatch" style="background: #18181b;">
+                    <div class="color-label">Card</div>
+                    <div class="color-value">#18181b</div>
+                </div>
+                
+                <div class="color-swatch" style="background: #27272a;">
+                    <div class="color-label">Border</div>
+                    <div class="color-value">#27272a</div>
+                </div>
+                
+                <div class="color-swatch" style="background: #7c6af0;">
+                    <div class="color-label">Accent (Purple)</div>
+                    <div class="color-value">#7c6af0</div>
+                </div>
+                
+                <div class="color-swatch" style="background: #22c55e;">
+                    <div class="color-label">Success (Green)</div>
+                    <div class="color-value">#22c55e</div>
+                </div>
+                
+                <div class="color-swatch" style="background: #f59e0b;">
+                    <div class="color-label">Warning (Amber)</div>
+                    <div class="color-value">#f59e0b</div>
+                </div>
+                
+                <div class="color-swatch" style="background: #ef4444;">
+                    <div class="color-label">Danger (Red)</div>
+                    <div class="color-value">#ef4444</div>
+                </div>
+                
+                <div class="color-swatch" style="background: #fafafa; color: #09090b;">
+                    <div class="color-label" style="color: #09090b;">Text Primary</div>
+                    <div class="color-value" style="color: #52525b;">#fafafa</div>
+                </div>
+                
+                <div class="color-swatch" style="background: #a1a1aa;">
+                    <div class="color-label">Text Muted</div>
+                    <div class="color-value">#a1a1aa</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- TYPOGRAPHY -->
+        <div class="component-section">
+            <h2>✍️ Typography</h2>
+            
+            <div class="example">
+                <h3 style="font-size: 32px; margin-bottom: 16px;">Page Title (32px, DM Sans 500)</h3>
+                <h3 style="font-size: 24px; margin-bottom: 16px;">Section Heading (24px, DM Sans 600)</h3>
+                <h3 style="font-size: 18px; margin-bottom: 16px;">Subsection (18px, DM Sans 600)</h3>
+                <p style="font-size: 14px; margin-bottom: 16px;">Body Text (14px, DM Sans 400)</p>
+                <p style="font-size: 13px; color: #a1a1aa; margin-bottom: 16px;">Caption (13px, DM Sans 400, #a1a1aa)</p>
+                <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #71717a; font-weight: 600;">
+                    Label (11px, DM Sans 600, uppercase, 0.5px letter-spacing)
+                </p>
+                <p style="font-family: 'JetBrains Mono', monospace; font-size: 24px; margin-top: 16px;">
+                    £7,000,000 (24px, JetBrains Mono for numbers)
+                </p>
+            </div>
+            
+            <pre><code>/* Typography System */
+--font-body: 'DM Sans', sans-serif;
+--font-mono: 'JetBrains Mono', monospace;
+
+/* Sizes */
+--text-xs: 11px;
+--text-sm: 13px;
+--text-base: 14px;
+--text-lg: 18px;
+--text-xl: 24px;
+--text-2xl: 32px;</code></pre>
+        </div>
+        
+        <!-- BUTTONS -->
+        <div class="component-section">
+            <h2>🔘 Buttons</h2>
+            
+            <div class="example">
+                <button class="btn btn-primary">Primary Button</button>
+                <button class="btn btn-secondary">Secondary Button</button>
+                <button class="btn btn-success">Success Button</button>
+                <button class="btn btn-warning">Warning Button</button>
+                <button class="btn btn-danger">Danger Button</button>
+            </div>
+            
+            <pre><code>&lt;button class="btn btn-primary"&gt;Primary&lt;/button&gt;
+&lt;button class="btn btn-secondary"&gt;Secondary&lt;/button&gt;
+&lt;button class="btn btn-success"&gt;Success&lt;/button&gt;</code></pre>
+        </div>
+        
+        <!-- BADGES -->
+        <div class="component-section">
+            <h2>🏷️ Badges</h2>
+            
+            <h3>Confidence Badges</h3>
+            <div class="example">
+                <span class="badge badge-low">LOW</span>
+                <span class="badge badge-medium">MEDIUM</span>
+                <span class="badge badge-high">HIGH</span>
+            </div>
+            
+            <h3>Verdict Badges</h3>
+            <div class="example">
+                <span class="verdict-badge verdict-proceed">✓ PROCEED</span>
+                <span class="verdict-badge verdict-conditional">⚠️ CONDITIONAL</span>
+                <span class="verdict-badge verdict-reject">✗ REJECT</span>
+            </div>
+            
+            <pre><code>&lt;span class="badge badge-low"&gt;LOW&lt;/span&gt;
+&lt;span class="verdict-badge verdict-conditional"&gt;⚠️ CONDITIONAL&lt;/span&gt;</code></pre>
+        </div>
+        
+        <!-- CALLOUTS -->
+        <div class="component-section">
+            <h2>📢 Callouts</h2>
+            
+            <div class="callout callout-critical">
+                <h4>CRITICAL ISSUE</h4>
+                <p>This is a critical callout for blockers and serious problems.</p>
+            </div>
+            
+            <div class="callout callout-warning">
+                <h4>WARNING</h4>
+                <p>This is a warning callout for important notices.</p>
+            </div>
+            
+            <div class="callout callout-info">
+                <h4>INFORMATION</h4>
+                <p>This is an info callout for helpful context.</p>
+            </div>
+            
+            <div class="callout callout-success">
+                <h4>SUCCESS</h4>
+                <p>This is a success callout for positive outcomes.</p>
+            </div>
+            
+            <pre><code>&lt;div class="callout callout-warning"&gt;
+  &lt;h4&gt;WARNING&lt;/h4&gt;
+  &lt;p&gt;Content here&lt;/p&gt;
+&lt;/div&gt;</code></pre>
+        </div>
+        
+        <!-- METRIC CARDS -->
+        <div class="component-section">
+            <h2>📊 Metric Cards</h2>
+            
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+                <div class="metric-card">
+                    <div class="metric-label">Asking Price</div>
+                    <div class="metric-value">£7.0m</div>
+                    <div class="metric-subtitle">£183 psf</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-label">Market Range</div>
+                    <div class="metric-value">£6.2-7.1m</div>
+                    <div class="metric-subtitle">Based on comps</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-label">IRR (10yr)</div>
+                    <div class="metric-value">15.2%</div>
+                    <div class="metric-subtitle">Conservative</div>
+                </div>
+            </div>
+            
+            <pre><code>&lt;div class="metric-card"&gt;
+  &lt;div class="metric-label"&gt;Asking Price&lt;/div&gt;
+  &lt;div class="metric-value"&gt;£7.0m&lt;/div&gt;
+  &lt;div class="metric-subtitle"&gt;£183 psf&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+        </div>
+        
+        <!-- DATA CARDS -->
+        <div class="component-section">
+            <h2>📋 Data Cards</h2>
+            
+            <div class="card">
+                <h4>Physical Characteristics</h4>
+                <div class="card-row">
+                    <span style="color: #a1a1aa;">Net Lettable Area</span>
+                    <span style="font-family: 'JetBrains Mono', monospace;">30,150 sq ft</span>
+                </div>
+                <div class="card-row">
+                    <span style="color: #a1a1aa;">Car Parking</span>
+                    <span style="font-family: 'JetBrains Mono', monospace;">110 spaces</span>
+                </div>
+                <div class="card-row">
+                    <span style="color: #a1a1aa;">EPC Rating</span>
+                    <span style="color: #4ade80;">C (62) — Compliant</span>
+                </div>
+            </div>
+            
+            <pre><code>&lt;div class="card"&gt;
+  &lt;h4&gt;Card Title&lt;/h4&gt;
+  &lt;div class="card-row"&gt;
+    &lt;span style="color: #a1a1aa;"&gt;Label&lt;/span&gt;
+    &lt;span&gt;Value&lt;/span&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+        </div>
+        
+        <!-- TABLES -->
+        <div class="component-section">
+            <h2>📄 Tables</h2>
+            
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Property</th>
+                            <th>Size</th>
+                            <th>Rent PSF</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Phoenix House</td>
+                            <td style="font-family: 'JetBrains Mono', monospace;">4,250 sq ft</td>
+                            <td style="font-family: 'JetBrains Mono', monospace;">£23.00</td>
+                            <td>Sep 2024</td>
+                        </tr>
+                        <tr>
+                            <td>Burnt Mills Estate</td>
+                            <td style="font-family: 'JetBrains Mono', monospace;">3,800 sq ft</td>
+                            <td style="font-family: 'JetBrains Mono', monospace;">£22.50</td>
+                            <td>Jul 2024</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <pre><code>&lt;div class="table-container"&gt;
+  &lt;table&gt;
+    &lt;thead&gt;
+      &lt;tr&gt;
+        &lt;th&gt;Column 1&lt;/th&gt;
+      &lt;/tr&gt;
+    &lt;/thead&gt;
+    &lt;tbody&gt;
+      &lt;tr&gt;
+        &lt;td&gt;Data&lt;/td&gt;
+      &lt;/tr&gt;
+    &lt;/tbody&gt;
+  &lt;/table&gt;
+&lt;/div&gt;</code></pre>
+        </div>
+        
+        <!-- INPUTS -->
+        <div class="component-section">
+            <h2>📝 Form Inputs</h2>
+            
+            <div class="example">
+                <input type="text" class="input" placeholder="Enter property address...">
+                <input type="number" class="input" placeholder="£7,000,000">
+            </div>
+            
+            <pre><code>&lt;input type="text" class="input" placeholder="Text..."&gt;</code></pre>
+        </div>
+        
+        <!-- SPACING -->
+        <div class="component-section">
+            <h2>📏 Spacing Scale</h2>
+            
+            <pre><code>/* Spacing Scale */
+--spacing-xs: 4px;
+--spacing-sm: 8px;
+--spacing-md: 16px;
+--spacing-lg: 24px;
+--spacing-xl: 32px;
+--spacing-2xl: 48px;</code></pre>
+            
+            <div style="background: #27272a; padding: 16px; border-radius: 8px; margin-top: 16px;">
+                <div style="background: #7c6af0; height: 4px; margin: 4px 0;"><span style="margin-left: 8px;">4px (xs)</span></div>
+                <div style="background: #7c6af0; height: 8px; margin: 8px 0;"><span style="margin-left: 8px;">8px (sm)</span></div>
+                <div style="background: #7c6af0; height: 16px; margin: 16px 0;"><span style="margin-left: 8px;">16px (md)</span></div>
+                <div style="background: #7c6af0; height: 24px; margin: 24px 0;"><span style="margin-left: 8px;">24px (lg)</span></div>
+                <div style="background: #7c6af0; height: 32px; margin: 32px 0;"><span style="margin-left: 8px;">32px (xl)</span></div>
+            </div>
+        </div>
+        
+        <!-- BORDER RADIUS -->
+        <div class="component-section">
+            <h2>🔲 Border Radius</h2>
+            
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 16px;">
+                <div style="background: #7c6af0; padding: 20px; border-radius: 4px; text-align: center;">4px<br>Small</div>
+                <div style="background: #7c6af0; padding: 20px; border-radius: 6px; text-align: center;">6px<br>Default</div>
+                <div style="background: #7c6af0; padding: 20px; border-radius: 8px; text-align: center;">8px<br>Card</div>
+                <div style="background: #7c6af0; padding: 20px; border-radius: 12px; text-align: center;">12px<br>Large</div>
+            </div>
+            
+            <pre><code>border-radius: 4px;  /* Small - badges */
+border-radius: 6px;  /* Default - buttons, inputs */
+border-radius: 8px;  /* Card - cards, containers */
+border-radius: 12px; /* Large - special containers */</code></pre>
+        </div>
+        
+        <!-- COMPLETE CSS -->
+        <div class="component-section">
+            <h2>📦 Complete CSS Stylesheet</h2>
+            <p style="color: #a1a1aa; margin-bottom: 16px;">
+                Copy this entire CSS into your project for instant DealScope styling.
+            </p>
+            
+            <pre style="max-height: 400px; overflow-y: auto;"><code>/* DealScope Design System — Complete CSS */
+
+:root {
+  /* Colors */
+  --background: #09090b;
+  --card: #18181b;
+  --border: #27272a;
+  --muted-border: #3f3f46;
+  --text: #fafafa;
+  --text-muted: #a1a1aa;
+  --text-subtle: #71717a;
+  --accent: #7c6af0;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  
+  /* Typography */
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  
+  /* Border Radius */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--background);
+  color: var(--text);
+  line-height: 1.6;
+}
+
+.btn {
+  padding: 10px 20px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--text);
+}
+
+.btn-secondary {
+  background: var(--card);
+  color: var(--text);
+  border: 1px solid var(--muted-border);
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+}
+
+.metric-value {
+  font-family: var(--font-mono);
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+/* Add all other component styles... */</code></pre>
+        </div>
+    </div>
+</body>
+</html>
