@@ -553,7 +553,7 @@ export default function UnderwritePage() {
                       }`}>
                         {cr.value.toFixed(1)}% cap
                       </td>
-                      {data.sensitivity.matrix[ci].map((irr, gi) => {
+                      {data.sensitivity!.matrix[ci].map((irr, gi) => {
                         const isCurrent = ci === data.sensitivity!.currentCapRateIdx && gi === data.sensitivity!.currentGrowthIdx;
                         const irrColor = irr >= 15 ? "text-[var(--grn)]" : irr >= 10 ? "text-[var(--tx)]" : "text-[var(--red)]";
                         return (

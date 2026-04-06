@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { generateOpportunities } from "@/lib/income-opportunities";
 
 interface AssetOpportunity {
   assetId: string;
@@ -12,18 +13,6 @@ interface AssetOpportunity {
   note: string;
 }
 
-interface AssetWithOpportunities {
-  assetId: string;
-  assetName: string;
-  location: string;
-  opportunities: Array<{
-    id: string;
-    type: string;
-    label: string;
-    annualIncome: number;
-    note: string;
-  }>;
-}
 
 export interface IncomeCategoryBreakdown {
   category: string;
@@ -229,7 +218,7 @@ export async function GET() {
     });
   }
 
-  // Fetch all user assets
+  // Fetch all user assets (include region + sqft for opportunity generation)
   const userAssets = await prisma.userAsset.findMany({
     where: { userId: session.user.id },
     select: {
@@ -238,6 +227,8 @@ export async function GET() {
       assetType: true,
       location: true,
       address: true,
+      region: true,
+      sqft: true,
     },
   });
 
@@ -260,27 +251,19 @@ export async function GET() {
     },
   });
 
-  // Fetch income opportunities (potential, not yet activated)
-  const opportunitiesResponse = await fetch(
-    `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/user/income-opportunities`,
-    {
-      headers: {
-        cookie: `next-auth.session-token=${session?.user?.id}`, // Pass session
-      },
-    }
-  ).then(r => r.ok ? r.json() : { assets: [] }).catch(() => ({ assets: [] }));
-
-  const allOpportunities: AssetOpportunity[] = (opportunitiesResponse.assets as AssetWithOpportunities[] || []).flatMap((asset) =>
-    asset.opportunities.map((opp) => ({
-      assetId: asset.assetId,
-      assetName: asset.assetName,
-      location: asset.location,
+  // Generate opportunities directly — no internal HTTP fetch (fixes serverless timeout/503)
+  const allOpportunities: AssetOpportunity[] = userAssets.flatMap((asset) => {
+    const opps = generateOpportunities(asset);
+    return opps.map((opp) => ({
+      assetId: asset.id,
+      assetName: asset.name,
+      location: asset.location ?? asset.address ?? "",
       type: opp.type,
       label: opp.label,
       annualIncome: opp.annualIncome,
       note: opp.note,
-    }))
-  );
+    }));
+  });
 
   // Calculate active income (live activations)
   const liveActivations = activations.filter(a => a.status === "live");
