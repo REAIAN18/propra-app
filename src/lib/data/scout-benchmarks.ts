@@ -87,17 +87,6 @@ export const MARKET_CAP_RATES: Record<string, Record<string, number>> = {
     flex:        0.0700,
     mixed:       0.0675,
   },
-  east_uk: {
-    // Outer SE / East England — Essex (SS, CO, CM), East Anglia (IP, NR, CB), Beds/Herts fringe
-    // NOT prime SE England (Guildford, Reading, Crawley). Thin occupier demand, higher cap rates.
-    industrial:  0.0625,
-    warehouse:   0.0600,
-    logistics:   0.0575,
-    office:      0.0825,  // Basildon/Chelmsford/Colchester out-of-town office: 8–9%
-    retail:      0.0900,  // High street/retail park; weak footfall in secondary Essex towns
-    flex:        0.0700,
-    mixed:       0.0750,
-  },
   fl_us: {
     // Florida — Miami, Broward, Palm Beach, Tampa, Orlando
     industrial:  0.0600,
@@ -200,18 +189,6 @@ export const MARKET_ERV: Record<string, Record<string, number>> = {
     flex:        9.50,
     mixed:       8.00,
   },
-  east_uk: {
-    // Outer SE / East England ERV — £/sqft/yr
-    // Essex (Basildon, Southend, Colchester, Chelmsford), East Anglia (Ipswich, Norwich)
-    // Realistic Q1 2026 ERVs for secondary office/industrial in these towns.
-    industrial:  8.00,   // £6.50–£9.50/sqft/yr for Essex industrial
-    warehouse:   8.50,
-    logistics:   10.00,
-    office:      13.00,  // Basildon/Chelmsford Grade B office: £11–£16/sqft/yr
-    retail:      18.00,  // secondary high street; actual varies widely
-    flex:        10.00,
-    mixed:       9.00,
-  },
   fl_us: {
     // Florida ERV — $/sqft/yr NNN basis
     industrial:  9.50,
@@ -252,7 +229,7 @@ export function normaliseRegion(region: string | null | undefined): string {
   const r = region.toLowerCase().replace(/[\s_-]+/g, "_");
   if (r.includes("prime_london") || r.includes("west_end") || r.includes("city_of_london") || r.includes("mayfair") || r.includes("fitzrovia") || r.includes("victoria") || r.includes("pimlico") || r.includes("marylebone") || r.includes("soho") || r.includes("covent_garden") || r.includes("knightsbridge") || r.includes("chelsea") || r.includes("kensington")) return "prime_london";
   if (r.includes("london") || r.includes("greater_london")) return "greater_london";
-  if (r.includes("regional_uk") || r.includes("regional"))                return "regional_uk";
+  if (r.includes("regional_uk") || r.includes("regional") || r.includes("east_uk") || r.includes("essex") || r.includes("east_anglia") || r.includes("basildon") || r.includes("southend") || r.includes("colchester") || r.includes("chelmsford") || r.includes("ipswich") || r.includes("norwich")) return "regional_uk";
   if (r.includes("se") || r.includes("south_east") || r.includes("kent") || r.includes("sussex") || r.includes("hamp")) return "se_uk";
   if (r.includes("midland") || r.includes("birmingham"))                   return "midlands";
   if (r.includes("north") || r.includes("manchester") || r.includes("leeds") || r.includes("liverpool") || r.includes("newcastle") || r.includes("sheffield") || r.includes("glasgow") || r.includes("edinburgh") || r.includes("scotland")) return "north_uk";
