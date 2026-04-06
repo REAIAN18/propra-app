@@ -555,7 +555,7 @@ export default function PropertyDossierPage() {
             {activeTab === "Overview"       && <OverviewTab      deal={deal} prop={prop} />}
             {activeTab === "Property"       && <PropertyTab      deal={deal} />}
             {activeTab === "Planning"       && <PlanningTab      deal={deal} />}
-            {activeTab === "Title & Legal"  && <TitleTab />}
+            {activeTab === "Title & Legal"  && <TitleTab deal={deal} />}
             {activeTab === "Environmental"  && <EnvironmentalTab />}
             {activeTab === "Ownership"      && <OwnershipTab />}
             {activeTab === "Financials"     && <FinancialsTabV2  deal={deal} prop={prop} />}

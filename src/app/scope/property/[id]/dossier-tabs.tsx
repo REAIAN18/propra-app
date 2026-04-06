@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import s from "./dossier.module.css";
+import { SalesHistoryTable } from "@/components/dealscope/SalesHistoryTable";
+import type { SaleRecord } from "@/components/dealscope/SalesHistoryTable";
+import type { RawDeal } from "./tabs/types";
 
 /* ═══════════════════════════════════════════════════
    SHARED HELPERS
@@ -22,7 +25,8 @@ const ILLUSTRATIVE_BANNER = (
   </div>
 );
 
-export function TitleTab() {
+export function TitleTab({ deal }: { deal: RawDeal }) {
+  const salesHistory = ((deal.dataSources?.salesHistory ?? []) as SaleRecord[]);
   return (
     <>
       {ILLUSTRATIVE_BANNER}
@@ -58,20 +62,7 @@ export function TitleTab() {
 
       <div className={s.card}>
         <div className={s.cardTitle}>Sales history</div>
-        <div className={s.statRow}>
-          <div className={s.statBox}><div className={s.statLabel}>Purchased (2018)</div><div className={s.statVal}>£485,000</div><div className={s.statSub}>£59/sqft</div></div>
-          <div className={s.statBox}><div className={s.statLabel}>Est. current value</div><div className={`${s.statVal} ${s.vGreen}`}>£760,000</div><div className={s.statSubGreen}>+57% since purchase</div></div>
-          <div className={s.statBox}><div className={s.statLabel}>Annual growth</div><div className={`${s.statVal} ${s.vGreen}`}>+7.3%</div><div className={s.statSub}>over 7.7 years</div></div>
-        </div>
-        <table className={s.tbl}>
-          <thead><tr><th>Date</th><th>Price</th><th>Buyer</th><th>Type</th><th>£/sqft</th><th>Change</th></tr></thead>
-          <tbody>
-            <tr><td>22 Jun 2018</td><td className={s.mono}>£485,000</td><td>Meridian Property Holdings Ltd</td><td>Standard</td><td className={s.mono}>£59</td><td className={`${s.mono} ${s.vGreen}`}>+52%</td></tr>
-            <tr><td>14 Mar 2011</td><td className={s.mono}>£320,000</td><td>Kent Industrial Investments Ltd</td><td>Standard</td><td className={s.mono}>£39</td><td className={`${s.mono} ${s.vGreen}`}>+49%</td></tr>
-            <tr><td>8 Sep 2004</td><td className={s.mono}>£215,000</td><td>B&R Holdings (South East) Ltd</td><td>Standard</td><td className={s.mono}>£26</td><td className={`${s.mono} ${s.vGreen}`}>+51%</td></tr>
-            <tr><td>1 Dec 1997</td><td className={s.mono}>£142,000</td><td>Medway Warehouse Co. Ltd</td><td>New build</td><td className={s.mono}>£17</td><td className={s.mono}>—</td></tr>
-          </tbody>
-        </table>
+        <SalesHistoryTable sales={salesHistory} title="" />
       </div>
 
       <div className={s.card}>

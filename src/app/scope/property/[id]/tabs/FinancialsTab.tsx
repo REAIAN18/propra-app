@@ -6,6 +6,8 @@
  */
 
 import { MultipleValuations, ComparablesTable, ServiceCharges, MetricCard } from "@/lib/dealscope/components";
+import { LettingScenariosTable } from "@/components/dealscope/LettingScenariosTable";
+import type { LettingScenario } from "@/components/dealscope/LettingScenariosTable";
 import type { ValuationScenario } from "@/components/dealscope/MultipleValuations";
 import type { Comparable } from "@/components/dealscope/ComparablesTable";
 import type { ServiceChargeItem } from "@/components/dealscope/ServiceCharges";
@@ -61,6 +63,24 @@ export function FinancialsTab({ deal, prop }: Props) {
     { label: "Bull case",  valueLow: equityResult.exitValue * 1.10, valueMid: equityResult.exitValue * 1.20, valueHigh: equityResult.exitValue * 1.30, method: "Exit yield -100bps", confidence: "low" },
     { label: "Stabilised", valueLow: equityResult.exitValue * 0.95, valueMid: equityResult.exitValue * 1.05, valueHigh: equityResult.exitValue * 1.15, method: "Fully let at ERV",   confidence: "medium" },
   ];
+
+  // Letting scenarios from live data
+  const rawScenarios = ((ds.scenarios ?? ds.lettingScenarios) as unknown[] | undefined) ?? [];
+  const lettingScenarios: LettingScenario[] = (Array.isArray(rawScenarios) ? rawScenarios : []).map((sc: unknown) => {
+    const s = sc as Record<string, unknown>;
+    const label = (s.label ?? s.name ?? "") as string;
+    return {
+      label: (label.toLowerCase().includes("bear") ? "Bear" : label.toLowerCase().includes("bull") ? "Bull" : "Base") as LettingScenario["label"],
+      rentPsf: typeof s.rentPsf === "number" ? s.rentPsf : undefined,
+      rentPa: typeof s.rentPa === "number" ? s.rentPa : undefined,
+      voidMonths: typeof s.voidMonths === "number" ? s.voidMonths : undefined,
+      yield: typeof s.yield === "number" ? s.yield : typeof s.cashYield === "number" ? s.cashYield : undefined,
+      netIncomePa: typeof s.netIncomePa === "number" ? s.netIncomePa : undefined,
+      exitValue: typeof s.exitValue === "number" ? s.exitValue : typeof s.npv === "number" ? s.npv : undefined,
+      irr: typeof s.irr === "number" ? s.irr : undefined,
+      equityMultiple: typeof s.equityMultiple === "number" ? s.equityMultiple : undefined,
+    };
+  });
 
   // Comparables
   const rawComps = ((ds.comps ?? ds.comparables) as unknown[] | undefined) ?? [];
@@ -131,6 +151,12 @@ export function FinancialsTab({ deal, prop }: Props) {
       <div className={`${s.card} ${s.a2}`}>
         <div className={s.cardTitle}>Exit value scenarios (4 scenarios)</div>
         <MultipleValuations scenarios={scenarios} />
+      </div>
+
+      {/* Letting scenarios */}
+      <div className={`${s.card} ${s.a2}`}>
+        <div className={s.cardTitle}>Letting scenarios</div>
+        <LettingScenariosTable scenarios={lettingScenarios} title="" />
       </div>
 
       {/* Comparables */}
