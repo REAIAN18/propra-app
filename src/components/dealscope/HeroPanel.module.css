@@ -1,22 +1,24 @@
 /* ═══════════════════════════════════════════════════
-   HeroPanel — class names match HeroPanel.tsx exactly
+   HeroPanel — DS-T06 — matches HeroPanel.tsx class refs
    Uses global dark theme CSS vars only
    ═══════════════════════════════════════════════════ */
 
-/* Outer wrapper */
+/* Root container */
 .heroPanel {
-  padding: 0;
+  padding: 16px 20px;
+  background: linear-gradient(180deg, var(--s1), var(--bg));
+  border-bottom: 1px solid var(--s2);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
 /* ── Property header ── */
 .propertyHeader {
-  padding: 16px 20px 8px;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  background: linear-gradient(180deg, var(--s1), var(--bg));
-  border-bottom: 1px solid var(--s2);
 }
 
 .propertyTitle {
@@ -27,68 +29,65 @@
 .propertyTitle h1 {
   font-family: 'Instrument Serif', serif;
   font-size: 20px;
-  font-weight: 400;
-  color: var(--tx);
-  margin: 0 0 4px;
+  font-weight: 600;
   letter-spacing: -0.3px;
-  line-height: 1.2;
+  color: var(--tx);
+  margin: 0 0 5px 0;
 }
 
-/* Meta tags row — e.g. "Office · 38,330 sq ft NLA · Freehold" */
 .propertyMeta {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: 0;
   font-size: 11px;
   color: var(--tx2, #8e8ea0);
+  flex-wrap: wrap;
 }
 
-/* Dot separator between spans */
+/* · separator between adjacent spans */
 .propertyMeta span + span::before {
   content: ' · ';
-  color: var(--tx3, #555566);
+  white-space: pre;
 }
 
 .backBtn {
   font-size: 11px;
   color: var(--tx3, #555566);
+  cursor: pointer;
   background: none;
   border: none;
-  cursor: pointer;
-  padding: 0;
-  white-space: nowrap;
-  transition: color 0.15s;
+  padding: 4px 0;
+  font-family: 'DM Sans', sans-serif;
   flex-shrink: 0;
-  margin-top: 4px;
+  transition: color 0.15s;
 }
 .backBtn:hover { color: var(--acc2, #a899ff); }
 
 /* ── Metrics grid ── */
 .metricsGrid {
   display: flex;
+  gap: 10px;
   flex-wrap: wrap;
-  gap: 8px;
-  padding: 12px 20px;
-  background: var(--bg);
-  border-bottom: 1px solid var(--s2);
+  align-items: stretch;
 }
 
 /* Verdict card */
 .verdictCell {
-  flex: 1;
-  min-width: 200px;
-  padding: 12px 14px;
-  border-radius: 10px;
   background: var(--verdictBg, rgba(124,106,240,.06));
   border: 1px solid var(--verdictBorder, rgba(124,106,240,.2));
+  border-radius: 10px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 160px;
 }
 
 .verdictTitle {
   font-size: 13px;
   font-weight: 600;
   color: var(--tx);
-  margin: 6px 0 2px;
+  margin: 0;
   line-height: 1.3;
 }
 
@@ -102,15 +101,12 @@
 /* ── Action bar ── */
 .actionBar {
   display: flex;
-  flex-wrap: wrap;
   gap: 6px;
-  padding: 10px 20px;
-  background: var(--s1);
-  border-bottom: 1px solid var(--s2);
+  flex-wrap: wrap;
 }
 
 .btnPrimary {
-  padding: 7px 14px;
+  padding: 8px 16px;
   border-radius: 8px;
   border: none;
   cursor: pointer;
@@ -119,10 +115,7 @@
   font-weight: 600;
   background: var(--acc);
   color: #fff;
-  box-shadow: 0 2px 10px rgba(124,106,240,.25);
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
+  box-shadow: 0 2px 12px rgba(124,106,240,0.25);
   transition: background 0.2s, transform 0.15s;
 }
 .btnPrimary:hover { background: var(--acc2, #a899ff); transform: translateY(-1px); }
@@ -137,30 +130,29 @@
   font-weight: 600;
   background: var(--s2);
   color: var(--tx2, #8e8ea0);
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
   transition: background 0.2s, color 0.2s;
 }
 .btnSecondary:hover { background: var(--s3, #1f1f2c); color: var(--tx); }
 
+.btnActive {
+  background: rgba(124,106,240,0.15);
+  border-color: rgba(124,106,240,0.4);
+  color: var(--acc2, #a899ff);
+}
+
 .btnDisabled {
   opacity: 0.5;
   cursor: not-allowed;
-  transform: none !important;
 }
 
-.btnActive {
-  background: rgba(124,106,240,.15) !important;
-  border-color: rgba(124,106,240,.4) !important;
-  color: var(--acc2, #a899ff) !important;
+/* ── Responsive ── */
+@media (max-width: 800px) {
+  .heroPanel { padding: 14px 16px; }
+  .metricsGrid { gap: 8px; }
 }
 
-/* Responsive */
-@media (max-width: 640px) {
-  .propertyTitle h1 { font-size: 16px; }
-  .propertyHeader { padding: 12px 16px 8px; }
-  .metricsGrid { padding: 10px 16px; }
-  .actionBar { padding: 8px 16px; }
-  .verdictCell { min-width: 100%; }
+@media (max-width: 480px) {
+  .propertyTitle h1 { font-size: 17px; }
+  .actionBar { gap: 5px; }
+  .btnPrimary, .btnSecondary { font-size: 11px; padding: 6px 12px; }
 }
