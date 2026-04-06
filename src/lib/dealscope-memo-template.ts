@@ -351,6 +351,15 @@ p { font-size: 9.5px; line-height: 1.6; color: #333; margin-bottom: 8px; }
 @media print {
   .page { page-break-after: always; }
   .cover-page { page-break-after: always; }
+  body { font-size: 9px; }
+}
+
+@media screen and (max-width: 768px) {
+  .page { width: 100%; min-height: auto; padding: 16px; }
+  .cover-page { padding: 24px 16px; }
+  .col-2, .financial-grid, .verdict-summary { grid-template-columns: 1fr; }
+  .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+  body { font-size: 11px; }
 }
 `;
 
