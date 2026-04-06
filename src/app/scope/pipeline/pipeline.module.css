@@ -147,3 +147,13 @@
 @media (max-width: 768px) {
   .kanban { grid-template-columns: repeat(2, 1fr); }
 }
+
+.emptyCol {
+  font-size: 11px;
+  color: var(--tx3);
+  text-align: center;
+  padding: 20px 8px;
+  border: 1px dashed var(--bdr);
+  border-radius: 6px;
+  margin-top: 4px;
+}

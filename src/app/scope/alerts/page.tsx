@@ -38,14 +38,6 @@ type AlertItem = {
   property?: { id: string; address: string; assetType: string } | null;
 };
 
-const DEMO_ALERTS: AlertItem[] = [
-  { id: "1", type: "signal_match", title: "Meridian Business Park — entered administration", description: "Begbies Traynor appointed. 8,200 sqft industrial, Rochester ME2.", read: false, dismissed: false, createdAt: new Date(Date.now() - 2 * 3600000).toISOString(), mandate: { id: "m1", name: "SE Industrial" } },
-  { id: "2", type: "price_change", title: "Redfield Manor — guide price reduced 15%", description: "£850,000 → £722,500. On your watchlist since 14 Mar.", read: false, dismissed: false, createdAt: new Date(Date.now() - 4 * 3600000).toISOString(), metadata: { oldPrice: 850000, newPrice: 722500 } },
-  { id: "3", type: "status_change", title: "Vale Trading — MEES enforcement notice served", description: "Medway Council enforcement notice for EPC F. Owner has 6 months to comply.", read: false, dismissed: false, createdAt: new Date(Date.now() - 6 * 3600000).toISOString() },
-  { id: "4", type: "deadline", title: "Ashworth Close — auction closes in 5 days", description: "EIG Auctions, Lot 23. Reserve £480,000. Legal pack available.", read: false, dismissed: false, createdAt: new Date(Date.now() - 6 * 3600000).toISOString() },
-  { id: "5", type: "portfolio", title: "Portfolio gap: Manchester retail", description: "£320k retail unit in M4. Would address over-concentration in SE industrial (78%).", read: false, dismissed: false, createdAt: new Date(Date.now() - 86400000).toISOString() },
-  { id: "6", type: "followup", title: "Fenton Business Hub — follow-up overdue", description: "Approach letter sent 7 days ago via email. No response logged.", read: true, dismissed: false, createdAt: new Date(Date.now() - 86400000).toISOString() },
-];
 
 function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
@@ -66,14 +58,13 @@ export default function AlertsPage() {
       if (filter !== "All") params.set("filter", filter);
       const res = await fetch(`/api/dealscope/alerts?${params}`);
       const data = await res.json();
-      if (Array.isArray(data) && data.length > 0) {
+      if (Array.isArray(data)) {
         setAlerts(data);
       } else {
-        // Demo fallback
-        setAlerts(filter === "All" ? DEMO_ALERTS : DEMO_ALERTS.filter((a) => a.type === filter));
+        setAlerts([]);
       }
     } catch {
-      setAlerts(DEMO_ALERTS);
+      setAlerts([]);
     } finally {
       setLoading(false);
     }
