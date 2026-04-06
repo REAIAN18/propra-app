@@ -321,7 +321,17 @@ function DueDiligenceTab({ deal }: { deal: RawDeal }) {
         <DocumentList items={(() => {
           const uploadedDocs = (ds.documents as DocumentItem[] | undefined) ?? [];
           const generated: DocumentItem[] = [
-            { type: "pdf", name: "IC Memo", description: "Investment Committee memorandum", action: "generate", onAction: () => window.open(`/api/dealscope/properties/${deal.id}/export/pdf`, "_blank") },
+            { type: "pdf", name: "IC Memo (HTML)", description: "Investment Committee memorandum", action: "generate", onAction: async () => {
+              try {
+                const res = await fetch(`/api/dealscope/properties/${deal.id}/export/pdf`);
+                if (!res.ok) throw new Error(await res.text());
+                const blob = await res.blob();
+                const blobUrl = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = blobUrl; a.download = `ic-memo-${deal.id}.html`; a.click();
+                URL.revokeObjectURL(blobUrl);
+              } catch (e) { console.error('[export memo]', e); }
+            } },
             { type: "xlsx", name: "Financial model", description: "IRR, cash flows, scenarios", action: "generate", onAction: () => { const a = document.createElement("a"); a.href = `/api/dealscope/properties/${deal.id}/export/excel`; a.download = ""; a.click(); } },
           ];
           return [...uploadedDocs, ...generated];
@@ -475,11 +485,19 @@ export default function PropertyDossierPage() {
     showToast("Added to watchlist");
   }
 
-  const handleExportPdf = () => {
+  const handleExportPdf = async () => {
     if (!id) return;
     setExporting("pdf");
-    window.open(`/api/dealscope/properties/${id}/export/pdf`, "_blank");
-    setTimeout(() => setExporting(null), 3000);
+    try {
+      const res = await fetch(`/api/dealscope/properties/${id}/export/pdf`);
+      if (!res.ok) throw new Error(await res.text());
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl; a.download = `ic-memo-${id}.html`; a.click();
+      URL.revokeObjectURL(blobUrl);
+    } catch (e) { console.error('[export pdf]', e); }
+    finally { setExporting(null); }
   };
 
   const handleExportExcel = () => {
