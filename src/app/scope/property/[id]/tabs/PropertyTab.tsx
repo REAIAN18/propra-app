@@ -2,11 +2,13 @@
 
 /**
  * DS-T21: Property Tab Assembly
- * Assembles HeroPanel (T06), Gallery (T08), BuildingSpec (T09), EPC (T10), AISummary (T20).
+ * Assembles HeroPanel (T06), Gallery (T08), BuildingSpec (T09), EPC (T10), AISummary (T20), SalesHistory.
  */
 
 import { AISummary, Gallery } from "@/lib/dealscope/components";
 import type { GalleryItem } from "@/lib/dealscope/components";
+import { SalesHistoryTable } from "@/components/dealscope/SalesHistoryTable";
+import type { SaleRecord } from "@/components/dealscope/SalesHistoryTable";
 import type { RawDeal } from "./types";
 import s from "../dossier.module.css";
 
@@ -50,6 +52,17 @@ export function PropertyTab({ deal }: Props) {
         .substring(0, 1200) || undefined
     : undefined;
   const size = deal.buildingSizeSqft ?? deal.sqft;
+
+  const rawSalesHistory = (ds.salesHistory as Record<string, unknown>[] | undefined) ?? [];
+  const salesHistory: SaleRecord[] = (Array.isArray(rawSalesHistory) ? rawSalesHistory : []).map(
+    (r: Record<string, unknown>) => ({
+      date: (r.date ?? r.transferDate ?? r.dateSold ?? "") as string,
+      price: (r.price ?? r.pricePaid ?? 0) as number,
+      type: (r.type ?? r.propertyType) as string | undefined,
+      tenure: r.tenure as string | undefined,
+      newBuild: (r.newBuild ?? r.isNew) as boolean | undefined,
+    })
+  );
 
   return (
     <>
@@ -127,6 +140,12 @@ export function PropertyTab({ deal }: Props) {
           <Gallery items={galleryItems} />
         </div>
       )}
+
+      {/* Sales history — wired to ds.salesHistory */}
+      <div className={s.card}>
+        <div className={s.cardTitle}>Sales history</div>
+        <SalesHistoryTable sales={salesHistory} title="" />
+      </div>
 
       {/* Agent contact */}
       {listing?.agentContact != null && (listing.agentContact as Record<string, unknown>).name != null && (
