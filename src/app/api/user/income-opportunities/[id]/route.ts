@@ -46,6 +46,7 @@ export async function GET(
     requested: "quoting",
     in_progress: "installing",
     live: "live",
+    renewing: "renewing",
     declined: "identified",
   };
 
