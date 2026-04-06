@@ -20,26 +20,47 @@ interface PortfolioItem {
   acquired: string;
 }
 
+interface Mandate {
+  id: string;
+  name: string;
+  clientName?: string | null;
+  criteria?: Record<string, unknown>;
+  alertDigest?: string;
+  matches?: number;
+}
+
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>("criteria");
   const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
+  const [mandates, setMandates] = useState<Mandate[]>([]);
+  const [mandatesLoading, setMandatesLoading] = useState(false);
 
   useEffect(() => {
     fetch("/api/dealscope/pipeline")
       .then(r => r.json())
       .then(data => {
-        const entries = (data.entries ?? []).map((e: any) => ({
-          id: e.id,
-          name: e.propertyId ?? "Property",
+        const entries = (data.entries ?? []).map((e: Record<string, unknown>) => ({
+          id: e.id as string,
+          name: (e.propertyId as string) ?? "Property",
           type: "Commercial",
           location: "—",
           value: "—",
-          acquired: e.addedAt ? new Date(e.addedAt).toLocaleDateString("en-GB", { month: "short", year: "numeric" }) : "—",
+          acquired: e.addedAt ? new Date(e.addedAt as string).toLocaleDateString("en-GB", { month: "short", year: "numeric" }) : "—",
         }));
         setPortfolioItems(entries);
       })
       .catch(() => setPortfolioItems([]));
   }, []);
+
+  useEffect(() => {
+    if (activeTab !== "mandates") return;
+    setMandatesLoading(true);
+    fetch("/api/dealscope/mandates")
+      .then(r => r.json())
+      .then((data: Mandate[]) => setMandates(Array.isArray(data) ? data : []))
+      .catch(() => setMandates([]))
+      .finally(() => setMandatesLoading(false));
+  }, [activeTab]);
   const [selectedAssetClasses, setSelectedAssetClasses] = useState<string[]>(["Industrial", "Warehouse"]);
   const [selectedLocations, setSelectedLocations] = useState<string[]>(["South East", "London"]);
   const [selectedSignals, setSelectedSignals] = useState<string[]>(["Administration", "Auction", "MEES risk", "Absent owner"]);
@@ -333,22 +354,32 @@ export default function SettingsPage() {
               <div className={styles.card}>
                 <h3 className={styles.cardTitle}>Saved searches (mandates)</h3>
                 <p className={styles.cardDesc}>Create mandates to get alerts on properties matching your criteria.</p>
-                <div className={styles.mandateList}>
-                  <div className={styles.mandateItem}>
-                    <div>
-                      <div className={styles.mandateName}>SE Industrial &lt;£800k</div>
-                      <div className={styles.mandateDesc}>Industrial properties in South East, under £800,000. Alerts: daily digest</div>
-                    </div>
-                    <button className={styles.secondaryButton}>Edit</button>
+                {mandatesLoading ? (
+                  <div style={{ padding: "16px 0", color: "var(--tx3)", fontSize: 13 }}>Loading mandates…</div>
+                ) : mandates.length === 0 ? (
+                  <div style={{ padding: "16px 0", color: "var(--tx3)", fontSize: 13 }}>No mandates saved yet. Create one to start receiving targeted alerts.</div>
+                ) : (
+                  <div className={styles.mandateList}>
+                    {mandates.map(m => {
+                      const criteria = m.criteria ?? {};
+                      const classes = (criteria.assetClasses as string[] | undefined)?.join(", ") ?? "";
+                      const locs = (criteria.locations as string[] | undefined)?.join(", ") ?? "";
+                      const desc = [classes, locs, m.alertDigest ? `Alerts: ${m.alertDigest}` : ""].filter(Boolean).join(" · ");
+                      return (
+                        <div key={m.id} className={styles.mandateItem}>
+                          <div>
+                            <div className={styles.mandateName}>{m.name}</div>
+                            {desc && <div className={styles.mandateDesc}>{desc}</div>}
+                            {m.matches != null && m.matches > 0 && (
+                              <div className={styles.mandateDesc}>{m.matches} current match{m.matches !== 1 ? "es" : ""}</div>
+                            )}
+                          </div>
+                          <button className={styles.secondaryButton}>Edit</button>
+                        </div>
+                      );
+                    })}
                   </div>
-                  <div className={styles.mandateItem}>
-                    <div>
-                      <div className={styles.mandateName}>London Office (admin)</div>
-                      <div className={styles.mandateDesc}>Office properties in Greater London with administration signals. Alerts: immediate</div>
-                    </div>
-                    <button className={styles.secondaryButton}>Edit</button>
-                  </div>
-                </div>
+                )}
                 <button className={styles.primaryButton}>+ Create mandate</button>
               </div>
             </div>
