@@ -116,7 +116,7 @@ async function fetchFloodRisk(lat: number, lng: number): Promise<any> {
   }
 }
 
-// ── Build assumptions when data is missing — NEVER returns null/blank ──
+// ── Build assumptions when data is missing ──
 async function buildAssumptions(
   aiData: AIExtractedData | null,
   epcData: any,
@@ -128,7 +128,7 @@ async function buildAssumptions(
   address?: string | null,
 ): Promise<{
   sqft: number; sqftSource: string;
-  erv: number; ervSource: string;
+  erv: number; ervSource: string; ervAvailable: boolean;
   yearBuilt: number; yearBuiltSource: string;
   capRate: number; capRateSource: string;
   noi: number; noiSource: string;
@@ -152,15 +152,22 @@ async function buildAssumptions(
     sqftSource = `estimated (${est.method})`;
   }
 
-  // ── ERV — prefer listing passing rent, then AI market analysis, then static benchmark ──
+  // ── ERV — listing passing rent (priority 1) or AI market analysis (priority 2) ──
+  // No static benchmark fallback: hardcoded tables are wrong for niche assets
+  // (cinema in Devon, cold store in Florida) and create false confidence.
+  // If AI estimation fails, ERV is marked unavailable so the UI can prompt the
+  // user to enter it manually rather than silently computing with wrong data.
   let erv = 0;
-  let ervSource = "data";
+  let ervSource = "unavailable — enter market rent manually";
+  let ervAvailable = false;
+
   if (aiData?.passingRent) {
     erv = aiData.passingRent;
     ervSource = "listing passing rent";
+    ervAvailable = true;
   } else if (address && sqft > 0) {
-    // Use AI-based market ERV estimation for location-aware accuracy.
-    // This avoids static benchmark tables that are wrong for secondary/regional markets.
+    // AI-based market ERV estimation — works for any location and asset type.
+    // Claude reasons about the specific submarket rather than using a lookup table.
     try {
       const aiERV = await estimateMarketERV(address, assetType, sqft, {
         yearBuilt: aiData?.yearBuilt,
@@ -171,20 +178,12 @@ async function buildAssumptions(
       if (aiERV && aiERV.ervPsf > 0) {
         erv = aiERV.ervAnnual;
         ervSource = `AI market analysis — £${aiERV.ervPsf.toFixed(2)}/sqft (${aiERV.confidence} confidence): ${aiERV.reasoning}`;
+        ervAvailable = true;
       }
     } catch (e) {
-      console.warn("[enrich] AI ERV estimation failed, falling back to benchmark:", e);
+      console.warn("[enrich] AI ERV estimation failed:", e);
+      // ervAvailable stays false — downstream will surface "ERV required" to user
     }
-    // Fallback to static benchmark if AI call failed
-    if (!erv) {
-      const est = estimateRent(sqft, assetType, region);
-      erv = est.value;
-      ervSource = `benchmark estimate (${est.method})`;
-    }
-  } else {
-    const est = estimateRent(sqft, assetType, region);
-    erv = est.value;
-    ervSource = `benchmark estimate (${est.method})`;
   }
 
   // ── Year built — never blank ──
@@ -226,16 +225,16 @@ async function buildAssumptions(
   const capRate = mktCapRate;
   const capRateSource = `market benchmark for ${region} ${assetType} (${(mktCapRate * 100).toFixed(1)}%)`;
 
-  // ── NOI — never blank ──
-  const noi = erv * 0.85;
-  const noiSource = "estimated (ERV × 85% after opex)";
+  // ── NOI — null if ERV unavailable (prevents false returns calculations) ──
+  const noi = ervAvailable ? erv * 0.85 : 0;
+  const noiSource = ervAvailable ? "estimated (ERV × 85% after opex)" : "unavailable — ERV required";
 
-  // ── Passing rent — never blank ──
+  // ── Passing rent ──
   const passingRent = occupancyPct === 0 ? 0 : (aiData?.passingRent || erv);
   const passingRentSource = occupancyPct === 0 ? "vacant (£0 current income)" : (aiData?.passingRent ? "listing" : "estimated (= ERV)");
 
   return {
-    sqft, sqftSource, erv, ervSource, yearBuilt: yearBuilt!, yearBuiltSource,
+    sqft, sqftSource, erv, ervSource, ervAvailable, yearBuilt: yearBuilt!, yearBuiltSource,
     capRate, capRateSource, noi, noiSource, passingRent, passingRentSource,
     epcRating, epcRatingSource, occupancyPct, occupancySource,
     voidMonths: voidEst.months, voidReasoning: voidEst.reasoning,
