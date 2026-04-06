@@ -10,13 +10,22 @@
 
 /* ── Property header ── */
 .propertyHeader {
-  padding: 16px 20px 8px;
+  padding: 16px 20px;
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 14px;
   background: linear-gradient(180deg, var(--s1), var(--bg));
   border-bottom: 1px solid var(--s2);
+}
+
+/* Info column (title + back btn) sits next to the gallery */
+.propertyInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .propertyTitle {
@@ -159,8 +168,15 @@
 /* Responsive */
 @media (max-width: 640px) {
   .propertyTitle h1 { font-size: 16px; }
-  .propertyHeader { padding: 12px 16px 8px; }
+  .propertyHeader {
+    padding: 12px 16px;
+    flex-direction: column;
+  }
   .metricsGrid { padding: 10px 16px; }
   .actionBar { padding: 8px 16px; }
   .verdictCell { min-width: 100%; }
+}
+
+@media (max-width: 375px) {
+  .propertyHeader { padding: 10px 12px; }
 }
