@@ -5,12 +5,13 @@
  * Assembles valuations (T16), returns (T17), comparables (T18), service charges (T19).
  */
 
-import { MultipleValuations, ComparablesTable, ServiceCharges, MetricCard } from "@/lib/dealscope/components";
+import { MultipleValuations, ComparablesTable, MetricCard } from "@/lib/dealscope/components";
+import { ServiceChargesBreakdown } from "@/components/dealscope/ServiceChargesBreakdown";
+import type { ServiceChargeLineItem } from "@/components/dealscope/ServiceChargesBreakdown";
 import { LettingScenariosTable } from "@/components/dealscope/LettingScenariosTable";
 import type { LettingScenario } from "@/components/dealscope/LettingScenariosTable";
 import type { ValuationScenario } from "@/components/dealscope/MultipleValuations";
 import type { Comparable } from "@/components/dealscope/ComparablesTable";
-import type { ServiceChargeItem } from "@/components/dealscope/ServiceCharges";
 import { calculateIRR } from "@/lib/dealscope/calculations/irr";
 import { calculateEquityMultiple } from "@/lib/dealscope/calculations/equity";
 import { calculateVerdict } from "@/lib/dealscope/calculations/verdict";
@@ -140,7 +141,7 @@ export function FinancialsTab({ deal, prop }: Props) {
 
   // Service charges
   const scRaw = ds.serviceCharge;
-  const serviceItems: ServiceChargeItem[] = [];
+  const serviceItems: ServiceChargeLineItem[] = [];
   if (scRaw && typeof scRaw === "object" && !Array.isArray(scRaw)) {
     for (const [k, v] of Object.entries(scRaw as Record<string, unknown>)) {
       if (typeof v === "number") serviceItems.push({ label: k, annualCost: v });
@@ -221,7 +222,7 @@ export function FinancialsTab({ deal, prop }: Props) {
       {serviceItems.length > 0 && (
         <div className={`${s.card} ${s.a3}`}>
           <div className={s.cardTitle}>Service charges breakdown</div>
-          <ServiceCharges items={serviceItems} />
+          <ServiceChargesBreakdown items={serviceItems} />
         </div>
       )}
 
