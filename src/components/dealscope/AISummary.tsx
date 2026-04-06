@@ -9,31 +9,27 @@ export function AISummary({ summary, play }: AISummaryProps) {
   return (
     <div
       style={{
-        background: "linear-gradient(135deg, rgba(124,106,240,.08), rgba(124,106,240,.03))",
-        border: "1px solid rgba(124,106,240,.2)",
+        background: "linear-gradient(135deg, rgba(124,106,240,.06), rgba(45,212,168,.04))",
+        border: "1px solid rgba(124,106,240,.12)",
         borderRadius: 10,
-        padding: "14px 16px",
+        padding: 16,
         marginBottom: 14,
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
         <span
           style={{
-            background: "rgba(124,106,240,.15)",
-            color: "#a899ff",
             fontSize: 9,
-            fontWeight: 700,
-            letterSpacing: "1px",
-            padding: "2px 7px",
-            borderRadius: 4,
+            fontWeight: 600,
+            color: "#a899ff",
             textTransform: "uppercase",
-            fontFamily: "var(--mono, monospace)",
+            letterSpacing: "1px",
           }}
         >
-          AI SUMMARY
+          AI ANALYSIS
         </span>
         {play && (
-          <span style={{ fontSize: 12, color: "#a0a0ab", fontStyle: "italic" }}>
+          <span style={{ fontSize: 12, color: "#8e8ea0", fontStyle: "italic" }}>
             {play}
           </span>
         )}
@@ -41,8 +37,8 @@ export function AISummary({ summary, play }: AISummaryProps) {
       <p
         style={{
           fontSize: 13,
-          color: "#e4e4ec",
-          lineHeight: 1.65,
+          color: "#e8e8f0",
+          lineHeight: 1.7,
           margin: 0,
         }}
       >
