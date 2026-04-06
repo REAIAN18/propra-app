@@ -30,25 +30,58 @@ export interface DealSourceData {
   currency?: string;
   askingPrice?: number;
   guidePrice?: number;
+  // PSF rates from ScoutDeal model for deriving annual rents when assumptions not stored
+  currentRentPsf?: number;
+  marketRentPsf?: number;
+}
+
+// Unwrap assumption objects stored as { value: number, source: string }
+function unwrapAssumption(v: unknown): number | undefined {
+  if (v == null) return undefined;
+  if (typeof v === "number") return v > 0 ? v : undefined;
+  if (typeof v === "object" && v !== null && "value" in v) {
+    const val = (v as { value: unknown }).value;
+    return typeof val === "number" && val > 0 ? val : undefined;
+  }
+  return undefined;
 }
 
 function toProperty(deal: DealSourceData): Property {
   const ds = (deal.dataSources ?? {}) as Record<string, unknown>;
   const assumptions = ds.assumptions as Record<string, unknown> | undefined;
+  const ai = ds.ai as Record<string, unknown> | undefined;
+  const size = deal.buildingSizeSqft ?? deal.sqft;
+
+  // Passing rent: dataSources direct → assumptions (unwrapped) → currentRentPsf * size → AI
+  const passingRent =
+    unwrapAssumption(ds.passingRent) ??
+    unwrapAssumption(ds.currentRentPa) ??
+    unwrapAssumption(assumptions?.passingRent) ??
+    (deal.currentRentPsf != null && size ? deal.currentRentPsf * size : undefined) ??
+    unwrapAssumption(ai?.passingRent);
+
+  // ERV: dataSources direct → assumptions (unwrapped) → marketRentPsf * size → AI
+  const erv =
+    unwrapAssumption(ds.erv) ??
+    unwrapAssumption(ds.marketRentPa) ??
+    unwrapAssumption(assumptions?.erv) ??
+    (deal.marketRentPsf != null && size ? deal.marketRentPsf * size : undefined) ??
+    unwrapAssumption(ai?.erv);
+
   return {
     id: deal.id,
     address: deal.address,
     assetType: deal.assetType,
     askingPrice: deal.askingPrice ?? deal.guidePrice,
-    size: deal.buildingSizeSqft ?? deal.sqft,
+    size,
     builtYear: deal.yearBuilt,
     epcRating: deal.epcRating,
     occupancyPct: deal.occupancyPct,
-    passingRent: (ds.passingRent ?? ds.currentRentPa ?? assumptions?.passingRent) as number | undefined,
-    erv: (ds.erv ?? ds.marketRentPa ?? assumptions?.erv) as number | undefined,
-    businessRates: (ds.businessRates ?? assumptions?.businessRates) as number | undefined,
-    serviceCharge: (ds.serviceCharge ?? assumptions?.serviceCharge) as number | undefined,
-    expectedVoid: (assumptions?.expectedVoidMonths ?? ds.expectedVoidMonths) as number | undefined,
+    passingRent,
+    erv,
+    businessRates: unwrapAssumption(ds.businessRates) ?? unwrapAssumption(assumptions?.businessRates),
+    serviceCharge: unwrapAssumption(ds.serviceCharge) ?? unwrapAssumption(assumptions?.serviceCharge),
+    expectedVoid: unwrapAssumption(assumptions?.expectedVoidMonths) ?? unwrapAssumption(ds.expectedVoidMonths),
     description: deal.dataSources ? JSON.stringify(deal.dataSources).toLowerCase() : undefined,
   };
 }

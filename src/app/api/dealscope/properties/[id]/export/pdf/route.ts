@@ -46,6 +46,9 @@ export async function GET(
       currency: deal.currency ?? "GBP",
       askingPrice: deal.askingPrice ?? undefined,
       guidePrice: deal.guidePrice ?? undefined,
+      // PSF rates for deriving annual rent figures when full ERV not in dataSources
+      currentRentPsf: deal.currentRentPsf ?? undefined,
+      marketRentPsf: deal.marketRentPsf ?? undefined,
     }, { confidential: true });
 
     // Dynamic import avoids Next.js static analysis rejecting react-dom/server in route handlers
