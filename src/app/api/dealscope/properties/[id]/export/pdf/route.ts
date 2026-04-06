@@ -13,6 +13,29 @@ import { populateICMemo } from "@/lib/dealscope/exports/populate-ic-memo";
 export const runtime = "nodejs";
 export const maxDuration = 30;
 
+/** Derive the same signal-based deal score used by the GET /properties/[id] endpoint. */
+function deriveSignalScore(deal: {
+  hasInsolvency: boolean;
+  hasPlanningApplication: boolean;
+  sourceTag: string | null;
+  epcRating: string | null;
+}): number {
+  let score = 50;
+  if (deal.hasInsolvency) score += 20;
+  if (deal.hasPlanningApplication) score += 15;
+  if (deal.sourceTag === "Auction") score += 12;
+  if (deal.sourceTag === "Distressed") score += 15;
+  if (deal.epcRating === "F" || deal.epcRating === "G") score += 10;
+  return Math.min(100, score);
+}
+
+/** Map a numeric deal score to the ICMemoProps recommendation enum. */
+function scoreToRecommendation(score: number): "PROCEED" | "CONDITIONAL" | "PASS" {
+  if (score >= 70) return "PROCEED";
+  if (score >= 45) return "CONDITIONAL";
+  return "PASS";
+}
+
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -27,6 +50,8 @@ export async function GET(
 
     const ds = (deal.dataSources as Record<string, unknown>) || {};
     const ai = (ds.ai as Record<string, unknown>) || {};
+    // Pre-computed returns stored by the enrichment pipeline / user PATCH
+    const storedReturns = (ds.returns as Record<string, unknown> | undefined) ?? {};
 
     const memoProps = populateICMemo({
       id: deal.id,
@@ -47,6 +72,21 @@ export async function GET(
       askingPrice: deal.askingPrice ?? undefined,
       guidePrice: deal.guidePrice ?? undefined,
     }, { confidential: true });
+
+    // Override with pre-computed returns when available — avoids NaN from
+    // recalculating with incomplete enrichment data (e.g. vacant properties).
+    const dealScore = deriveSignalScore(deal);
+    if (typeof storedReturns.irr5yr === "number") {
+      memoProps.irr = storedReturns.irr5yr / 100;
+    }
+    if (typeof storedReturns.equityMultiple === "number") {
+      memoProps.equityMultiple = storedReturns.equityMultiple;
+    }
+    if (typeof storedReturns.noi === "number") {
+      memoProps.noi = storedReturns.noi;
+    }
+    memoProps.dealScore = dealScore;
+    memoProps.recommendation = scoreToRecommendation(dealScore);
 
     // Dynamic import avoids Next.js static analysis rejecting react-dom/server in route handlers
     const { renderToStaticMarkup } = await import("react-dom/server");
