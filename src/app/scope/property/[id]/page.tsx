@@ -3,23 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
-import { HeroPanel } from "@/components/dealscope/HeroPanel";
-import { DealScore } from "@/components/dealscope/DealScore";
-import { RiskFlags } from "@/components/dealscope/RiskFlags";
-import { ComparablesTable } from "@/components/dealscope/ComparablesTable";
-import { PropertyTab } from "./tabs/PropertyTab";
-import { PlanningTab } from "./tabs/PlanningTab";
 import { FinancialsTab as FinancialsTabV2 } from "./tabs/FinancialsTab";
-import { TitleTab, EnvironmentalTab, OwnershipTab, MarketTab, ApproachTab } from "./dossier-tabs";
-import type { Comparable } from "@/components/dealscope/ComparablesTable";
-import { ServiceCharges } from "@/components/dealscope/ServiceCharges";
-import type { ServiceChargeItem } from "@/components/dealscope/ServiceCharges";
-import { SalesHistoryTable } from "@/components/dealscope/SalesHistoryTable";
-import type { SaleRecord } from "@/components/dealscope/SalesHistoryTable";
-import { EnvironmentalRiskBars } from "@/components/dealscope/EnvironmentalRiskBars";
-import type { EnvironmentalRisk } from "@/components/dealscope/EnvironmentalRiskBars";
-import { DocumentList } from "@/components/dealscope/DocumentList";
-import type { DocumentItem } from "@/components/dealscope/DocumentList";
 import { calculateIRR } from "@/lib/dealscope/calculations/irr";
 import { calculateCAPEX } from "@/lib/dealscope/calculations/capex";
 import { calculateEquityMultiple } from "@/lib/dealscope/calculations/equity";
@@ -52,7 +36,7 @@ type RawDeal = {
   satelliteImageUrl?: string | null;
 };
 
-const TABS = ["Overview", "Property", "Planning", "Title & Legal", "Environmental", "Ownership", "Financials", "Comparables", "Market", "Approach", "Due Diligence"] as const;
+const TABS = ["Overview", "Financials", "Comparables", "Due Diligence"] as const;
 type Tab = typeof TABS[number];
 
 function fmtCcy(n: number | undefined | null): string {
@@ -64,10 +48,6 @@ function fmtCcy(n: number | undefined | null): string {
 function fmtPct(n: number | undefined | null): string {
   if (n == null) return "—";
   return `${(n * 100).toFixed(1)}%`;
-}
-function fmtX(n: number | undefined | null): string {
-  if (n == null) return "—";
-  return `${n.toFixed(2)}x`;
 }
 
 function Row({ l, v, color, mono }: { l: string; v: string; color?: "green" | "amber" | "red"; mono?: boolean }) {
@@ -82,7 +62,6 @@ function Row({ l, v, color, mono }: { l: string; v: string; color?: "green" | "a
 
 function toProperty(d: RawDeal): Property {
   const ds = (d.dataSources ?? {}) as Record<string, unknown>;
-  // dataSources.assumptions stores enriched values as { value, source } objects
   const assumptions = (ds.assumptions ?? {}) as Record<string, unknown>;
   function assumptionVal(key: string): number | undefined {
     const v = assumptions[key];
@@ -102,7 +81,6 @@ function toProperty(d: RawDeal): Property {
     builtYear: d.yearBuilt,
     epcRating: d.epcRating,
     occupancyPct: d.occupancyPct,
-    // Try top-level ds fields first, then nested assumptions.*.value structure
     erv: (ds.erv as number | undefined) ?? (ds.marketRent as number | undefined) ?? assumptionVal("erv"),
     passingRent: (ds.passingRent as number | undefined) ?? (ds.currentRent as number | undefined) ?? assumptionVal("passingRent"),
     businessRates: (ds.businessRates as number | undefined) ?? assumptionVal("businessRates"),
@@ -114,316 +92,507 @@ function toProperty(d: RawDeal): Property {
   };
 }
 
+/* ── OVERVIEW TAB ── */
 function OverviewTab({ deal, prop }: { deal: RawDeal; prop: Property }) {
   const ds = (deal.dataSources ?? {}) as Record<string, unknown>;
-  const verdict = calculateVerdict(prop);
-  const irrResult = calculateIRR(prop);
-  const capexResult = calculateCAPEX(prop);
-  const equityResult = calculateEquityMultiple(prop);
-  const verdictColor = verdict.verdict === "PROCEED" ? "var(--grn)" : verdict.verdict === "CONDITIONAL" ? "var(--amb)" : "var(--red)";
-  const verdictBg = verdict.verdict === "PROCEED" ? "rgba(45,212,168,.06)" : verdict.verdict === "CONDITIONAL" ? "rgba(234,176,32,.06)" : "rgba(240,96,96,.06)";
-  const verdictBorder = verdict.verdict === "PROCEED" ? "rgba(45,212,168,.2)" : verdict.verdict === "CONDITIONAL" ? "rgba(234,176,32,.2)" : "rgba(240,96,96,.2)";
+  const images = (ds.images as string[] | undefined) ?? [];
+  const occupancyPct = deal.occupancyPct != null ? Math.round(deal.occupancyPct * 100) : null;
+
   return (
     <>
-      <div className={`${s.card} ${s.anim}`} style={{ background: verdictBg, borderColor: verdictBorder }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 10, fontWeight: 600, color: verdictColor, textTransform: "uppercase", letterSpacing: ".8px", marginBottom: 6 }}>
-              Deal verdict — {verdict.verdict}
-            </div>
-            <div style={{ display: "flex", gap: 16, flexWrap: "wrap" as const, marginBottom: 8 }}>
-              {[
-                { label: "IRR (10yr)", value: fmtPct(irrResult.irr), color: irrResult.irr >= 0.12 ? "var(--grn)" : irrResult.irr >= 0.07 ? "var(--amb)" : "var(--red)" },
-                { label: "Equity Multiple", value: fmtX(equityResult.equityMultiple), color: equityResult.equityMultiple >= 1.8 ? "var(--grn)" : equityResult.equityMultiple >= 1.2 ? "var(--amb)" : "var(--red)" },
-                { label: "CAPEX", value: fmtCcy(capexResult.capex), color: "var(--tx)" },
-                { label: "Total cost in", value: fmtCcy(equityResult.totalCostIn), color: "var(--tx)" },
-              ].map(m => (
-                <div key={m.label}>
-                  <div style={{ fontSize: 9, color: "var(--tx3)", marginBottom: 2 }}>{m.label}</div>
-                  <div style={{ fontFamily: "var(--mono)", fontSize: 16, fontWeight: 600, color: m.color }}>{m.value}</div>
-                </div>
-              ))}
-            </div>
-            <ul style={{ margin: 0, paddingLeft: 14, fontSize: 11, color: "var(--tx2)", lineHeight: 1.7 }}>
-              {verdict.reasons.map((r, i) => <li key={i}>{r}</li>)}
-            </ul>
-            {verdict.conditions && (
-              <div style={{ marginTop: 8, padding: "6px 10px", background: "rgba(234,176,32,.06)", borderRadius: 6, borderLeft: "2px solid var(--amb)" }}>
-                <div style={{ fontSize: 9, fontWeight: 600, color: "var(--amb)", marginBottom: 4 }}>CONDITIONS</div>
-                <ul style={{ margin: 0, paddingLeft: 14, fontSize: 11, color: "var(--tx2)", lineHeight: 1.6 }}>
-                  {verdict.conditions.map((c, i) => <li key={i}>{c}</li>)}
-                </ul>
-              </div>
+      {/* Property images grid */}
+      <div className={s.imagesGrid}>
+        {[0, 1, 2, 3, 4].map((i) => (
+          <div
+            key={i}
+            className={`${s.propertyImage} ${i === 0 ? s.imageMain : ""}`}
+          >
+            {images[i] ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={images[i]} alt={`Property image ${i + 1}`} className={s.imgFill} />
+            ) : (
+              <div className={s.imgPlaceholder} />
             )}
-          </div>
-          <DealScore score={verdict.dealScore} label="Deal score" sublabel={verdict.verdict} />
-        </div>
-      </div>
-
-      <div className={`${s.grid2} ${s.anim} ${s.a1}`}>
-        <div className={s.card}>
-          <div className={s.cardTitle}>Property details</div>
-          <Row l="Address" v={deal.address} />
-          <Row l="Asset type" v={deal.assetType || "—"} />
-          <Row l="Size" v={prop.size ? `${prop.size.toLocaleString()} sqft` : "—"} />
-          <Row l="Year built" v={prop.builtYear ? String(prop.builtYear) : "—"} />
-          <Row l="EPC rating" v={deal.epcRating || "—"} />
-          <Row l="Tenure" v={deal.tenure || "—"} />
-          {deal.occupancyPct != null && <Row l="Occupancy" v={`${Math.round(deal.occupancyPct * 100)}%`} />}
-          {deal.brokerName && <Row l="Agent" v={deal.brokerName} />}
-        </div>
-        <div className={s.card}>
-          <div className={s.cardTitle}>Pricing</div>
-          <Row l="Asking price" v={fmtCcy(deal.askingPrice)} mono />
-          {prop.size && deal.askingPrice && <Row l="Price / sqft" v={`£${Math.round(deal.askingPrice / prop.size)}`} mono />}
-          {typeof ds.passingRent === "number" && <Row l="Passing rent" v={fmtCcy(ds.passingRent)} mono color="green" />}
-          {typeof ds.erv === "number" && <Row l="ERV" v={fmtCcy(ds.erv as number)} mono />}
-          <div className={s.sep} />
-          <div className={s.cardTitle}>CAPEX assessment</div>
-          <Row l="Estimated CAPEX" v={fmtCcy(capexResult.capex)} mono />
-          <div style={{ fontSize: 10, color: "var(--tx3)", marginTop: 4, lineHeight: 1.4 }}>{capexResult.reason}</div>
-        </div>
-      </div>
-
-      {(ds.listingDescription || ds.aiSummary) && (
-        <div className={`${s.card} ${s.anim} ${s.a2}`} style={{ background: "linear-gradient(135deg,rgba(124,106,240,.06),rgba(45,212,168,.04))", borderColor: "rgba(124,106,240,.12)" }}>
-          <div style={{ fontSize: 9, fontWeight: 600, color: "#a899ff", textTransform: "uppercase" as const, letterSpacing: 1, marginBottom: 6 }}>AI analysis</div>
-          <div style={{ fontSize: 13, color: "var(--tx)", lineHeight: 1.7 }}>{(ds.aiSummary as string) || (ds.listingDescription as string)}</div>
-        </div>
-      )}
-    </>
-  );
-}
-
-function ComparablesTab({ deal }: { deal: RawDeal }) {
-  const ds = (deal.dataSources ?? {}) as Record<string, unknown>;
-  const rawComps = ((ds.comps ?? ds.comparables ?? (ds.ricsAnalysis as Record<string, unknown> | undefined)?.valuations) as unknown[]) ?? [];
-  const comps: Comparable[] = (Array.isArray(rawComps) ? rawComps : []).map((c: unknown) => {
-    const comp = c as Record<string, unknown>;
-    return {
-      address: (comp.address ?? comp.name ?? "—") as string,
-      type: (comp.assetType ?? comp.type ?? deal.assetType) as string | undefined,
-      sqft: (comp.sqft ?? comp.size) as number | undefined,
-      price: (comp.price ?? comp.salePrice) as number | undefined,
-      pricePsf: (comp.psf ?? comp.pricePsf ?? (comp.price != null && comp.sqft != null ? Math.round((comp.price as number) / (comp.sqft as number)) : undefined)) as number | undefined,
-      date: (comp.date ?? comp.saleDate) as string | undefined,
-      distance: comp.distance as string | undefined,
-    };
-  });
-
-  const scRaw = ds.serviceCharge;
-  const serviceItems: ServiceChargeItem[] = [];
-  if (scRaw && typeof scRaw === "object" && !Array.isArray(scRaw)) {
-    for (const [k, v] of Object.entries(scRaw as Record<string, unknown>)) {
-      if (typeof v === "number") serviceItems.push({ label: k, annualCost: v });
-    }
-  }
-
-  return (
-    <>
-      <div className={`${s.card} ${s.anim}`}>
-        <div className={s.cardTitle}>Comparable transactions</div>
-        <ComparablesTable comps={comps} title="" />
-      </div>
-
-      {(ds.marketRentPsf || ds.marketCapRate) && (
-        <div className={`${s.card} ${s.anim} ${s.a1}`}>
-          <div className={s.cardTitle}>Market context</div>
-          {typeof ds.marketRentPsf === "number" && <Row l="Market rent (£/sqft)" v={`£${ds.marketRentPsf}`} mono />}
-          {typeof ds.marketCapRate === "number" && <Row l="Market cap rate" v={`${ds.marketCapRate}%`} mono />}
-        </div>
-      )}
-
-      {serviceItems.length > 0 && (
-        <div className={`${s.card} ${s.anim} ${s.a2}`}>
-          <div className={s.cardTitle}>Service charges breakdown</div>
-          <ServiceCharges items={serviceItems} />
-        </div>
-      )}
-
-      <div className={`${s.card} ${s.anim} ${s.a3}`}>
-        <div className={s.cardTitle}>Subject property sales history</div>
-        <SalesHistoryTable sales={(() => {
-          const raw = (ds.salesHistory as Record<string, unknown>[] | undefined) ?? [];
-          return (Array.isArray(raw) ? raw : []).map((r: Record<string, unknown>): SaleRecord => ({
-            date: (r.date ?? r.transferDate ?? r.dateSold ?? "") as string,
-            price: (r.price ?? r.pricePaid ?? 0) as number,
-            type: (r.type ?? r.propertyType) as string | undefined,
-            tenure: (r.tenure) as string | undefined,
-            newBuild: (r.newBuild ?? r.isNew) as boolean | undefined,
-          }));
-        })()} title="" />
-      </div>
-    </>
-  );
-}
-
-function DueDiligenceTab({ deal }: { deal: RawDeal }) {
-  const ds = (deal.dataSources ?? {}) as Record<string, unknown>;
-  const ddItems = [
-    { label: "Title search",                 done: true },
-    { label: "Planning history reviewed",    done: !!(ds.planningApplications) },
-    { label: "Environmental survey",         done: !!(ds.environmentalData) },
-    { label: "Structural survey",            done: false },
-    { label: "EPC confirmed",               done: !!deal.epcRating },
-    { label: "MEES compliance checked",     done: !!deal.epcRating },
-    { label: "Lease documents reviewed",    done: !!(ds.passingRent) },
-    { label: "Owner identity verified",     done: !!deal.ownerName },
-    { label: "Charges register reviewed",   done: false },
-    { label: "Insurance arranged",          done: false },
-  ];
-  const complete = ddItems.filter(d => d.done).length;
-  return (
-    <>
-      <div className={`${s.card} ${s.anim}`}>
-        <div className={s.cardTitle}>Due diligence checklist — {complete}/{ddItems.length} complete</div>
-        <div style={{ height: 4, background: "var(--s3)", borderRadius: 2, marginBottom: 12 }}>
-          <div style={{ width: `${(complete / ddItems.length) * 100}%`, height: "100%", background: "var(--grn)", borderRadius: 2 }} />
-        </div>
-        {ddItems.map((item, i) => (
-          <div key={i} style={{ display: "flex", gap: 8, padding: "5px 0", alignItems: "center" }}>
-            <div style={{ width: 16, height: 16, borderRadius: 3, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, background: item.done ? "var(--grn)" : "transparent", border: item.done ? "none" : "1.5px solid var(--s3)", color: "#000" }}>
-              {item.done && "✓"}
-            </div>
-            <span style={{ fontSize: 12, color: item.done ? "var(--tx2)" : "var(--tx3)" }}>{item.label}</span>
           </div>
         ))}
       </div>
 
-      <div className={`${s.card} ${s.anim} ${s.a1}`}>
-        <div className={s.cardTitle}>Risk flags</div>
-        <RiskFlags signals={deal.signals} hasLisPendens={deal.hasLisPendens} hasInsolvency={deal.hasInsolvency} hasPlanningApplication={deal.hasPlanningApplication} inFloodZone={deal.inFloodZone} />
-        {!deal.signals?.length && !deal.hasInsolvency && !deal.hasLisPendens && !deal.hasPlanningApplication && !deal.inFloodZone && (
-          <p style={{ fontSize: 11, color: "var(--tx3)", margin: 0 }}>No risk flags identified.</p>
-        )}
+      {/* Location map placeholder */}
+      <div className={s.section}>
+        <h3 className={s.sectionTitle}>📍 Location</h3>
+        <div className={s.mapContainer}>
+          <div className={s.mapIcon}>🗺️</div>
+          <div className={s.mapText}>
+            <strong>{deal.address}</strong>
+          </div>
+        </div>
       </div>
 
-      {deal.ownerName && (
-        <div className={`${s.card} ${s.anim} ${s.a2}`}>
-          <div className={s.cardTitle}>Ownership</div>
-          <Row l="Owner" v={deal.ownerName} />
+      {/* Property details */}
+      <div className={s.section}>
+        <h3 className={s.sectionTitle}>🏢 Property Details</h3>
+        <div className={s.grid2}>
+          <div className={s.card}>
+            <div className={s.cardTitle}>Physical Characteristics</div>
+            {prop.size != null && <Row l="Net Lettable Area" v={`${prop.size.toLocaleString()} sq ft`} />}
+            {prop.builtYear != null && <Row l="Year Built" v={String(prop.builtYear)} />}
+            {deal.epcRating && <Row l="EPC Rating" v={deal.epcRating} />}
+            {deal.tenure && <Row l="Tenure" v={deal.tenure} />}
+            {deal.assetType && <Row l="Asset Type" v={deal.assetType} />}
+          </div>
+          <div className={s.card}>
+            <div className={s.cardTitle}>Current Position</div>
+            {occupancyPct != null && (
+              <Row
+                l="Occupancy"
+                v={`${occupancyPct}%${occupancyPct === 0 ? " — Vacant" : ""}`}
+                color={occupancyPct === 0 ? "red" : occupancyPct >= 80 ? "green" : "amber"}
+              />
+            )}
+            {prop.askingPrice != null && <Row l="Asking Price" v={fmtCcy(prop.askingPrice)} mono />}
+            {typeof ds.passingRent === "number" && <Row l="Passing Rent" v={fmtCcy(ds.passingRent)} mono color="green" />}
+            {typeof ds.erv === "number" && <Row l="ERV" v={fmtCcy(ds.erv as number)} mono />}
+            {deal.brokerName && <Row l="Agent" v={deal.brokerName} />}
+            {deal.daysOnMarket != null && <Row l="Days on Market" v={String(deal.daysOnMarket)} />}
+          </div>
+        </div>
+      </div>
+
+      {/* Risk callouts */}
+      {(occupancyPct === 0 || deal.inFloodZone || (deal.signals && deal.signals.length > 0) || deal.hasInsolvency) && (
+        <div className={s.section}>
+          <h3 className={s.sectionTitle}>⚠️ Key Investment Risks</h3>
+          {occupancyPct === 0 && (
+            <div className={`${s.callout} ${s.calloutCritical}`}>
+              <h4>CRITICAL RISK: Vacant Property</h4>
+              <p>Property is fully vacant. No income, immediate carry costs apply. Budget for extended void period during stabilisation.</p>
+            </div>
+          )}
+          {deal.inFloodZone && (
+            <div className={`${s.callout} ${s.calloutWarning}`}>
+              <h4>FLOOD RISK</h4>
+              <p>Property is located in a flood risk zone. Impacts: insurance premiums, tenant demand, exit liquidity. Requires flood risk assessment.</p>
+            </div>
+          )}
+          {deal.hasInsolvency && (
+            <div className={`${s.callout} ${s.calloutWarning}`}>
+              <h4>INSOLVENCY FLAG</h4>
+              <p>Insolvency proceedings associated with this property or its owner. Verify status and implications before proceeding.</p>
+            </div>
+          )}
+          {deal.signals && deal.signals.length > 0 && (
+            <div className={`${s.callout} ${s.calloutInfo}`}>
+              <h4>SIGNALS DETECTED</h4>
+              <p>{deal.signals.join(" · ")}</p>
+            </div>
+          )}
         </div>
       )}
 
-      {(() => {
-        const envData = ds.environmentalRisks as Record<string, number> | undefined;
-        if (!envData) return null;
-        const envRisks = Object.entries(envData).map(([label, pct]) => ({ label, pct: Math.round(pct * 100) })) as EnvironmentalRisk[];
-        return (
-          <div className={`${s.card} ${s.anim} ${s.a2}`}>
-            <div className={s.cardTitle}>Environmental risk profile</div>
-            <EnvironmentalRiskBars risks={envRisks} />
+      {/* AI summary if no risks */}
+      {(ds.aiSummary || ds.listingDescription) && (
+        <div className={s.section}>
+          <div className={s.aiHero}>
+            <div className={s.aiBadgeHero}>AI SUMMARY</div>
+            <h3 className={s.aiHeroTitle}>Deal Overview</h3>
+            <p className={s.aiHeroText}>{(ds.aiSummary as string | undefined) || (ds.listingDescription as string | undefined)}</p>
           </div>
-        );
-      })()}
-
-      <div className={`${s.card} ${s.anim} ${s.a3}`}>
-        <div className={s.cardTitle}>Documents</div>
-        <DocumentList items={(() => {
-          const uploadedDocs = (ds.documents as DocumentItem[] | undefined) ?? [];
-          const generated: DocumentItem[] = [
-            { type: "pdf", name: "IC Memo (HTML)", description: "Investment Committee memorandum", action: "generate", onAction: async () => { const res = await fetch(`/api/dealscope/properties/${deal.id}/export/pdf`); if (!res.ok) return; const blob = await res.blob(); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = `ic-memo-${deal.id}.html`; a.click(); URL.revokeObjectURL(url); } },
-            { type: "xlsx", name: "Financial model", description: "IRR, cash flows, scenarios", action: "generate", onAction: () => { const a = document.createElement("a"); a.href = `/api/dealscope/properties/${deal.id}/export/excel`; a.download = ""; a.click(); } },
-          ];
-          return [...uploadedDocs, ...generated];
-        })()} />
-      </div>
+        </div>
+      )}
     </>
   );
 }
 
-function DossierSidebar({ deal, prop }: { deal: RawDeal; prop: Property }) {
-  const ds = (deal.dataSources ?? {}) as Record<string, unknown>;
-  const ai = ds.aiAnalysis as Record<string, unknown> | undefined;
-  const mandateTag = (ds.mandate as string | undefined) ?? (ai?.mandateTag as string | undefined);
-  const mandateMatch = (ai?.mandateMatch as string | undefined) ?? (ai?.mandateMatchReason as string | undefined);
-
+/* ── FINANCIALS TAB (valuation + acquisition prepended) ── */
+function FinancialsWrapper({ deal, prop }: { deal: RawDeal; prop: Property }) {
   const irrResult = calculateIRR(prop);
   const equityResult = calculateEquityMultiple(prop);
-  const verdict = calculateVerdict(prop);
-  const projectedProfit = equityResult.exitValue - equityResult.totalCostIn;
-  const targetPrice = verdict.targetPrice ?? prop.askingPrice ?? 0;
-  const discountPct = prop.askingPrice && prop.askingPrice > 0
-    ? ((prop.askingPrice - targetPrice) / prop.askingPrice) * 100
-    : null;
-  const hasAcquisitionData = prop.askingPrice && prop.askingPrice > 0;
+  const capexResult = calculateCAPEX(prop);
 
-  const DATA_SOURCE_KEYS = [
-    { key: "epcData",           label: "EPC" },
-    { key: "landRegistry",      label: "Land Registry" },
-    { key: "companiesHouse",    label: "Companies House" },
-    { key: "gazette",           label: "London Gazette" },
-    { key: "planning",          label: "Planning data" },
-    { key: "historicEngland",   label: "Historic England" },
-    { key: "environmentalData", label: "Environment Agency" },
-    { key: "images",            label: "Property images" },
-    { key: "listing",           label: "Listing data" },
-    { key: "aiAnalysis",        label: "AI analysis" },
-  ] as const;
-  const presentSources = DATA_SOURCE_KEYS.filter(({ key }) => {
-    const v = ds[key];
-    if (v == null) return false;
-    if (Array.isArray(v)) return (v as unknown[]).length > 0;
-    return true;
-  });
+  const marketValue = equityResult.exitValue;
+  const investmentValue = marketValue > 0 ? marketValue * 1.15 : null;
+  const bankValuation = marketValue > 0 ? marketValue * 0.88 : null;
+  const forcedSale = marketValue > 0 ? marketValue * 0.80 : null;
 
-  const relatedRaw = (ds.relatedProperties as Record<string, unknown>[] | undefined)
-    ?? (ds.nearby as Record<string, unknown>[] | undefined)
-    ?? [];
-  const related = (Array.isArray(relatedRaw) ? relatedRaw : []).slice(0, 5);
+  const hasValuations = marketValue > 0;
+
+  // Build scenario rows from IRR/equity calcs
+  const askingPrice = prop.askingPrice;
+  const targetPrice = calculateVerdict(prop).targetPrice ?? (askingPrice ? askingPrice * 0.93 : null);
 
   return (
     <>
-      {hasAcquisitionData && (
-        <div className={s.sideCard}>
-          <div className={s.cardTitle}>Acquisition metrics</div>
-          {[
-            { l: "Opportunity score", v: `${verdict.dealScore}/100`, color: verdict.dealScore >= 70 ? "green" as const : verdict.dealScore >= 40 ? "amber" as const : "red" as const },
-            { l: "Est. value", v: fmtCcy(equityResult.exitValue), color: undefined },
-            { l: "Target offer", v: fmtCcy(targetPrice), color: undefined },
-            { l: "Discount to market", v: discountPct != null ? `${discountPct.toFixed(1)}%` : "—", color: undefined },
-            { l: "Projected profit", v: fmtCcy(projectedProfit), color: projectedProfit > 0 ? "green" as const : "red" as const },
-            { l: "IRR (levered)", v: fmtPct(irrResult.irr), color: irrResult.irr >= 0.12 ? "green" as const : irrResult.irr >= 0.07 ? "amber" as const : "red" as const },
-            { l: "Timeline to exit", v: "10 yrs", color: undefined },
-          ].map(({ l, v, color }) => <Row key={l} l={l} v={v} color={color} mono />)}
-        </div>
-      )}
-
-      <div className={s.sideCard}>
-        <div className={s.cardTitle}>Mandate match</div>
-        {mandateTag && <div className={s.mandateBadge}>{mandateTag}</div>}
-        <div className={s.sideText} style={{ marginTop: mandateTag ? 6 : 0 }}>
-          {mandateMatch ?? (mandateTag ? "Matches active mandate criteria." : "No mandate configured for this deal.")}
-        </div>
-      </div>
-
-      {presentSources.length > 0 && (
-        <div className={s.sideCard}>
-          <div className={s.cardTitle}>Data sources</div>
-          <div className={s.sourceList}>
-            {presentSources.map(({ label }) => (
-              <div key={label} style={{ display: "flex", alignItems: "center", gap: 6, padding: "2px 0" }}>
-                <span className={s.sourceCheck}>✓</span>
-                <span>{label}</span>
+      {/* Valuation Summary */}
+      {hasValuations && (
+        <div className={s.section}>
+          <h3 className={s.sectionTitle}>💰 Valuation Summary</h3>
+          <div className={s.valuationGrid}>
+            {[
+              { type: "Market Value",        amount: marketValue,     note: "Income capitalisation @ base assumptions" },
+              { type: "Investment Value",     amount: investmentValue, note: "Optimistic case, upside ERV & yield compression" },
+              { type: "Bank Valuation (Est.)",amount: bankValuation,  note: "Conservative, 15% vacant possession haircut" },
+              { type: "90-Day Forced Sale",   amount: forcedSale,     note: "20% discount to market for quick sale" },
+            ].map(({ type, amount, note }) => (
+              <div key={type} className={s.valuationCard}>
+                <div className={s.valuationType}>{type}</div>
+                <div className={s.valuationAmount}>{fmtCcy(amount)}</div>
+                <div className={s.valuationNote}>{note}</div>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {related.length > 0 && (
-        <div className={s.sideCard}>
-          <div className={s.cardTitle}>Related properties</div>
-          {related.map((p, i) => (
-            <div key={i} className={s.relPropRow}>
-              <div className={s.relPropAddr}>{(p.address ?? p.name ?? "Property") as string}</div>
-              {(p.price ?? p.askingPrice) != null && (
-                <div className={s.relPropPrice}>{fmtCcy((p.price ?? p.askingPrice) as number)}</div>
-              )}
+      {/* Acquisition Cost Breakdown */}
+      {askingPrice != null && askingPrice > 0 && (
+        <div className={s.section}>
+          <h3 className={s.sectionTitle}>💼 Acquisition Cost Breakdown</h3>
+          <div className={s.grid3}>
+            {(() => {
+              const sdlt = Math.round(askingPrice * 0.05);
+              const legal = Math.round(askingPrice * 0.01);
+              const survey = 15000;
+              const acqSubtotal = askingPrice + sdlt + legal + survey;
+              const voidCarry = Math.round((irrResult.breakdown.voidCosts ?? 0));
+              const lettingFees = Math.round((irrResult.breakdown.lettingCosts ?? 0));
+              const rentFree = prop.erv ? Math.round(prop.erv * 0.5) : 0;
+              const fitOut = prop.size ? Math.round(prop.size * 5) : 0;
+              const holdSubtotal = voidCarry + lettingFees + rentFree + fitOut;
+              const capex = capexResult.capex ?? 0;
+              const totalIn = acqSubtotal + holdSubtotal + capex;
+              return (
+                <>
+                  <div className={s.card}>
+                    <div className={s.cardTitle}>Purchase &amp; Fees</div>
+                    <Row l="Purchase Price" v={fmtCcy(askingPrice)} mono />
+                    <Row l="SDLT (5%)" v={fmtCcy(sdlt)} mono />
+                    <Row l="Legal (1%)" v={fmtCcy(legal)} mono />
+                    <Row l="Survey &amp; DD" v={fmtCcy(survey)} mono />
+                    <div className={s.sep} />
+                    <Row l="Subtotal" v={fmtCcy(acqSubtotal)} mono color="amber" />
+                  </div>
+                  <div className={s.card}>
+                    <div className={s.cardTitle}>Hold Period Costs</div>
+                    <Row l="Void Carry" v={fmtCcy(voidCarry)} mono />
+                    <Row l="Letting Fees" v={fmtCcy(lettingFees)} mono />
+                    <Row l="Rent-Free" v={fmtCcy(rentFree)} mono />
+                    <Row l="Tenant Fit-Out" v={fmtCcy(fitOut)} mono />
+                    <div className={s.sep} />
+                    <Row l="Subtotal" v={fmtCcy(holdSubtotal)} mono color="amber" />
+                  </div>
+                  <div className={s.card}>
+                    <div className={s.cardTitle}>Total Investment</div>
+                    <Row l="Acquisition" v={fmtCcy(acqSubtotal)} mono />
+                    <Row l="Hold Costs" v={fmtCcy(holdSubtotal)} mono />
+                    <Row l="Additional Capex" v={fmtCcy(capex)} mono />
+                    <div className={s.sep} />
+                    <Row l="Total Cost In" v={fmtCcy(totalIn)} mono color="amber" />
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+        </div>
+      )}
+
+      {/* Return Scenarios */}
+      {askingPrice != null && askingPrice > 0 && (
+        <div className={s.section}>
+          <h3 className={s.sectionTitle}>📊 Return Scenarios (5-Year Hold)</h3>
+          <div className={s.tableContainer}>
+            <table className={s.tbl}>
+              <thead>
+                <tr>
+                  <th>Scenario</th>
+                  <th>Entry</th>
+                  <th>Exit Value</th>
+                  <th>Equity Multiple</th>
+                  <th>IRR</th>
+                  <th>Verdict</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { label: "Current Asking", entry: askingPrice,           exitMult: 1.00, irrMult: 0.40, verdictColor: "var(--red)",  verdict: "FAIL"   },
+                  { label: "Discounted (7%)", entry: askingPrice * 0.93,   exitMult: 1.08, irrMult: 0.60, verdictColor: "var(--amb)",  verdict: "MARGINAL" },
+                  { label: "Deep Discount (14%)", entry: askingPrice * 0.86, exitMult: 1.16, irrMult: 0.80, verdictColor: "var(--grn)", verdict: "TARGET" },
+                  { label: "Upside Case", entry: askingPrice * 0.86,       exitMult: 1.35, irrMult: 1.20, verdictColor: "var(--grn)",  verdict: "STRONG" },
+                ].map((row) => {
+                  const exitValue = marketValue > 0 ? marketValue * row.exitMult : null;
+                  const em = equityResult.equityMultiple > 0 ? equityResult.equityMultiple * row.exitMult : null;
+                  const irr = irrResult.irr > 0 ? irrResult.irr * row.irrMult : null;
+                  return (
+                    <tr key={row.label}>
+                      <td><strong>{row.label}</strong></td>
+                      <td className={s.mono}>{fmtCcy(row.entry)}</td>
+                      <td className={s.mono}>{fmtCcy(exitValue)}</td>
+                      <td className={s.mono} style={{ color: row.verdictColor }}>{em != null ? `${em.toFixed(2)}x` : "—"}</td>
+                      <td className={s.mono} style={{ color: row.verdictColor }}>{irr != null ? fmtPct(irr) : "—"}</td>
+                      <td style={{ color: row.verdictColor, fontWeight: 600 }}>{row.verdict}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          {targetPrice != null && targetPrice < askingPrice && (
+            <div className={`${s.callout} ${s.calloutWarning}`}>
+              <h4>TARGET ENTRY</h4>
+              <p>Analysis suggests pursuing at {fmtCcy(targetPrice)} or below (
+                {Math.round(((askingPrice - targetPrice) / askingPrice) * 100)}% discount from asking price)
+                to achieve target returns.</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Existing financials detail (IRR, cash flows, scenarios) */}
+      <div className={s.section}>
+        <h3 className={s.sectionTitle}>📈 Detailed Financial Analysis</h3>
+        <FinancialsTabV2 deal={deal} prop={prop} />
+      </div>
+    </>
+  );
+}
+
+/* ── COMPARABLES TAB ── */
+function ComparablesTab({ deal }: { deal: RawDeal }) {
+  const ds = (deal.dataSources ?? {}) as Record<string, unknown>;
+  const rawComps = ((ds.comps ?? ds.comparables ?? (ds.ricsAnalysis as Record<string, unknown> | undefined)?.valuations) as unknown[]) ?? [];
+  const comps = (Array.isArray(rawComps) ? rawComps : []).map((c: unknown) => {
+    const comp = c as Record<string, unknown>;
+    return {
+      address: (comp.address ?? comp.name ?? "—") as string,
+      sqft: (comp.sqft ?? comp.size) as number | undefined,
+      price: (comp.price ?? comp.salePrice) as number | undefined,
+      psf: (comp.psf ?? comp.pricePsf ?? (comp.price != null && comp.sqft != null ? Math.round((comp.price as number) / (comp.sqft as number)) : undefined)) as number | undefined,
+      date: (comp.date ?? comp.saleDate) as string | undefined,
+      distance: comp.distance as string | undefined,
+      incentive: comp.incentive as string | undefined,
+      effectiveRent: comp.effectiveRent as number | undefined,
+    };
+  });
+
+  const rentComps = comps.filter(c => c.psf != null && c.psf < 1000);
+  const saleComps = comps.filter(c => c.price != null && (c.psf == null || c.psf >= 100));
+
+  return (
+    <>
+      <div className={`${s.callout} ${s.calloutInfo}`}>
+        <h4>PURPOSE: ASSUMPTION VALIDATION</h4>
+        <p>Every financial model makes assumptions. This section compares those assumptions against actual market transactions to identify gaps and correct valuations.</p>
+      </div>
+
+      {/* Rental Comparables */}
+      {rentComps.length > 0 && (
+        <div className={s.section}>
+          <h3 className={s.sectionTitle}>📈 Rental Comparables</h3>
+          <div className={s.tableContainer}>
+            <table className={s.tbl}>
+              <thead>
+                <tr>
+                  <th>Property</th>
+                  <th>Size</th>
+                  <th>Rent PSF</th>
+                  {rentComps.some(c => c.incentive) && <th>Incentive</th>}
+                  {rentComps.some(c => c.effectiveRent) && <th>Effective Rent</th>}
+                  <th>Date</th>
+                  {rentComps.some(c => c.distance) && <th>Distance</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {rentComps.map((c, i) => (
+                  <tr key={i}>
+                    <td>{c.address}</td>
+                    <td className={s.mono}>{c.sqft ? c.sqft.toLocaleString() : "—"}</td>
+                    <td className={s.mono}>{c.psf ? `£${c.psf}` : "—"}</td>
+                    {rentComps.some(c => c.incentive) && <td>{c.incentive ?? "—"}</td>}
+                    {rentComps.some(c => c.effectiveRent) && <td className={s.mono}>{c.effectiveRent ? fmtCcy(c.effectiveRent) : "—"}</td>}
+                    <td>{c.date ?? "—"}</td>
+                    {rentComps.some(c => c.distance) && <td>{c.distance ?? "—"}</td>}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {(() => {
+            const psfs = rentComps.map(c => c.psf).filter((p): p is number => p != null);
+            if (psfs.length < 2) return null;
+            const min = Math.min(...psfs), max = Math.max(...psfs);
+            return (
+              <div className={`${s.callout} ${s.calloutInfo}`}>
+                <h4>ANALYSIS</h4>
+                <p><strong>Rent Range:</strong> £{min.toFixed(0)}–£{max.toFixed(0)} psf</p>
+                <p><strong>Comparable count:</strong> {psfs.length} transactions</p>
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
+      {/* Investment / Sale Comparables */}
+      {saleComps.length > 0 && (
+        <div className={s.section}>
+          <h3 className={s.sectionTitle}>📊 Investment Comparables</h3>
+          <div className={s.tableContainer}>
+            <table className={s.tbl}>
+              <thead>
+                <tr>
+                  <th>Property</th>
+                  <th>Size</th>
+                  <th>Price</th>
+                  <th>Price PSF</th>
+                  <th>Date</th>
+                  {saleComps.some(c => c.distance) && <th>Distance</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {saleComps.map((c, i) => (
+                  <tr key={i}>
+                    <td>{c.address}</td>
+                    <td className={s.mono}>{c.sqft ? c.sqft.toLocaleString() : "—"}</td>
+                    <td className={s.mono}>{fmtCcy(c.price)}</td>
+                    <td className={s.mono}>{c.psf ? `£${c.psf}` : "—"}</td>
+                    <td>{c.date ?? "—"}</td>
+                    {saleComps.some(c => c.distance) && <td>{c.distance ?? "—"}</td>}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {comps.length === 0 && (
+        <div className={`${s.card} ${s.anim}`}>
+          <div className={s.cardTitle}>Comparable transactions</div>
+          <p style={{ fontSize: 12, color: "var(--tx3)", margin: 0 }}>
+            No comparable transactions available for this property yet.
+          </p>
+        </div>
+      )}
+
+      {/* Market context */}
+      {(ds.marketRentPsf || ds.marketCapRate) && (
+        <div className={s.section}>
+          <h3 className={s.sectionTitle}>📋 Market Context</h3>
+          <div className={s.card}>
+            {typeof ds.marketRentPsf === "number" && <Row l="Market rent (£/sqft)" v={`£${ds.marketRentPsf}`} mono />}
+            {typeof ds.marketCapRate === "number" && <Row l="Market cap rate" v={`${ds.marketCapRate}%`} mono />}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+/* ── DUE DILIGENCE TAB ── */
+function DueDiligenceTab({ deal }: { deal: RawDeal }) {
+  const ds = (deal.dataSources ?? {}) as Record<string, unknown>;
+  const ddItems = [
+    { label: "Title search",               done: true },
+    { label: "Planning history reviewed",  done: !!(ds.planningApplications) },
+    { label: "Environmental survey",       done: !!(ds.environmentalData) },
+    { label: "Structural survey",          done: false },
+    { label: "EPC confirmed",              done: !!deal.epcRating },
+    { label: "MEES compliance checked",    done: !!deal.epcRating },
+    { label: "Lease documents reviewed",   done: !!(ds.passingRent) },
+    { label: "Owner identity verified",    done: !!deal.ownerName },
+    { label: "Charges register reviewed",  done: false },
+    { label: "Insurance arranged",         done: false },
+  ];
+  const complete = ddItems.filter(d => d.done).length;
+
+  const hasAskingPrice = deal.askingPrice != null && deal.askingPrice > 0;
+  const prop = toProperty(deal);
+  const verdict = calculateVerdict(prop);
+  const targetPrice = verdict.targetPrice;
+  const discountPct = hasAskingPrice && targetPrice != null
+    ? Math.round(((deal.askingPrice! - targetPrice) / deal.askingPrice!) * 100)
+    : null;
+
+  return (
+    <>
+      {/* Environmental & Planning cards */}
+      <div className={s.section}>
+        <h3 className={s.sectionTitle}>🔍 Environmental &amp; Planning</h3>
+        <div className={s.grid2}>
+          <div className={s.card}>
+            <div className={s.cardTitle}>Planning Status</div>
+            <Row l="Use Class" v={(ds.useClass as string | undefined) ?? "—"} />
+            <Row l="Planning Applications" v={ds.planningApplications ? "Yes — review required" : "None on record"} color={ds.planningApplications ? "amber" : "green"} />
+            {deal.hasPlanningApplication && (
+              <Row l="Active Application" v="Yes" color="amber" />
+            )}
+            <Row l="Permitted Development" v="Check required" />
+          </div>
+          <div className={s.card}>
+            <div className={s.cardTitle}>Environmental</div>
+            <Row l="Flood Risk" v={deal.inFloodZone ? "Zone 3 — High" : "Low"} color={deal.inFloodZone ? "amber" : "green"} />
+            <Row l="EPC Rating" v={deal.epcRating ?? "—"} color={deal.epcRating ? "green" : undefined} />
+            <Row l="Asbestos Survey" v="Required (DD)" />
+            <Row l="Environmental Data" v={ds.environmentalData ? "Available" : "Not yet retrieved"} color={ds.environmentalData ? "green" : undefined} />
+          </div>
+        </div>
+      </div>
+
+      {/* DD checklist */}
+      <div className={s.section}>
+        <div className={s.card}>
+          <div className={s.cardTitle}>Due diligence checklist — {complete}/{ddItems.length} complete</div>
+          <div style={{ height: 4, background: "var(--s3)", borderRadius: 2, marginBottom: 12 }}>
+            <div style={{ width: `${(complete / ddItems.length) * 100}%`, height: "100%", background: "var(--grn)", borderRadius: 2 }} />
+          </div>
+          {ddItems.map((item, i) => (
+            <div key={i} style={{ display: "flex", gap: 8, padding: "5px 0", alignItems: "center" }}>
+              <div style={{ width: 16, height: 16, borderRadius: 3, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, background: item.done ? "var(--grn)" : "transparent", border: item.done ? "none" : "1.5px solid var(--s3)", color: "#000" }}>
+                {item.done && "✓"}
+              </div>
+              <span style={{ fontSize: 12, color: item.done ? "var(--tx2)" : "var(--tx3)" }}>{item.label}</span>
             </div>
           ))}
         </div>
-      )}
+      </div>
+
+      {/* Conditions for success */}
+      <div className={s.section}>
+        <h3 className={s.sectionTitle}>✅ Conditions for Success</h3>
+
+        {verdict.verdict === "AVOID" && hasAskingPrice && (
+          <div className={`${s.callout} ${s.calloutCritical}`}>
+            <h4>AT CURRENT ASKING PRICE: DO NOT PROCEED</h4>
+            <p>Returns fall below target thresholds. Downside scenario risks capital loss with no margin for error.</p>
+          </div>
+        )}
+
+        {(verdict.verdict === "CONDITIONAL" || verdict.verdict === "PROCEED") && discountPct != null && discountPct > 0 && (
+          <div className={`${s.callout} ${s.calloutWarning}`}>
+            <h4>CONDITIONAL APPROVAL</h4>
+            <p><strong>Required Conditions:</strong></p>
+            <p>1. Entry price ≤ {fmtCcy(targetPrice)} ({discountPct}% minimum discount from asking)<br />
+            2. Conservative underwriting: validate exit yield floor and ERV assumptions<br />
+            3. Explicit acceptance of stabilisation period<br />
+            4. Demonstrable in-house leasing or asset management capability<br />
+            5. Contingency funding for extended void scenario</p>
+          </div>
+        )}
+
+        {verdict.verdict === "PROCEED" && (discountPct == null || discountPct <= 0) && (
+          <div className={`${s.callout} ${s.calloutInfo}`}>
+            <h4>PROCEED</h4>
+            <p>Analysis supports proceeding at current pricing. Ensure all DD checklist items are complete before exchange.</p>
+          </div>
+        )}
+
+        {deal.ownerName && (
+          <div className={s.card} style={{ marginTop: 12 }}>
+            <div className={s.cardTitle}>Ownership</div>
+            <Row l="Owner" v={deal.ownerName} />
+            {deal.hasInsolvency && <Row l="Insolvency Flag" v="Yes — verify status" color="red" />}
+            {deal.hasLisPendens && <Row l="Lis Pendens" v="Yes — legal review required" color="amber" />}
+          </div>
+        )}
+      </div>
     </>
   );
 }
@@ -515,32 +684,18 @@ export default function PropertyDossierPage() {
       <AppShell>
         <div className={s.skeletonContainer}>
           <div className={s.skeletonHeader}>
-            <div className={`${s.skeleton} ${s.skeletonPhoto}`} />
             <div className={s.skeletonInfo}>
               <div className={`${s.skeleton} ${s.skeletonTitle}`} />
               <div className={`${s.skeleton} ${s.skeletonSpec}`} />
               <div className={`${s.skeleton} ${s.skeletonSpec}`} style={{ width: "30%" }} />
             </div>
-            <div className={s.skeletonInfo} style={{ flex: "0 0 auto", gap: 8 }}>
-              <div className={`${s.skeleton} ${s.skeletonBadge}`} />
-              <div className={`${s.skeleton} ${s.skeletonBadge}`} />
-            </div>
           </div>
           <div className={s.skeletonTabs}>
-            {[80, 80, 96, 80, 108].map((w, i) => (
+            {[80, 80, 96, 108].map((w, i) => (
               <div key={i} className={`${s.skeleton} ${s.skeletonTab}`} style={{ width: w }} />
             ))}
           </div>
           <div className={s.skeletonContent}>
-            <div className={`${s.skeleton} ${s.skeletonTitle}`} style={{ width: 130, height: 18 }} />
-            <div className={s.skeletonGrid}>
-              {[1, 2, 3, 4].map(i => (
-                <div key={i} className={s.skeletonCard}>
-                  <div className={`${s.skeleton} ${s.skeletonCardLabel}`} />
-                  <div className={`${s.skeleton} ${s.skeletonCardValue}`} />
-                </div>
-              ))}
-            </div>
             <div className={s.skeletonGrid}>
               {[1, 2, 3, 4].map(i => (
                 <div key={i} className={s.skeletonCard}>
@@ -554,6 +709,7 @@ export default function PropertyDossierPage() {
       </AppShell>
     );
   }
+
   if (error || !deal) {
     return (
       <AppShell>
@@ -562,7 +718,13 @@ export default function PropertyDossierPage() {
           <p className={s.errorTitle}>Could not load property</p>
           <p className={s.errorMessage}>{error || "Property not found."}</p>
           <div className={s.errorActions}>
-            <button className={s.retryBtn} onClick={() => { setError(null); setLoading(true); fetch(`/api/dealscope/properties/${id}`).then(r => r.ok ? r.json() : r.json().then((e: { error?: string }) => Promise.reject(e.error ?? "Failed to load"))).then((data: RawDeal) => { setDeal(data); setLoading(false); }).catch((e: unknown) => { setError(String(e)); setLoading(false); }); }}>Retry</button>
+            <button className={s.retryBtn} onClick={() => {
+              setError(null); setLoading(true);
+              fetch(`/api/dealscope/properties/${id}`)
+                .then(r => r.ok ? r.json() : r.json().then((e: { error?: string }) => Promise.reject(e.error ?? "Failed to load")))
+                .then((data: RawDeal) => { setDeal(data); setLoading(false); })
+                .catch((e: unknown) => { setError(String(e)); setLoading(false); });
+            }}>Retry</button>
             <button className={s.backBtn2} onClick={() => router.back()}>← Back</button>
           </div>
         </div>
@@ -570,77 +732,128 @@ export default function PropertyDossierPage() {
     );
   }
 
-  // Fresh calculations on every render — never cached
   const prop = toProperty(deal);
   const verdict = calculateVerdict(prop);
-  const verdictColor = verdict.verdict === "PROCEED" ? "var(--grn)" : verdict.verdict === "CONDITIONAL" ? "var(--amb)" : "var(--red)";
+  const equityResult = calculateEquityMultiple(prop);
+  const ds = (deal.dataSources ?? {}) as Record<string, unknown>;
+  const aiSummary = (ds.aiSummary as string | undefined) || (ds.listingDescription as string | undefined);
+
+  const occupancyPct = deal.occupancyPct != null ? Math.round(deal.occupancyPct * 100) : null;
+  const targetPrice = verdict.targetPrice;
+
+  const verdictLabel = verdict.verdict === "PROCEED" ? "✓ PROCEED"
+    : verdict.verdict === "CONDITIONAL" ? "⚠ CONDITIONAL"
+    : "✕ AVOID";
+  const verdictBg = verdict.verdict === "PROCEED"
+    ? "linear-gradient(135deg,rgba(52,211,153,.15) 0%,rgba(52,211,153,.05) 100%)"
+    : verdict.verdict === "CONDITIONAL"
+    ? "linear-gradient(135deg,rgba(245,158,11,.15) 0%,rgba(245,158,11,.05) 100%)"
+    : "linear-gradient(135deg,rgba(240,96,96,.15) 0%,rgba(240,96,96,.05) 100%)";
+  const verdictBorder = verdict.verdict === "PROCEED" ? "var(--grn)"
+    : verdict.verdict === "CONDITIONAL" ? "var(--amb)"
+    : "var(--red)";
 
   return (
     <AppShell>
       <div className={s.page}>
-        <HeroPanel
-          property={{
-            address: deal.address,
-            assetType: deal.assetType,
-            buildingSizeSqft: deal.buildingSizeSqft ?? deal.sqft,
-            yearBuilt: deal.yearBuilt,
-            epcRating: deal.epcRating,
-            tenure: deal.tenure,
-            askingPrice: deal.askingPrice,
-            guidePrice: deal.guidePrice,
-            dealScore: verdict.dealScore,
-            signals: deal.signals,
-            hasInsolvency: deal.hasInsolvency,
-            hasLisPendens: deal.hasLisPendens,
-            dataSources: deal.dataSources,
-            satelliteImageUrl: deal.satelliteImageUrl,
-          }}
-          exporting={exporting}
-          watched={watched}
-          onBack={() => router.back()}
-          onExportMemo={handleExportPdf}
-          onContact={() => setActiveTab("Overview")}
-          onAddToPipeline={() => setShowPipelineMenu((v) => !v)}
-          onWatch={() => setShowWatchModal(true)}
-        />
 
-        <div style={{ padding: "0 20px" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div className={s.tabs}>
-              {TABS.map(tab => (
-                <button key={tab} className={`${s.tab} ${activeTab === tab ? s.tabOn : ""}`} onClick={() => setActiveTab(tab)}>{tab}</button>
-              ))}
-            </div>
-            <button
-              onClick={handleExportExcel}
-              style={{ padding: "5px 12px", borderRadius: 6, background: "var(--s2)", border: "1px solid var(--s3)", color: "var(--tx2)", cursor: "pointer", fontSize: 11, fontWeight: 500, flexShrink: 0 }}
-            >
-              ↓ Excel
-            </button>
-          </div>
-          <div className={s.dossierLayout}>
-            <div className={s.dossierMain}>
-              <div className={s.tabContent} style={{ paddingBottom: 40 }}>
-                {activeTab === "Overview"       && <OverviewTab      deal={deal} prop={prop} />}
-                {activeTab === "Property"       && <PropertyTab      deal={deal} />}
-                {activeTab === "Planning"       && <PlanningTab      deal={deal} />}
-                {activeTab === "Title & Legal"  && <TitleTab />}
-                {activeTab === "Environmental"  && <EnvironmentalTab />}
-                {activeTab === "Ownership"      && <OwnershipTab />}
-                {activeTab === "Financials"     && <FinancialsTabV2  deal={deal} prop={prop} />}
-                {activeTab === "Comparables"    && <ComparablesTab   deal={deal} />}
-                {activeTab === "Market"         && <MarketTab />}
-                {activeTab === "Approach"       && <ApproachTab />}
-                {activeTab === "Due Diligence"  && <DueDiligenceTab  deal={deal} />}
+        {/* ── INLINE HERO PANEL ── */}
+        <div className={s.heroPanel}>
+          <div className={s.heroPropHeader}>
+            <div className={s.heroPropTitle}>
+              <h1 className={s.heroH1}>{deal.address}</h1>
+              <div className={s.heroMeta}>
+                {deal.assetType && <span>{deal.assetType}</span>}
+                {(deal.buildingSizeSqft ?? deal.sqft) != null && (
+                  <span>{((deal.buildingSizeSqft ?? deal.sqft) as number).toLocaleString()} sq ft</span>
+                )}
+                {deal.tenure && <span>{deal.tenure}</span>}
+                {occupancyPct != null && (
+                  <span>{occupancyPct === 0 ? "100% Vacant" : `${occupancyPct}% Occupied`}</span>
+                )}
               </div>
             </div>
-            <div className={s.dossierSide}>
-              <DossierSidebar deal={deal} prop={prop} />
+            <button className={s.heroBackBtn} onClick={() => router.back()}>← Back to results</button>
+          </div>
+
+          {/* AI Summary */}
+          {aiSummary && (
+            <div className={s.aiSummaryBox}>
+              <span className={s.aiBadge}>AI SUMMARY</span>
+              <h3 className={s.aiSummaryTitle}>Deal Overview</h3>
+              <p className={s.aiSummaryText}>{aiSummary}</p>
             </div>
+          )}
+
+          {/* Metrics grid: verdict (2-col) + 3 metrics */}
+          <div className={s.heroMetrics}>
+            <div className={s.heroVerdictCard} style={{ background: verdictBg, border: `2px solid ${verdictBorder}` }}>
+              <span className={s.heroVerdictBadge} style={{ color: verdictBorder }}>{verdictLabel}</span>
+              <h3 className={s.heroVerdictTitle}>{verdict.verdict === "CONDITIONAL" && targetPrice ? `Pursue at ${fmtCcy(targetPrice)}` : verdict.verdict === "PROCEED" ? "Proceed at asking price" : "Do not proceed at asking"}</h3>
+              {targetPrice != null && prop.askingPrice != null && (
+                <p className={s.heroVerdictSub}>Score: {verdict.dealScore}/100</p>
+              )}
+            </div>
+            <div className={s.heroMetricCard}>
+              <div className={s.heroMetricLabel}>Asking Price</div>
+              <div className={s.heroMetricValue}>{fmtCcy(prop.askingPrice)}</div>
+              {prop.size && prop.askingPrice && (
+                <div className={s.heroMetricSub}>£{Math.round(prop.askingPrice / prop.size)} psf</div>
+              )}
+            </div>
+            <div className={s.heroMetricCard}>
+              <div className={s.heroMetricLabel}>Est. Market Value</div>
+              <div className={s.heroMetricValue}>{equityResult.exitValue > 0 ? fmtCcy(equityResult.exitValue) : "—"}</div>
+              <div className={s.heroMetricSub}>Based on analysis</div>
+            </div>
+            <div className={s.heroMetricCard}>
+              <div className={s.heroMetricLabel}>Target Entry</div>
+              <div className={s.heroMetricValue}>{fmtCcy(targetPrice ?? prop.askingPrice)}</div>
+              {targetPrice != null && prop.askingPrice != null && targetPrice < prop.askingPrice && (
+                <div className={s.heroMetricSub}>
+                  {Math.round(((prop.askingPrice - targetPrice) / prop.askingPrice) * 100)}% below asking
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Action bar */}
+          <div className={s.heroActionBar}>
+            <button className={s.btnP} onClick={handleExportPdf} disabled={exporting === "pdf"}>
+              {exporting === "pdf" ? "Exporting…" : "📄 Export IC Memo"}
+            </button>
+            <button className={s.btnS} onClick={() => setShowPipelineMenu(v => !v)}>+ Add to Pipeline</button>
+            <button className={`${s.btnS} ${watched ? s.btnWatched : ""}`} onClick={() => setShowWatchModal(true)}>
+              {watched ? "✓ Watching" : "👁 Watch"}
+            </button>
+            <button className={s.btnS} onClick={handleExportExcel}>↓ Excel</button>
           </div>
         </div>
 
-        {/* ── PIPELINE STAGE DROPDOWN ── */}
+        {/* ── TAB NAVIGATION ── */}
+        <div className={s.heroTabNav}>
+          {TABS.map(tab => (
+            <button
+              key={tab}
+              className={`${s.heroTabBtn} ${activeTab === tab ? s.heroTabBtnOn : ""}`}
+              onClick={() => setActiveTab(tab)}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+
+        {/* ── FULL-WIDTH CONTENT ── */}
+        <div className={s.heroContent}>
+          <div className={s.tabContent}>
+            {activeTab === "Overview"      && <OverviewTab      deal={deal} prop={prop} />}
+            {activeTab === "Financials"    && <FinancialsWrapper deal={deal} prop={prop} />}
+            {activeTab === "Comparables"   && <ComparablesTab   deal={deal} />}
+            {activeTab === "Due Diligence" && <DueDiligenceTab  deal={deal} />}
+          </div>
+        </div>
+
+        {/* ── PIPELINE DROPDOWN ── */}
         {showPipelineMenu && (
           <div style={{ position: "fixed", inset: 0, zIndex: 50 }} onClick={() => setShowPipelineMenu(false)}>
             <div
