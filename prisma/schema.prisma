@@ -68,6 +68,7 @@ model User {
   portfolioProperties      PortfolioProperty[]
   creditBalance            CreditBalance?
   creditTransactions       CreditTransaction[]
+  financialBudgets         FinancialBudget[]
 }
 
 enum Portfolio {
@@ -1377,6 +1378,28 @@ model MonthlyFinancial {
   @@unique([assetId, month, year])
   @@index([userId])
   @@index([assetId])
+}
+
+// ─── FINANCIAL BUDGET (PRO-997) ─────────────────────────────────────────────
+
+model FinancialBudget {
+  id                  String   @id @default(cuid())
+  userId              String
+  year                Int
+  budgetedRevenue     Float    @default(0)
+  budgetedOpEx        Float    @default(0)
+  budgetedNOI         Float    @default(0)
+  budgetedInsurance   Float    @default(0)
+  budgetedEnergy      Float    @default(0)
+  budgetedMaintenance Float    @default(0)
+  budgetedManagement  Float    @default(0)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, year])
+  @@index([userId])
 }
 
 model Loan {

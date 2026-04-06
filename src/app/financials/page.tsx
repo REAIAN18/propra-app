@@ -30,8 +30,6 @@ interface TenantPayment {
   currency: string;
   sym: string;
   paymentStatus: "paid" | "late" | "overdue" | "vacant";
-  daysPastDue?: number;
-  lastPaidDate?: string;
 }
 
 interface WorkOrder {
@@ -88,29 +86,141 @@ function barWidth(pct: number): string {
   return `${w}%`;
 }
 
+// ─── Budget Form ──────────────────────────────────────────────────────────────
+
+interface BudgetFormProps {
+  year: number;
+  onSaved: () => void;
+  onCancel: () => void;
+}
+
+function BudgetForm({ year, onSaved, onCancel }: BudgetFormProps) {
+  const [saving, setSaving] = useState(false);
+  const [fields, setFields] = useState({
+    budgetedRevenue: "",
+    budgetedInsurance: "",
+    budgetedEnergy: "",
+    budgetedMaintenance: "",
+    budgetedManagement: "",
+  });
+
+  const set = (k: keyof typeof fields) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    setFields((f) => ({ ...f, [k]: e.target.value }));
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      await fetch("/api/user/financial-budget", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          year,
+          budgetedRevenue:     parseFloat(fields.budgetedRevenue)     || 0,
+          budgetedInsurance:   parseFloat(fields.budgetedInsurance)   || 0,
+          budgetedEnergy:      parseFloat(fields.budgetedEnergy)      || 0,
+          budgetedMaintenance: parseFloat(fields.budgetedMaintenance) || 0,
+          budgetedManagement:  parseFloat(fields.budgetedManagement)  || 0,
+        }),
+      });
+      onSaved();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const inputStyle: React.CSSProperties = {
+    width: "100%",
+    background: "var(--s2)",
+    border: "1px solid var(--bdr)",
+    borderRadius: 6,
+    padding: "8px 10px",
+    color: "var(--tx)",
+    font: "400 12px var(--mono)",
+    outline: "none",
+  };
+
+  const rows: { label: string; key: keyof typeof fields; placeholder: string }[] = [
+    { label: "Gross Revenue", key: "budgetedRevenue", placeholder: "e.g. 462000" },
+    { label: "Insurance", key: "budgetedInsurance", placeholder: "e.g. 38000" },
+    { label: "Energy", key: "budgetedEnergy", placeholder: "e.g. 52000" },
+    { label: "Maintenance", key: "budgetedMaintenance", placeholder: "e.g. 32000" },
+    { label: "Management", key: "budgetedManagement", placeholder: "e.g. 26000" },
+  ];
+
+  return (
+    <form onSubmit={submit} style={{ padding: 18 }}>
+      <div style={{ font: "500 11px var(--mono)", color: "var(--tx3)", marginBottom: 14 }}>
+        Annual budget for {year} — all figures in full (e.g. 462000)
+      </div>
+      <div style={{ display: "grid", gap: 10, marginBottom: 16 }}>
+        {rows.map((r) => (
+          <div key={r.key} style={{ display: "grid", gridTemplateColumns: "140px 1fr", alignItems: "center", gap: 12 }}>
+            <label style={{ font: "500 12px var(--sans)", color: "var(--tx)" }}>{r.label}</label>
+            <input
+              type="number"
+              placeholder={r.placeholder}
+              value={fields[r.key]}
+              onChange={set(r.key)}
+              style={inputStyle}
+            />
+          </div>
+        ))}
+      </div>
+      <div style={{ display: "flex", gap: 8 }}>
+        <button
+          type="submit"
+          disabled={saving}
+          style={{ padding: "8px 16px", background: "var(--acc)", color: "#fff", border: "none", borderRadius: 6, font: "500 12px var(--sans)", cursor: saving ? "default" : "pointer", opacity: saving ? 0.6 : 1 }}
+        >
+          {saving ? "Saving…" : "Save budget"}
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          style={{ padding: "8px 16px", background: "var(--s2)", color: "var(--tx3)", border: "1px solid var(--bdr)", borderRadius: 6, font: "500 12px var(--sans)", cursor: "pointer" }}
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function FinancialsPage() {
   const [budgets, setBudgets] = useState<BudgetRow[]>([]);
+  const [hasBudget, setHasBudget] = useState(false);
+  const [budgetYear] = useState(new Date().getFullYear());
+  const [showBudgetForm, setShowBudgetForm] = useState(false);
   const [months, setMonths] = useState<MonthRow[]>([]);
   const [tenantPayments, setTenantPayments] = useState<TenantPayment[]>([]);
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
   const [loans, setLoans] = useState<LoanSummary[]>([]);
   const [loading, setLoading] = useState(true);
 
+  function loadBudget() {
+    return fetch(`/api/user/financial-budget?year=${budgetYear}`)
+      .then((r) => r.json())
+      .then((d) => {
+        setBudgets(d.budgets ?? []);
+        setHasBudget(d.hasBudget ?? false);
+      })
+      .catch(() => {});
+  }
+
   useEffect(() => {
     Promise.all([
-      fetch("/api/user/financial-budget?assetId=demo").then((r) => r.json()),
+      loadBudget(),
       fetch("/api/user/monthly-financial?months=12").then((r) => r.json()),
       fetch("/api/user/tenants").then((r) => r.json()),
       fetch("/api/user/work-orders").then((r) => r.json()),
       fetch("/api/user/financing-summary").then((r) => r.json()),
     ])
-      .then(([budgetData, monthData, tenantData, woData, loanData]) => {
-        setBudgets(budgetData.budgets ?? []);
+      .then(([, monthData, tenantData, woData, loanData]) => {
         setMonths(monthData.months ?? []);
 
-        // Map tenants to payment rows
         const payments: TenantPayment[] = (tenantData.tenants ?? []).map(
           (t: {
             id: string;
@@ -145,6 +255,7 @@ export default function FinancialsPage() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ── Derived KPIs ────────────────────────────────────────────────────────────
@@ -165,13 +276,13 @@ export default function FinancialsPage() {
   const totalDebtService = loans.reduce((s, l) => s + l.annualDebtService, 0);
   const dscr = totalDebtService > 0 ? (annualNOI / totalDebtService).toFixed(2) : "—";
 
-  // NOI waterfall segments from budget
+  // NOI waterfall — prefer budget actuals, fall back to monthly aggregate
   const revRow = budgets.find((b) => b.category === "Gross Revenue");
   const insRow = budgets.find((b) => b.category === "Insurance");
   const engRow = budgets.find((b) => b.category === "Energy");
   const mntRow = budgets.find((b) => b.category === "Maintenance");
 
-  const wfRevenue = revRow?.actual ?? annualRevenue / 4; // use latest quarter if available
+  const wfRevenue = revRow?.actual ?? annualRevenue / 4;
   const wfIns = insRow?.actual ?? 0;
   const wfEng = engRow?.actual ?? 0;
   const wfMnt = mntRow?.actual ?? 0;
@@ -186,12 +297,14 @@ export default function FinancialsPage() {
     opex: m.operatingCosts,
     noi: m.noi,
     debt: totalDebtService / 12,
-    capex: 0,
     net: m.noi - totalDebtService / 12,
     isProjected: !m.hasRealData,
   }));
 
   const sym = latestMonth ? "$" : "$";
+
+  // Budget rows to display (skip Total OpEx — derived from others)
+  const displayBudgets = budgets.filter((b) => b.category !== "Total OpEx");
 
   if (loading) {
     return (
@@ -214,7 +327,7 @@ export default function FinancialsPage() {
         <div style={{ flex: 1, overflowY: "auto", padding: "28px 32px 80px", maxWidth: 1080 }}>
 
           {/* ── KPIs ─────────────────────────────────────────────────── */}
-          <div className="fin-kpis" style={{ display: "grid", gridTemplateColumns: "repeat(6,1fr)", gap: 1, background: "var(--bdr)", border: "1px solid var(--bdr)", borderRadius: 10, overflow: "hidden", marginBottom: 24 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(6,1fr)", gap: 1, background: "var(--bdr)", border: "1px solid var(--bdr)", borderRadius: 10, overflow: "hidden", marginBottom: 24 }}>
             <KPI label="Gross Revenue" value={fmt(annualRevenue, sym)} note="/yr" />
             <KPI label="OpEx" value={fmt(annualOpEx, sym)} note="/yr" />
             <KPI label="NOI" value={fmt(annualNOI, sym)} note="/yr" valueColor="var(--grn)" subNote={`${noiMargin}% margin`} />
@@ -254,11 +367,21 @@ export default function FinancialsPage() {
           </Card>
 
           {/* ── Budget vs Actual ──────────────────────────────────────── */}
-          <SectionLabel>Budget vs Actual — Year to Date</SectionLabel>
-          <Card title="Year-to-Date Variance" action="Edit budget →">
-            {budgets.length > 0 ? (
+          <SectionLabel>Budget vs Actual — {budgetYear}</SectionLabel>
+          <Card
+            title="Year-to-Date Variance"
+            action={showBudgetForm ? undefined : hasBudget ? "Edit budget →" : "Set budget →"}
+            onAction={() => setShowBudgetForm(true)}
+          >
+            {showBudgetForm ? (
+              <BudgetForm
+                year={budgetYear}
+                onSaved={() => { setShowBudgetForm(false); loadBudget(); }}
+                onCancel={() => setShowBudgetForm(false)}
+              />
+            ) : displayBudgets.length > 0 ? (
               <div style={{ padding: 18 }}>
-                {budgets.map((row) => (
+                {displayBudgets.map((row) => (
                   <div key={row.category} style={{ marginBottom: 16 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
                       <span style={{ font: "500 12px var(--sans)", color: "var(--tx)" }}>{row.category}</span>
@@ -277,7 +400,6 @@ export default function FinancialsPage() {
                   </div>
                 ))}
 
-                {/* NOI summary */}
                 {revRow && (
                   <div style={{ padding: "12px 16px", background: "var(--grn-lt)", border: "1px solid var(--grn-bdr)", borderRadius: 8, display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
                     <span style={{ font: "500 13px var(--sans)", color: "var(--tx)" }}>NOI — YTD</span>
@@ -288,7 +410,7 @@ export default function FinancialsPage() {
                 )}
               </div>
             ) : (
-              <EmptyState message="No budget data. Set up your annual budget to track variance." />
+              <EmptyState message="No budget set. Use 'Set budget →' to track variance against your actuals." />
             )}
           </Card>
 
@@ -296,11 +418,7 @@ export default function FinancialsPage() {
           <SectionLabel>Rent Collection</SectionLabel>
           <Card
             title="Collection Status"
-            action={
-              totalActive > 0
-                ? `${collectionRate}% collected${lateCount > 0 ? ` · ${lateCount} outstanding` : ""}`
-                : undefined
-            }
+            action={totalActive > 0 ? `${collectionRate}% collected${lateCount > 0 ? ` · ${lateCount} outstanding` : ""}` : undefined}
             actionMuted
           >
             {tenantPayments.length > 0 ? (
@@ -312,7 +430,7 @@ export default function FinancialsPage() {
             )}
           </Card>
 
-          {/* ── Cash Flow Forecast ────────────────────────────────────── */}
+          {/* ── Cash Flow ─────────────────────────────────────────────── */}
           <SectionLabel>Cash Flow — Recent Months</SectionLabel>
           <Card title="Monthly Cash Flow" action="View all →">
             {cashRows.length > 0 ? (
@@ -359,7 +477,9 @@ export default function FinancialsPage() {
           <Card title="Scheduled Capital Works" action="Create work order →">
             {workOrders.length > 0 ? (
               workOrders.map((wo) => (
-                <div key={wo.id} style={{ display: "grid", gridTemplateColumns: "1fr auto auto auto auto", alignItems: "center", gap: 12, padding: "11px 18px", borderBottom: "1px solid var(--bdr-lt)", cursor: "pointer" }}
+                <div
+                  key={wo.id}
+                  style={{ display: "grid", gridTemplateColumns: "1fr auto auto auto auto", alignItems: "center", gap: 12, padding: "11px 18px", borderBottom: "1px solid var(--bdr-lt)", cursor: "pointer" }}
                   onMouseEnter={(e) => (e.currentTarget.style.background = "var(--s2)")}
                   onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                 >
@@ -370,8 +490,12 @@ export default function FinancialsPage() {
                   <span style={{ font: "500 9px/1 var(--mono)", padding: "3px 7px", borderRadius: 5, background: "var(--amb-lt)", color: "var(--amb)", border: "1px solid var(--amb-bdr)", whiteSpace: "nowrap" }}>
                     {wo.timing ?? "TBD"}
                   </span>
-                  <span style={{ font: "500 11px/1 var(--mono)", color: "var(--tx2)" }}>{fmt(wo.budgetEstimate, sym)}</span>
-                  <span style={{ font: "400 10px var(--sans)", color: "var(--grn)" }}>+{fmt(wo.capRateValueAdd, sym)} value</span>
+                  <span style={{ font: "500 11px/1 var(--mono)", color: "var(--tx2)" }}>
+                    {fmt(wo.budgetEstimate ?? 0, sym)}
+                  </span>
+                  {wo.capRateValueAdd > 0 && (
+                    <span style={{ font: "400 10px var(--sans)", color: "var(--grn)" }}>+{fmt(wo.capRateValueAdd, sym)} value</span>
+                  )}
                   <span style={{ color: "var(--tx3)", fontSize: 12 }}>→</span>
                 </div>
               ))
@@ -383,7 +507,6 @@ export default function FinancialsPage() {
           {/* ── Debt & Financing ─────────────────────────────────────── */}
           <SectionLabel>Debt &amp; Financing</SectionLabel>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 24 }}>
-            {/* Current Debt */}
             <div style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: 10, overflow: "hidden" }}>
               <div style={{ padding: "14px 18px", borderBottom: "1px solid var(--bdr)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span style={{ font: "600 13px var(--sans)", color: "var(--tx)" }}>Current Debt</span>
@@ -401,7 +524,6 @@ export default function FinancialsPage() {
               )}
             </div>
 
-            {/* Refinance */}
             <div style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: 10, overflow: "hidden" }}>
               <div style={{ padding: "14px 18px", borderBottom: "1px solid var(--bdr)" }}>
                 <span style={{ font: "600 13px var(--sans)", color: "var(--tx)" }}>Portfolio Summary</span>
@@ -456,15 +578,19 @@ function KPI({ label, value, note, valueColor, subNote, subNoteColor }: {
   );
 }
 
-function Card({ title, action, actionMuted, children }: {
-  title: string; action?: string; actionMuted?: boolean; children: React.ReactNode;
+function Card({ title, action, actionMuted, onAction, children }: {
+  title: string; action?: string; actionMuted?: boolean;
+  onAction?: () => void; children: React.ReactNode;
 }) {
   return (
     <div style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: 10, overflow: "hidden", marginBottom: 14 }}>
       <div style={{ padding: "14px 18px", borderBottom: "1px solid var(--bdr)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <span style={{ font: "600 13px var(--sans)", color: "var(--tx)" }}>{title}</span>
         {action && (
-          <span style={{ font: "500 11px var(--sans)", color: actionMuted ? "var(--tx3)" : "var(--acc)", cursor: "pointer" }}>
+          <span
+            onClick={onAction}
+            style={{ font: "500 11px var(--sans)", color: actionMuted ? "var(--tx3)" : "var(--acc)", cursor: onAction ? "pointer" : "default" }}
+          >
             {action}
           </span>
         )}
@@ -497,15 +623,16 @@ function CollectionRow({ tenant, sym }: { tenant: TenantPayment; sym: string }) 
     paid: "var(--grn)", late: "var(--amb)", overdue: "var(--red)", vacant: "var(--tx3)",
   };
   const tagStyle: Record<TenantPayment["paymentStatus"], { bg: string; color: string; border: string; label: string }> = {
-    paid: { bg: "var(--grn-lt)", color: "var(--grn)", border: "var(--grn-bdr)", label: "PAID" },
-    late: { bg: "var(--amb-lt)", color: "var(--amb)", border: "var(--amb-bdr)", label: "LATE" },
+    paid:    { bg: "var(--grn-lt)", color: "var(--grn)", border: "var(--grn-bdr)", label: "PAID" },
+    late:    { bg: "var(--amb-lt)", color: "var(--amb)", border: "var(--amb-bdr)", label: "LATE" },
     overdue: { bg: "var(--red-lt)", color: "var(--red)", border: "var(--red-bdr)", label: "OVERDUE" },
-    vacant: { bg: "var(--s3)", color: "var(--tx3)", border: "var(--bdr)", label: "VACANT" },
+    vacant:  { bg: "var(--s3)",     color: "var(--tx3)", border: "var(--bdr)",     label: "VACANT" },
   };
   const tag = tagStyle[tenant.paymentStatus];
   const monthly = Math.round(tenant.annualRent / 12);
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto auto auto", alignItems: "center", gap: 12, padding: "11px 18px", borderBottom: "1px solid var(--bdr-lt)", cursor: "pointer" }}
+    <div
+      style={{ display: "grid", gridTemplateColumns: "1fr auto auto auto auto", alignItems: "center", gap: 12, padding: "11px 18px", borderBottom: "1px solid var(--bdr-lt)", cursor: "pointer" }}
       onMouseEnter={(e) => (e.currentTarget.style.background = "var(--s2)")}
       onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
     >
@@ -519,9 +646,7 @@ function CollectionRow({ tenant, sym }: { tenant: TenantPayment; sym: string }) 
       <span style={{ font: "500 9px/1 var(--mono)", padding: "3px 7px", borderRadius: 5, background: tag.bg, color: tag.color, border: `1px solid ${tag.border}`, whiteSpace: "nowrap" }}>
         {tag.label}
       </span>
-      <span style={{ font: "500 11px/1 var(--mono)", color: "var(--tx2)" }}>
-        {fmt(tenant.annualRent, sym)}
-      </span>
+      <span style={{ font: "500 11px/1 var(--mono)", color: "var(--tx2)" }}>{fmt(tenant.annualRent, sym)}</span>
       <span style={{ fontSize: 11, color: "var(--tx3)" }}>/yr</span>
       <span style={{ color: "var(--tx3)", fontSize: 12 }}>→</span>
     </div>
