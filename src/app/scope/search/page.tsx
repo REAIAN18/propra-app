@@ -6,16 +6,16 @@ import { useSearchParams } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import s from "./search.module.css";
 
-const SOURCES = [
-  { key: "auction", label: "Auctions", count: 47 },
-  { key: "admin", label: "Administration", count: 23 },
-  { key: "mees", label: "MEES risk", count: 34 },
-  { key: "absent", label: "Absent owner", count: 89 },
-  { key: "probate", label: "Probate", count: 12 },
-  { key: "dissolved", label: "Dissolved", count: 6 },
-  { key: "price_drop", label: "Price drops", count: 8 },
-  { key: "planning", label: "Planning", count: 15 },
-];
+const SOURCE_LABELS: Record<string, string> = {
+  auction: "Auctions",
+  admin: "Administration",
+  mees: "MEES risk",
+  absent: "Absent owner",
+  probate: "Probate",
+  dissolved: "Dissolved",
+  price_drop: "Price drops",
+  planning: "Planning",
+};
 
 const ASSET_CLASSES = ["Industrial", "Warehouse", "Office", "Retail", "Mixed", "Residential"];
 const LOCATIONS = ["South East", "London", "Midlands", "North West", "South West", "East", "Scotland", "Wales"];
@@ -61,8 +61,31 @@ function SearchContent() {
   const [locations, setLocations] = useState<string[]>([]);
   const [sort, setSort] = useState("Relevance");
   const [results, setResults] = useState<SearchResult[]>([]);
+  const [sourceChips, setSourceChips] = useState<Array<{ key: string; label: string; count: number }>>([]);
 
   useEffect(() => {
+    // Fetch live source counts from the home API
+    fetch("/api/scope/home")
+      .then(r => r.json())
+      .then(data => {
+        const liveSources: Array<{ key: string; label: string; count: number }> = (data.sources ?? []).map((s: any) => ({
+          key: s.key,
+          label: SOURCE_LABELS[s.key] ?? s.label ?? s.key,
+          count: s.count ?? 0,
+        }));
+        // Supplement with any known source keys not yet in live data (count 0)
+        const liveKeys = new Set(liveSources.map(s => s.key));
+        const allChips = [...liveSources];
+        for (const [key, label] of Object.entries(SOURCE_LABELS)) {
+          if (!liveKeys.has(key)) allChips.push({ key, label, count: 0 });
+        }
+        setSourceChips(allChips.filter(c => c.count > 0 || liveKeys.has(c.key)));
+      })
+      .catch(() => {
+        // Fallback: show labels with no counts
+        setSourceChips(Object.entries(SOURCE_LABELS).map(([key, label]) => ({ key, label, count: 0 })));
+      });
+
     fetch("/api/dealscope/search")
       .then(r => r.json())
       .then(data => {
@@ -89,10 +112,10 @@ function SearchContent() {
     <div className={s.page}>
       <div className={`${s.sourceBar} ${s.anim}`}>
         <div className={s.sourceBarInner}>
-          {SOURCES.map((src) => (
+          {sourceChips.map((src) => (
             <button key={src.key} className={`${s.sourceChip} ${sources.includes(src.key) ? s.sourceChipOn : ""}`} onClick={() => setSources(toggle(sources, src.key))}>
               <span className={s.sourceChipLabel}>{src.label}</span>
-              <span className={s.sourceChipCount}>{src.count}</span>
+              {src.count > 0 && <span className={s.sourceChipCount}>{src.count}</span>}
             </button>
           ))}
         </div>
