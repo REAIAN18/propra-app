@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import s from "./pipeline.module.css";
@@ -35,41 +35,42 @@ export default function PipelinePage() {
   const [filter, setFilter] = useState("All");
   const [deals, setDeals] = useState<Record<string, Deal[]>>({});
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchPipeline = async () => {
-      try {
-        const res = await fetch("/api/dealscope/pipeline");
-        if (res.ok) {
-          const data = await res.json();
-          // API returns { entries: [{ id, propertyId, stage, addedAt, ... }] }
-          // Group by stage name
-          const grouped: Record<string, Deal[]> = {};
-          const entries: any[] = Array.isArray(data) ? data : (data.entries ?? []);
-          for (const entry of entries) {
-            const stage = entry.stage ?? "Identified";
-            if (!grouped[stage]) grouped[stage] = [];
-            grouped[stage].push({
-              id: entry.id,
-              propertyId: entry.propertyId,
-              name: entry.property?.address ?? entry.address ?? entry.name ?? "Property",
-              loc: entry.property?.location ?? entry.location ?? "",
-              price: entry.property?.askingPrice ? `£${Number(entry.property.askingPrice).toLocaleString()}` : undefined,
-              score: entry.property?.dealScore ?? entry.score ?? undefined,
-              time: entry.updatedAt ? timeAgo(entry.updatedAt) : entry.addedAt ? timeAgo(entry.addedAt) : undefined,
-            });
-          }
-          setDeals(grouped);
+  const fetchPipeline = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/dealscope/pipeline");
+      if (res.ok) {
+        const data = await res.json();
+        const grouped: Record<string, Deal[]> = {};
+        const entries: any[] = Array.isArray(data) ? data : (data.entries ?? []);
+        for (const entry of entries) {
+          const stage = entry.stage ?? "Identified";
+          if (!grouped[stage]) grouped[stage] = [];
+          grouped[stage].push({
+            id: entry.id,
+            propertyId: entry.propertyId,
+            name: entry.property?.address ?? entry.address ?? entry.name ?? "Property",
+            loc: entry.property?.location ?? entry.location ?? "",
+            price: entry.property?.askingPrice ? `£${Number(entry.property.askingPrice).toLocaleString()}` : undefined,
+            score: entry.property?.dealScore ?? entry.score ?? undefined,
+            time: entry.updatedAt ? timeAgo(entry.updatedAt) : entry.addedAt ? timeAgo(entry.addedAt) : undefined,
+          });
         }
-      } catch (err) {
-        console.error("Failed to load pipeline:", err);
-      } finally {
-        setLoading(false);
+        setDeals(grouped);
+      } else {
+        setError("Failed to load pipeline. Please try again.");
       }
-    };
-
-    fetchPipeline();
+    } catch {
+      setError("Could not reach the server. Check your connection and retry.");
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => { fetchPipeline(); }, [fetchPipeline]);
 
   const totalDeals = Object.values(deals).flat().length;
 
@@ -88,6 +89,18 @@ export default function PipelinePage() {
             <button className={s.btnS}>Export CSV</button>
           </div>
         </div>
+
+        {error && (
+          <div style={{ padding: "16px 20px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", background: "rgba(240,96,96,.06)", border: "1px solid rgba(240,96,96,.2)", borderRadius: 8, fontSize: 12, color: "var(--tx3)" }}>
+              <span style={{ color: "var(--red)", fontSize: 16 }}>⚠</span>
+              <span style={{ flex: 1 }}>{error}</span>
+              <button onClick={fetchPipeline} style={{ padding: "4px 12px", borderRadius: 6, border: "1px solid var(--s3)", background: "var(--s2)", color: "var(--tx2)", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "var(--sans, 'DM Sans', sans-serif)" }}>
+                Retry
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className={s.kanban}>
           {STAGES.map((stage) => (

@@ -1,5 +1,7 @@
 "use client";
 
+import { Skeleton } from "./ui/Skeleton";
+
 export interface LettingScenario {
   label: "Bear" | "Base" | "Bull";
   rentPsf?: number;
@@ -15,6 +17,7 @@ export interface LettingScenario {
 interface LettingScenariosTableProps {
   scenarios?: LettingScenario[];
   title?: string;
+  isLoading?: boolean;
 }
 
 function fmtCurrency(n: number): string {
@@ -32,7 +35,31 @@ const SCENARIO_COLOR: Record<string, string> = {
 export function LettingScenariosTable({
   scenarios = [],
   title = "Letting scenarios",
+  isLoading = false,
 }: LettingScenariosTableProps) {
+  if (isLoading) {
+    return (
+      <div>
+        {title && <Skeleton height={10} width={140} borderRadius={3} style={{ marginBottom: 10 }} />}
+        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          {[1, 2, 3].map(i => (
+            <div key={i} style={{ display: "flex", gap: 8, padding: "8px 0", borderBottom: "1px solid var(--s2)" }}>
+              <Skeleton height={12} width={40} />
+              <Skeleton height={12} width="11%" />
+              <Skeleton height={12} width="11%" />
+              <Skeleton height={12} width="8%" />
+              <Skeleton height={12} width="8%" />
+              <Skeleton height={12} width="12%" />
+              <Skeleton height={12} width="12%" />
+              <Skeleton height={12} width="8%" />
+              <Skeleton height={12} width="8%" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   if (!scenarios || scenarios.length === 0) {
     return (
       <div style={{ padding: 10, background: "var(--s2)", borderRadius: 6, border: "1px dashed var(--s3)", fontSize: 11, color: "var(--tx3)", textAlign: "center" }}>
@@ -43,16 +70,7 @@ export function LettingScenariosTable({
   return (
     <div>
       {title && (
-        <div
-          style={{
-            fontSize: 10,
-            fontWeight: 600,
-            color: "var(--tx3)",
-            textTransform: "uppercase",
-            letterSpacing: ".8px",
-            marginBottom: 10,
-          }}
-        >
+        <div style={{ fontSize: 10, fontWeight: 600, color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: 10 }}>
           {title}
         </div>
       )}
@@ -60,20 +78,7 @@ export function LettingScenariosTable({
         <thead>
           <tr>
             {["Scenario", "Rent (£/sqft)", "Rent pa", "Void", "Yield", "Net income", "Exit value", "IRR", "Eq. ×"].map(h => (
-              <th
-                key={h}
-                style={{
-                  textAlign: "left",
-                  padding: "8px",
-                  color: "var(--tx3)",
-                  fontWeight: 500,
-                  borderBottom: "1px solid var(--s2)",
-                  fontSize: 10,
-                  textTransform: "uppercase",
-                  letterSpacing: ".5px",
-                  whiteSpace: "nowrap",
-                }}
-              >
+              <th key={h} style={{ textAlign: "left", padding: "8px", color: "var(--tx3)", fontWeight: 500, borderBottom: "1px solid var(--s2)", fontSize: 10, textTransform: "uppercase", letterSpacing: ".5px", whiteSpace: "nowrap" }}>
                 {h}
               </th>
             ))}
@@ -83,38 +88,21 @@ export function LettingScenariosTable({
           {scenarios.map((sc, i) => {
             const color = SCENARIO_COLOR[sc.label] ?? "var(--tx)";
             return (
-              <tr
-                key={i}
+              <tr key={i}
                 onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,.02)")}
                 onMouseLeave={e => (e.currentTarget.style.background = "")}
               >
                 <td style={{ padding: 8, borderBottom: "1px solid rgba(255,255,255,.02)" }}>
                   <span style={{ fontWeight: 600, color }}>{sc.label}</span>
                 </td>
-                <td style={{ padding: 8, fontFamily: "'JetBrains Mono', monospace", color: "var(--tx2)", borderBottom: "1px solid rgba(255,255,255,.02)" }}>
-                  {sc.rentPsf != null ? `£${sc.rentPsf.toFixed(2)}` : "—"}
-                </td>
-                <td style={{ padding: 8, fontFamily: "'JetBrains Mono', monospace", color: "var(--tx2)", borderBottom: "1px solid rgba(255,255,255,.02)" }}>
-                  {sc.rentPa != null ? fmtCurrency(sc.rentPa) : "—"}
-                </td>
-                <td style={{ padding: 8, fontFamily: "'JetBrains Mono', monospace", color: "var(--tx3)", borderBottom: "1px solid rgba(255,255,255,.02)" }}>
-                  {sc.voidMonths != null ? `${sc.voidMonths}m` : "—"}
-                </td>
-                <td style={{ padding: 8, fontFamily: "'JetBrains Mono', monospace", color: "var(--tx2)", borderBottom: "1px solid rgba(255,255,255,.02)" }}>
-                  {sc.yield != null ? `${sc.yield.toFixed(1)}%` : "—"}
-                </td>
-                <td style={{ padding: 8, fontFamily: "'JetBrains Mono', monospace", color: "var(--tx2)", borderBottom: "1px solid rgba(255,255,255,.02)" }}>
-                  {sc.netIncomePa != null ? fmtCurrency(sc.netIncomePa) : "—"}
-                </td>
-                <td style={{ padding: 8, fontFamily: "'JetBrains Mono', monospace", color: "var(--tx2)", borderBottom: "1px solid rgba(255,255,255,.02)" }}>
-                  {sc.exitValue != null ? fmtCurrency(sc.exitValue) : "—"}
-                </td>
-                <td style={{ padding: 8, fontFamily: "'JetBrains Mono', monospace", color, borderBottom: "1px solid rgba(255,255,255,.02)" }}>
-                  {sc.irr != null ? `${sc.irr.toFixed(1)}%` : "—"}
-                </td>
-                <td style={{ padding: 8, fontFamily: "'JetBrains Mono', monospace", color, borderBottom: "1px solid rgba(255,255,255,.02)" }}>
-                  {sc.equityMultiple != null ? `${sc.equityMultiple.toFixed(2)}×` : "—"}
-                </td>
+                <td style={{ padding: 8, fontFamily: "'JetBrains Mono', monospace", color: "var(--tx2)", borderBottom: "1px solid rgba(255,255,255,.02)" }}>{sc.rentPsf != null ? `£${sc.rentPsf.toFixed(2)}` : "—"}</td>
+                <td style={{ padding: 8, fontFamily: "'JetBrains Mono', monospace", color: "var(--tx2)", borderBottom: "1px solid rgba(255,255,255,.02)" }}>{sc.rentPa != null ? fmtCurrency(sc.rentPa) : "—"}</td>
+                <td style={{ padding: 8, fontFamily: "'JetBrains Mono', monospace", color: "var(--tx3)", borderBottom: "1px solid rgba(255,255,255,.02)" }}>{sc.voidMonths != null ? `${sc.voidMonths}m` : "—"}</td>
+                <td style={{ padding: 8, fontFamily: "'JetBrains Mono', monospace", color: "var(--tx2)", borderBottom: "1px solid rgba(255,255,255,.02)" }}>{sc.yield != null ? `${sc.yield.toFixed(1)}%` : "—"}</td>
+                <td style={{ padding: 8, fontFamily: "'JetBrains Mono', monospace", color: "var(--tx2)", borderBottom: "1px solid rgba(255,255,255,.02)" }}>{sc.netIncomePa != null ? fmtCurrency(sc.netIncomePa) : "—"}</td>
+                <td style={{ padding: 8, fontFamily: "'JetBrains Mono', monospace", color: "var(--tx2)", borderBottom: "1px solid rgba(255,255,255,.02)" }}>{sc.exitValue != null ? fmtCurrency(sc.exitValue) : "—"}</td>
+                <td style={{ padding: 8, fontFamily: "'JetBrains Mono', monospace", color, borderBottom: "1px solid rgba(255,255,255,.02)" }}>{sc.irr != null ? `${sc.irr.toFixed(1)}%` : "—"}</td>
+                <td style={{ padding: 8, fontFamily: "'JetBrains Mono', monospace", color, borderBottom: "1px solid rgba(255,255,255,.02)" }}>{sc.equityMultiple != null ? `${sc.equityMultiple.toFixed(2)}×` : "—"}</td>
               </tr>
             );
           })}

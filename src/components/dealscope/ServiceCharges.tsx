@@ -1,5 +1,7 @@
 "use client";
 
+import { Skeleton } from "./ui/Skeleton";
+
 export interface ServiceChargeItem {
   label: string;
   annualCost: number;
@@ -10,6 +12,7 @@ interface ServiceChargesProps {
   items: ServiceChargeItem[];
   totalBudget?: number;
   currency?: string;
+  isLoading?: boolean;
 }
 
 function fmtCurrency(n: number): string {
@@ -26,7 +29,25 @@ const CATEGORY_COLORS: Record<string, string> = {
   other:       "#8e8ea0",
 };
 
-export function ServiceCharges({ items, totalBudget }: ServiceChargesProps) {
+export function ServiceCharges({ items, totalBudget, isLoading = false }: ServiceChargesProps) {
+  if (isLoading) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {[1, 2, 3, 4].map(i => (
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Skeleton height={10} width={110} borderRadius={3} style={{ flexShrink: 0 }} />
+            <Skeleton height={5} style={{ flex: 1, borderRadius: 3 }} />
+            <Skeleton height={10} width={60} borderRadius={3} style={{ flexShrink: 0 }} />
+          </div>
+        ))}
+        <div style={{ borderTop: "1px solid var(--s3)", paddingTop: 8, display: "flex", justifyContent: "space-between" }}>
+          <Skeleton height={12} width={180} />
+          <Skeleton height={12} width={60} />
+        </div>
+      </div>
+    );
+  }
+
   if (!items || items.length === 0) {
     return (
       <div
@@ -49,7 +70,6 @@ export function ServiceCharges({ items, totalBudget }: ServiceChargesProps) {
 
   return (
     <div>
-      {/* Visual bar chart */}
       <div style={{ marginBottom: 14 }}>
         {items.map((item, i) => {
           const pct = total > 0 ? (item.annualCost / total) * 100 : 0;
@@ -60,35 +80,10 @@ export function ServiceCharges({ items, totalBudget }: ServiceChargesProps) {
               <div style={{ width: 110, fontSize: 10, color: "var(--tx3)", flexShrink: 0 }}>
                 {item.label}
               </div>
-              <div
-                style={{
-                  flex: 1,
-                  height: 5,
-                  background: "var(--s3)",
-                  borderRadius: 3,
-                  overflow: "hidden",
-                }}
-              >
-                <div
-                  style={{
-                    width: `${pct}%`,
-                    height: "100%",
-                    background: color,
-                    borderRadius: 3,
-                    transition: "width .6s ease",
-                  }}
-                />
+              <div style={{ flex: 1, height: 5, background: "var(--s3)", borderRadius: 3, overflow: "hidden" }}>
+                <div style={{ width: `${pct}%`, height: "100%", background: color, borderRadius: 3, transition: "width .6s ease" }} />
               </div>
-              <div
-                style={{
-                  width: 60,
-                  fontSize: 10,
-                  fontFamily: "'JetBrains Mono', monospace",
-                  color: "var(--tx2)",
-                  textAlign: "right",
-                  flexShrink: 0,
-                }}
-              >
+              <div style={{ width: 60, fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: "var(--tx2)", textAlign: "right", flexShrink: 0 }}>
                 {fmtCurrency(item.annualCost)}
               </div>
             </div>
@@ -96,24 +91,9 @@ export function ServiceCharges({ items, totalBudget }: ServiceChargesProps) {
         })}
       </div>
 
-      {/* Total */}
-      <div
-        style={{
-          borderTop: "1px solid var(--s3)",
-          paddingTop: 8,
-          display: "flex",
-          justifyContent: "space-between",
-          fontSize: 12,
-        }}
-      >
+      <div style={{ borderTop: "1px solid var(--s3)", paddingTop: 8, display: "flex", justifyContent: "space-between", fontSize: 12 }}>
         <span style={{ color: "var(--tx)" }}>Total annual service charge</span>
-        <span
-          style={{
-            fontFamily: "'JetBrains Mono', monospace",
-            fontWeight: 500,
-            color: "var(--tx)",
-          }}
-        >
+        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 500, color: "var(--tx)" }}>
           {fmtCurrency(total)}
         </span>
       </div>
