@@ -146,11 +146,13 @@ export async function GET(
 
     const html = renderMemoHTML(memoData);
 
-    // Return the HTML page directly — the browser handles print-to-PDF via Ctrl+P.
-    // No Puppeteer or server-side chromium required.
+    // Return as downloadable HTML file — user opens it and prints to PDF via browser (Cmd+P).
+    const safeAddress = (deal.address || id).replace(/[^a-zA-Z0-9\s-]/g, "").replace(/\s+/g, "-").slice(0, 60);
+    const filename = `ic-memo-${safeAddress}.html`;
     return new NextResponse(html, {
       headers: {
         "Content-Type": "text/html; charset=utf-8",
+        "Content-Disposition": `attachment; filename="${filename}"`,
       },
     });
   } catch (error: unknown) {
