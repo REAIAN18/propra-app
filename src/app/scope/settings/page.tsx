@@ -29,11 +29,97 @@ interface Mandate {
   matches?: number;
 }
 
+function CreateMandateModal({ onClose, onCreated }: { onClose: () => void; onCreated: (m: Mandate) => void }) {
+  const [name, setName] = useState("");
+  const [clientName, setClientName] = useState("");
+  const [assetClasses, setAssetClasses] = useState<string[]>([]);
+  const [locations, setLocations] = useState("");
+  const [priceMin, setPriceMin] = useState("");
+  const [priceMax, setPriceMax] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const toggleAsset = (a: string) => setAssetClasses((prev) => prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a]);
+
+  const handleCreate = async () => {
+    if (!name.trim()) return;
+    setSaving(true);
+    try {
+      const criteria: Record<string, unknown> = {};
+      if (assetClasses.length) criteria.assetClasses = assetClasses;
+      if (locations.trim()) criteria.locations = locations.split(",").map((l) => l.trim());
+      if (priceMin) criteria.priceMin = parseInt(priceMin, 10);
+      if (priceMax) criteria.priceMax = parseInt(priceMax, 10);
+
+      const res = await fetch("/api/dealscope/mandates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name.trim(), clientName: clientName.trim() || undefined, criteria }),
+      });
+      if (res.ok) onCreated(await res.json());
+    } catch (e) {
+      console.error("Create mandate failed:", e);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const inputStyle: React.CSSProperties = { width: "100%", padding: "10px 12px", background: "var(--s2)", border: "1px solid var(--s3)", borderRadius: 8, color: "var(--tx)", fontFamily: "var(--sans)", fontSize: 13, boxSizing: "border-box" };
+  const labelStyle: React.CSSProperties = { fontSize: 10, fontWeight: 600 as const, color: "var(--tx3)", textTransform: "uppercase" as const, letterSpacing: ".5px", display: "block", marginBottom: 4 };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.6)", backdropFilter: "blur(4px)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={onClose}>
+      <div style={{ background: "var(--s1)", border: "1px solid var(--s2)", borderRadius: 16, width: "90%", maxWidth: 480, boxShadow: "0 24px 80px rgba(0,0,0,.5)" }} onClick={(e) => e.stopPropagation()}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", borderBottom: "1px solid var(--s2)" }}>
+          <h3 style={{ fontFamily: "var(--serif)", fontSize: 18, color: "var(--tx)", fontWeight: 400 }}>Create mandate</h3>
+          <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 22, color: "var(--tx3)", cursor: "pointer" }}>&times;</button>
+        </div>
+        <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 14 }}>
+          <div>
+            <label style={labelStyle}>Name *</label>
+            <input style={inputStyle} placeholder="e.g. SE Industrial <£800k" value={name} onChange={(e) => setName(e.target.value)} />
+          </div>
+          <div>
+            <label style={labelStyle}>Client (optional)</label>
+            <input style={inputStyle} placeholder="e.g. Harrow Capital" value={clientName} onChange={(e) => setClientName(e.target.value)} />
+          </div>
+          <div>
+            <label style={labelStyle}>Asset types</label>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {["industrial", "office", "retail", "warehouse", "mixed"].map((a) => (
+                <button key={a} onClick={() => toggleAsset(a)} style={{ padding: "5px 12px", borderRadius: 20, border: `1px solid ${assetClasses.includes(a) ? "var(--acc)" : "var(--s3)"}`, background: assetClasses.includes(a) ? "rgba(124,106,240,.08)" : "transparent", color: assetClasses.includes(a) ? "#a899ff" : "var(--tx3)", fontFamily: "var(--sans)", fontSize: 11, cursor: "pointer" }}>{a}</button>
+              ))}
+            </div>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <div>
+              <label style={labelStyle}>Price min</label>
+              <input style={inputStyle} type="number" placeholder="200000" value={priceMin} onChange={(e) => setPriceMin(e.target.value)} />
+            </div>
+            <div>
+              <label style={labelStyle}>Price max</label>
+              <input style={inputStyle} type="number" placeholder="800000" value={priceMax} onChange={(e) => setPriceMax(e.target.value)} />
+            </div>
+          </div>
+          <div>
+            <label style={labelStyle}>Locations (comma-separated)</label>
+            <input style={inputStyle} placeholder="e.g. London, South East" value={locations} onChange={(e) => setLocations(e.target.value)} />
+          </div>
+        </div>
+        <div style={{ padding: "14px 20px", borderTop: "1px solid var(--s2)", display: "flex", gap: 8, justifyContent: "flex-end" }}>
+          <button onClick={onClose} style={{ padding: "8px 16px", borderRadius: 8, border: "1px solid var(--s3)", cursor: "pointer", fontFamily: "var(--sans)", fontSize: 12, fontWeight: 600, background: "var(--s2)", color: "var(--tx2)" }}>Cancel</button>
+          <button onClick={handleCreate} disabled={saving || !name.trim()} style={{ padding: "8px 16px", borderRadius: 8, border: "none", cursor: "pointer", fontFamily: "var(--sans)", fontSize: 12, fontWeight: 600, background: "var(--acc)", color: "#fff", opacity: saving || !name.trim() ? 0.6 : 1 }}>{saving ? "Creating…" : "Create mandate"}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>("criteria");
   const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
   const [mandates, setMandates] = useState<Mandate[]>([]);
   const [mandatesLoading, setMandatesLoading] = useState(false);
+  const [showCreateMandate, setShowCreateMandate] = useState(false);
 
   useEffect(() => {
     fetch("/api/dealscope/pipeline")
@@ -380,12 +466,21 @@ export default function SettingsPage() {
                     })}
                   </div>
                 )}
-                <button className={styles.primaryButton}>+ Create mandate</button>
+                <button className={styles.primaryButton} onClick={() => setShowCreateMandate(true)}>+ Create mandate</button>
               </div>
             </div>
           )}
         </div>
       </div>
+      {showCreateMandate && (
+        <CreateMandateModal
+          onClose={() => setShowCreateMandate(false)}
+          onCreated={(m) => {
+            setMandates((prev) => [m, ...prev]);
+            setShowCreateMandate(false);
+          }}
+        />
+      )}
     </AppShell>
   );
 }
