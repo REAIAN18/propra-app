@@ -57,12 +57,16 @@ export function calculateDealReturns(deal: DealForReturns): DealReturnsMetrics {
   // Calculate equity needed (35% of price for 65% LTV)
   const equityNeeded = price * 0.35;
 
-  // Build hold scenario inputs
+  // Build hold scenario inputs — UNLEVERED model (full property price as outlay).
+  // Using equityNeeded as currentValue was a bug: it omitted debt service but used
+  // equity as the outflow, mixing levered and unlevered assumptions and inflating IRR.
+  // Correct approach: treat as all-equity purchase (unlevered IRR).
+  // The Financials tab labels these as "Unlevered" to match.
   const passingRent = noi; // Assume NOI approximates passing rent (simplified)
   const marketERV = noi * 1.05; // Assume 5% upside to market ERV
 
   const holdInputs: HoldInputs = {
-    currentValue: equityNeeded, // We're analyzing from equity investment perspective
+    currentValue: price, // Full property price — unlevered equity model
     passingRent,
     marketERV,
     vacancyAllowance: 0.05, // 5%
@@ -80,9 +84,9 @@ export function calculateDealReturns(deal: DealForReturns): DealReturnsMetrics {
     return {
       capRate,
       noi,
-      irr5yr: holdResult.irr * 100, // Convert to percentage
+      irr5yr: holdResult.irr * 100, // Convert to percentage (unlevered IRR)
       cashOnCash: holdResult.cashYield, // Already in percentage
-      equityMultiple: holdResult.equityMultiple,
+      equityMultiple: holdResult.equityMultiple, // Unlevered equity multiple
       equityNeeded,
     };
   } catch (error) {
