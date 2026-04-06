@@ -7,6 +7,7 @@
 
 import { AISummary, Gallery } from "@/lib/dealscope/components";
 import type { GalleryItem } from "@/lib/dealscope/components";
+import { EPCCard } from "@/components/dealscope/EPCCard";
 import { SalesHistoryTable } from "@/components/dealscope/SalesHistoryTable";
 import type { SaleRecord } from "@/components/dealscope/SalesHistoryTable";
 import type { RawDeal } from "./types";
@@ -110,28 +111,17 @@ export function PropertyTab({ deal }: Props) {
           )}
         </div>
 
-        {(epcData ?? deal.epcRating) ? (
-          <div className={s.card}>
-            <div className={s.cardTitle}>Energy performance</div>
-            <div className={s.epcRow}>
-              <div className={s.epcBadge}>{(epcData?.epcRating as string | undefined) ?? deal.epcRating}</div>
-              <div>
-                <div className={s.epcRating}>Current: {(epcData?.epcRating as string | undefined) ?? deal.epcRating}</div>
-                {epcData?.epcPotential != null && (
-                  <div className={s.epcPotential}>Potential: {epcData.epcPotential as string}</div>
-                )}
-              </div>
-            </div>
-            {epcData?.validUntil != null && <Row l="Valid until" v={epcData.validUntil as string} mono />}
-            {epcData?.meesRisk != null && <Row l="MEES compliance" v={epcData.meesRisk as string} color="amber" />}
-            {epcData?.co2Emissions != null && <Row l="CO₂ emissions" v={epcData.co2Emissions as string} />}
-          </div>
-        ) : (
-          <div className={s.card}>
-            <div className={s.cardTitle}>Energy performance</div>
-            <p style={{ fontSize: 11, color: "var(--tx3)", margin: 0 }}>EPC data not available.</p>
-          </div>
-        )}
+        <EPCCard
+          rating={(epcData?.epcRating as string | undefined) ?? deal.epcRating ?? undefined}
+          potentialRating={epcData?.epcPotential as string | undefined}
+          validUntil={epcData?.validUntil as string | undefined}
+          meesCompliance={epcData?.meesRisk as string | undefined}
+          co2Emissions={epcData?.co2Emissions as string | undefined}
+          certificateDate={epcData?.certificateDate as string | undefined}
+          floorArea={epcData?.floorArea as string | undefined}
+          mainHeating={epcData?.mainHeating as string | undefined}
+          assessmentType={epcData?.assessmentType as string | undefined}
+        />
       </div>
 
       {/* T08 — Image Gallery */}
