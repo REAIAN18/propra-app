@@ -17,8 +17,12 @@ import type { ValuationScenario } from "@/components/dealscope/MultipleValuation
 import { ServiceCharges } from "@/components/dealscope/ServiceCharges";
 import type { ServiceChargeItem } from "@/components/dealscope/ServiceCharges";
 import { LettingScenariosTable } from "@/components/dealscope/LettingScenariosTable";
+import { SalesHistoryTable } from "@/components/dealscope/SalesHistoryTable";
+import type { SaleRecord } from "@/components/dealscope/SalesHistoryTable";
 import { EnvironmentalRiskBars } from "@/components/dealscope/EnvironmentalRiskBars";
 import type { EnvironmentalRisk } from "@/components/dealscope/EnvironmentalRiskBars";
+import { DocumentList } from "@/components/dealscope/DocumentList";
+import type { DocumentItem } from "@/components/dealscope/DocumentList";
 import { calculateIRR } from "@/lib/dealscope/calculations/irr";
 import { calculateCAPEX } from "@/lib/dealscope/calculations/capex";
 import { calculateEquityMultiple } from "@/lib/dealscope/calculations/equity";
@@ -308,6 +312,20 @@ function ComparablesTab({ deal }: { deal: RawDeal }) {
           <ServiceCharges items={serviceItems} />
         </div>
       )}
+
+      <div className={`${s.card} ${s.anim} ${s.a3}`}>
+        <div className={s.cardTitle}>Subject property sales history</div>
+        <SalesHistoryTable sales={(() => {
+          const raw = (ds.salesHistory as Record<string, unknown>[] | undefined) ?? [];
+          return (Array.isArray(raw) ? raw : []).map((r: Record<string, unknown>): SaleRecord => ({
+            date: (r.date ?? r.transferDate ?? r.dateSold ?? "") as string,
+            price: (r.price ?? r.pricePaid ?? 0) as number,
+            type: (r.type ?? r.propertyType) as string | undefined,
+            tenure: (r.tenure) as string | undefined,
+            newBuild: (r.newBuild ?? r.isNew) as boolean | undefined,
+          }));
+        })()} title="" />
+      </div>
     </>
   );
 }
@@ -369,9 +387,95 @@ function DueDiligenceTab({ deal }: { deal: RawDeal }) {
           })()
         } />
       </div>
+
+      <div className={`${s.card} ${s.anim} ${s.a3}`}>
+        <div className={s.cardTitle}>Documents</div>
+        <DocumentList items={(() => {
+          const uploadedDocs = (ds.documents as DocumentItem[] | undefined) ?? [];
+          const generated: DocumentItem[] = [
+            { type: "pdf", name: "IC Memo", description: "Investment Committee memorandum", action: "generate", onAction: () => window.open(`/api/dealscope/properties/${deal.id}/export/pdf`, "_blank") },
+            { type: "xlsx", name: "Financial model", description: "IRR, cash flows, scenarios", action: "generate", onAction: () => { const a = document.createElement("a"); a.href = `/api/dealscope/properties/${deal.id}/export/excel`; a.download = ""; a.click(); } },
+          ];
+          return [...uploadedDocs, ...generated];
+        })()} />
+      </div>
     </>
   );
 }
+
+function DossierSidebar({ deal }: { deal: RawDeal }) {
+  const ds = (deal.dataSources ?? {}) as Record<string, unknown>;
+  const ai = ds.aiAnalysis as Record<string, unknown> | undefined;
+  const mandateTag = (ds.mandate as string | undefined) ?? (ai?.mandateTag as string | undefined);
+  const mandateMatch = (ai?.mandateMatch as string | undefined) ?? (ai?.mandateMatchReason as string | undefined);
+
+  const DATA_SOURCE_KEYS = [
+    { key: "epcData",           label: "EPC" },
+    { key: "landRegistry",      label: "Land Registry" },
+    { key: "companiesHouse",    label: "Companies House" },
+    { key: "gazette",           label: "London Gazette" },
+    { key: "planning",          label: "Planning data" },
+    { key: "historicEngland",   label: "Historic England" },
+    { key: "environmentalData", label: "Environment Agency" },
+    { key: "images",            label: "Property images" },
+    { key: "listing",           label: "Listing data" },
+    { key: "aiAnalysis",        label: "AI analysis" },
+  ] as const;
+  const presentSources = DATA_SOURCE_KEYS.filter(({ key }) => {
+    const v = ds[key];
+    if (v == null) return false;
+    if (Array.isArray(v)) return (v as unknown[]).length > 0;
+    return true;
+  });
+
+  const relatedRaw = (ds.relatedProperties as Record<string, unknown>[] | undefined)
+    ?? (ds.nearby as Record<string, unknown>[] | undefined)
+    ?? [];
+  const related = (Array.isArray(relatedRaw) ? relatedRaw : []).slice(0, 5);
+
+  return (
+    <>
+      <div className={s.sideCard}>
+        <div className={s.cardTitle}>Mandate match</div>
+        {mandateTag && <div className={s.mandateBadge}>{mandateTag}</div>}
+        <div className={s.sideText} style={{ marginTop: mandateTag ? 6 : 0 }}>
+          {mandateMatch ?? (mandateTag ? "Matches active mandate criteria." : "No mandate configured for this deal.")}
+        </div>
+      </div>
+
+      {presentSources.length > 0 && (
+        <div className={s.sideCard}>
+          <div className={s.cardTitle}>Data sources</div>
+          <div className={s.sourceList}>
+            {presentSources.map(({ label }) => (
+              <div key={label} style={{ display: "flex", alignItems: "center", gap: 6, padding: "2px 0" }}>
+                <span className={s.sourceCheck}>✓</span>
+                <span>{label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {related.length > 0 && (
+        <div className={s.sideCard}>
+          <div className={s.cardTitle}>Related properties</div>
+          {related.map((p, i) => (
+            <div key={i} className={s.relPropRow}>
+              <div className={s.relPropAddr}>{(p.address ?? p.name ?? "Property") as string}</div>
+              {(p.price ?? p.askingPrice) != null && (
+                <div className={s.relPropPrice}>{fmtCcy((p.price ?? p.askingPrice) as number)}</div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
+const PIPELINE_STAGES = ["Identified", "Researched", "Approached", "Negotiating", "Under offer", "Completing"];
+const WATCH_REASONS = ["Price change", "Admin resolution / sale", "Auction listing", "Planning application", "EPC change", "Any change"];
 
 export default function PropertyDossierPage() {
   const { id } = useParams<{ id: string }>();
@@ -381,6 +485,42 @@ export default function PropertyDossierPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("Overview");
   const [exporting, setExporting] = useState<string | null>(null);
+  const [showPipelineMenu, setShowPipelineMenu] = useState(false);
+  const [showWatchModal, setShowWatchModal] = useState(false);
+  const [watched, setWatched] = useState(false);
+  const [watchReasons, setWatchReasons] = useState<string[]>(["Price change", "Admin resolution / sale"]);
+  const [watchNote, setWatchNote] = useState("");
+  const [toast, setToast] = useState<{ msg: string } | null>(null);
+
+  function showToast(msg: string) {
+    setToast({ msg });
+    setTimeout(() => setToast(null), 3500);
+  }
+
+  async function handleAddToPipeline(stage: string) {
+    setShowPipelineMenu(false);
+    try {
+      await fetch("/api/dealscope/pipeline", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ propertyId: id, stage: stage.toLowerCase().replace(/ /g, "_") }),
+      });
+    } catch {}
+    showToast(`Added to pipeline — ${stage}`);
+  }
+
+  async function handleWatch() {
+    setShowWatchModal(false);
+    try {
+      await fetch("/api/dealscope/watchlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ propertyId: id, reasons: watchReasons, note: watchNote }),
+      });
+    } catch {}
+    setWatched(true);
+    showToast("Added to watchlist");
+  }
 
   const handleExportPdf = () => {
     if (!id) return;
@@ -490,9 +630,12 @@ export default function PropertyDossierPage() {
             dataSources: deal.dataSources,
           }}
           exporting={exporting}
+          watched={watched}
           onBack={() => router.back()}
           onExportMemo={handleExportPdf}
           onContact={() => setActiveTab("Overview")}
+          onAddToPipeline={() => setShowPipelineMenu((v) => !v)}
+          onWatch={() => setShowWatchModal(true)}
         />
 
         <div style={{ padding: "0 20px" }}>
@@ -509,20 +652,99 @@ export default function PropertyDossierPage() {
               ↓ Excel
             </button>
           </div>
-          <div className={s.tabContent} style={{ paddingBottom: 40 }}>
-            {activeTab === "Overview"       && <OverviewTab      deal={deal} prop={prop} />}
-            {activeTab === "Property"       && <PropertyTab      deal={deal} />}
-            {activeTab === "Planning"       && <PlanningTab      deal={deal} />}
-            {activeTab === "Title & Legal"  && <TitleTab />}
-            {activeTab === "Environmental"  && <EnvironmentalTab />}
-            {activeTab === "Ownership"      && <OwnershipTab />}
-            {activeTab === "Financials"     && <FinancialsTabV2  deal={deal} prop={prop} />}
-            {activeTab === "Comparables"    && <ComparablesTab   deal={deal} />}
-            {activeTab === "Market"         && <MarketTab />}
-            {activeTab === "Approach"       && <ApproachTab />}
-            {activeTab === "Due Diligence"  && <DueDiligenceTab  deal={deal} />}
+          <div className={s.dossierLayout}>
+            <div className={s.dossierMain}>
+              <div className={s.tabContent} style={{ paddingBottom: 40 }}>
+                {activeTab === "Overview"       && <OverviewTab      deal={deal} prop={prop} />}
+                {activeTab === "Property"       && <PropertyTab      deal={deal} />}
+                {activeTab === "Planning"       && <PlanningTab      deal={deal} />}
+                {activeTab === "Title & Legal"  && <TitleTab />}
+                {activeTab === "Environmental"  && <EnvironmentalTab />}
+                {activeTab === "Ownership"      && <OwnershipTab />}
+                {activeTab === "Financials"     && <FinancialsTabV2  deal={deal} prop={prop} />}
+                {activeTab === "Comparables"    && <ComparablesTab   deal={deal} />}
+                {activeTab === "Market"         && <MarketTab />}
+                {activeTab === "Approach"       && <ApproachTab />}
+                {activeTab === "Due Diligence"  && <DueDiligenceTab  deal={deal} />}
+              </div>
+            </div>
+            <div className={s.dossierSide}>
+              <DossierSidebar deal={deal} />
+            </div>
           </div>
         </div>
+
+        {/* ── PIPELINE STAGE DROPDOWN ── */}
+        {showPipelineMenu && (
+          <div style={{ position: "fixed", inset: 0, zIndex: 50 }} onClick={() => setShowPipelineMenu(false)}>
+            <div
+              style={{ position: "absolute", top: 120, right: 24, background: "var(--s1)", border: "1px solid var(--s2)", borderRadius: 10, minWidth: 200, boxShadow: "0 8px 32px rgba(0,0,0,.4)", zIndex: 51, overflow: "hidden" }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={{ padding: "6px 12px", fontSize: 10, color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".5px", borderBottom: "1px solid var(--s2)" }}>Add to stage:</div>
+              {PIPELINE_STAGES.map((stage) => (
+                <button
+                  key={stage}
+                  onClick={() => handleAddToPipeline(stage)}
+                  style={{ width: "100%", textAlign: "left", padding: "9px 14px", background: "none", border: "none", color: "var(--tx)", fontSize: 12, cursor: "pointer", fontFamily: "var(--sans)", transition: ".15s" }}
+                  onMouseEnter={(e) => { (e.target as HTMLElement).style.background = "var(--s2)"; }}
+                  onMouseLeave={(e) => { (e.target as HTMLElement).style.background = "none"; }}
+                >
+                  {stage}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── WATCH MODAL ── */}
+        {showWatchModal && (
+          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.6)", zIndex: 60, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowWatchModal(false)}>
+            <div style={{ background: "var(--s1)", border: "1px solid var(--s2)", borderRadius: 14, width: "90%", maxWidth: 460, boxShadow: "0 20px 60px rgba(0,0,0,.5)" }} onClick={(e) => e.stopPropagation()}>
+              <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--s2)", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div>
+                  <div style={{ fontFamily: "var(--serif)", fontSize: 18 }}>Watch this property</div>
+                  <div style={{ fontSize: 11, color: "var(--tx2)", marginTop: 2 }}>{deal.address}</div>
+                </div>
+                <button onClick={() => setShowWatchModal(false)} style={{ background: "none", border: "none", color: "var(--tx3)", cursor: "pointer", fontSize: 16 }}>✕</button>
+              </div>
+              <div style={{ padding: "16px 20px" }}>
+                <div style={{ fontSize: 12, color: "var(--tx2)", marginBottom: 12 }}>You&apos;ll get alerts when anything changes — price, ownership, EPC, planning, or company status.</div>
+                <div style={{ fontSize: 10, color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".5px", marginBottom: 8 }}>What are you watching for?</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 16 }}>
+                  {WATCH_REASONS.map((r) => (
+                    <button
+                      key={r}
+                      onClick={() => setWatchReasons((prev) => prev.includes(r) ? prev.filter((x) => x !== r) : [...prev, r])}
+                      style={{ padding: "7px 14px", borderRadius: 20, border: watchReasons.includes(r) ? "1px solid rgba(124,106,240,.3)" : "1px solid var(--s3)", background: watchReasons.includes(r) ? "rgba(124,106,240,.08)" : "transparent", color: watchReasons.includes(r) ? "#a899ff" : "var(--tx3)", fontSize: 12, cursor: "pointer", textAlign: "left", fontFamily: "var(--sans)", transition: ".15s" }}
+                    >
+                      {r}
+                    </button>
+                  ))}
+                </div>
+                <div style={{ fontSize: 10, color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".5px", marginBottom: 6 }}>Note (optional)</div>
+                <textarea
+                  placeholder="Why are you watching? e.g. 'Waiting for admin to market publicly'"
+                  value={watchNote}
+                  onChange={(e) => setWatchNote(e.target.value)}
+                  style={{ width: "100%", padding: "8px 12px", background: "var(--s2)", border: "1px solid var(--s3)", borderRadius: 8, color: "var(--tx)", fontSize: 11, fontFamily: "var(--sans)", resize: "vertical", height: 56, outline: "none", boxSizing: "border-box" }}
+                />
+              </div>
+              <div style={{ padding: "12px 20px", borderTop: "1px solid var(--s2)", display: "flex", gap: 6, justifyContent: "flex-end" }}>
+                <button onClick={() => setShowWatchModal(false)} style={{ padding: "8px 16px", borderRadius: 8, border: "1px solid var(--s3)", background: "var(--s2)", color: "var(--tx2)", cursor: "pointer", fontSize: 12, fontFamily: "var(--sans)", fontWeight: 600 }}>Cancel</button>
+                <button onClick={handleWatch} style={{ padding: "8px 16px", borderRadius: 8, border: "none", background: "var(--acc)", color: "#fff", cursor: "pointer", fontSize: 12, fontFamily: "var(--sans)", fontWeight: 600 }}>Add to watchlist</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── TOAST ── */}
+        {toast && (
+          <div style={{ position: "fixed", bottom: 24, right: 24, zIndex: 80, background: "var(--s1)", border: "1px solid var(--s2)", borderRadius: 10, padding: "12px 16px", display: "flex", alignItems: "center", gap: 10, boxShadow: "0 8px 24px rgba(0,0,0,.4)", fontSize: 13 }}>
+            <div style={{ width: 24, height: 24, borderRadius: "50%", background: "rgba(45,212,168,.1)", color: "var(--grn)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12 }}>✓</div>
+            <span>{toast.msg}</span>
+          </div>
+        )}
       </div>
     </AppShell>
   );

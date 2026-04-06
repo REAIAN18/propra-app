@@ -6,6 +6,8 @@
  */
 
 import { MultipleValuations, ComparablesTable, ServiceCharges, MetricCard } from "@/lib/dealscope/components";
+import { LettingScenariosTable } from "@/components/dealscope/LettingScenariosTable";
+import type { LettingScenario } from "@/components/dealscope/LettingScenariosTable";
 import type { ValuationScenario } from "@/components/dealscope/MultipleValuations";
 import type { Comparable } from "@/components/dealscope/ComparablesTable";
 import type { ServiceChargeItem } from "@/components/dealscope/ServiceCharges";
@@ -46,6 +48,47 @@ function Row({ l, v, color, mono }: { l: string; v: string; color?: "green" | "a
       <span className={`${s.rowV} ${mono ? s.mono : ""}`} style={{ color: c }}>{v}</span>
     </div>
   );
+}
+
+function buildLettingScenarios(prop: Property, irrResult: ReturnType<typeof calculateIRR>, equityResult: ReturnType<typeof calculateEquityMultiple>): LettingScenario[] {
+  if (!prop.erv && !prop.size) return [];
+  const baseRentPa = prop.erv ?? (prop.size ? prop.size * 6.5 : 0);
+  const baseExitValue = equityResult.exitValue;
+  return [
+    {
+      label: "Bear",
+      rentPsf: prop.size ? parseFloat(((baseRentPa * 0.85) / prop.size).toFixed(2)) : undefined,
+      rentPa: Math.round(baseRentPa * 0.85),
+      voidMonths: 12,
+      yield: parseFloat((irrResult.irr * 100 * 0.6).toFixed(1)),
+      netIncomePa: Math.round(baseRentPa * 0.85 * 0.75),
+      exitValue: Math.round(baseExitValue * 0.80),
+      irr: parseFloat((irrResult.irr * 100 * 0.55).toFixed(1)),
+      equityMultiple: parseFloat((equityResult.equityMultiple * 0.7).toFixed(2)),
+    },
+    {
+      label: "Base",
+      rentPsf: prop.size ? parseFloat((baseRentPa / prop.size).toFixed(2)) : undefined,
+      rentPa: Math.round(baseRentPa),
+      voidMonths: Math.round((prop.expectedVoid ?? 3)),
+      yield: parseFloat((irrResult.irr * 100 * 0.9).toFixed(1)),
+      netIncomePa: Math.round(irrResult.breakdown.annualNOI),
+      exitValue: Math.round(baseExitValue),
+      irr: parseFloat((irrResult.irr * 100).toFixed(1)),
+      equityMultiple: parseFloat(equityResult.equityMultiple.toFixed(2)),
+    },
+    {
+      label: "Bull",
+      rentPsf: prop.size ? parseFloat(((baseRentPa * 1.20) / prop.size).toFixed(2)) : undefined,
+      rentPa: Math.round(baseRentPa * 1.20),
+      voidMonths: 1,
+      yield: parseFloat((irrResult.irr * 100 * 1.25).toFixed(1)),
+      netIncomePa: Math.round(baseRentPa * 1.20 * 0.90),
+      exitValue: Math.round(baseExitValue * 1.25),
+      irr: parseFloat((irrResult.irr * 100 * 1.45).toFixed(1)),
+      equityMultiple: parseFloat((equityResult.equityMultiple * 1.4).toFixed(2)),
+    },
+  ];
 }
 
 export function FinancialsTab({ deal, prop }: Props) {
@@ -157,6 +200,18 @@ export function FinancialsTab({ deal, prop }: Props) {
           <ServiceCharges items={serviceItems} />
         </div>
       )}
+
+      {/* Letting scenarios */}
+      {(() => {
+        const lettingScenarios = buildLettingScenarios(prop, irrResult, equityResult);
+        if (lettingScenarios.length === 0) return null;
+        return (
+          <div className={`${s.card} ${s.a3}`}>
+            <div className={s.cardTitle}>Letting scenarios</div>
+            <LettingScenariosTable scenarios={lettingScenarios} title="" />
+          </div>
+        );
+      })()}
     </>
   );
 }

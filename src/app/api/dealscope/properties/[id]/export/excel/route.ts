@@ -126,7 +126,7 @@ export async function GET(
       ["Net Initial Yield", pct(returns.capRate)],
       ["5-yr IRR", pct(returns.irr5yr)],
       ["Cash-on-Cash", pct(returns.cashOnCash)],
-      ["Equity Multiple", returns.equityMultiple ? `${returns.equityMultiple}×` : "—"],
+      ["Equity Multiple", returns.equityMultiple != null ? `${parseFloat(returns.equityMultiple).toFixed(2)}×` : "—"],
       ["Equity Needed", fmt(returns.equityNeeded)],
     ];
     retRows.forEach(([metric, value]) => fin.addRow({ metric, value, source: "" }));
@@ -201,9 +201,9 @@ export async function GET(
     scenarios.forEach((s) => {
       scSheet.addRow({
         name: s.name || "—",
-        irr: s.irr ? `${s.irr}%` : "—",
-        em: s.equityMultiple ? `${s.equityMultiple}×` : "—",
-        yield: s.cashYield ? `${s.cashYield}%` : "—",
+        irr: s.irr != null ? `${parseFloat(s.irr).toFixed(1)}%` : "—",
+        em: s.equityMultiple != null ? `${parseFloat(s.equityMultiple).toFixed(2)}×` : "—",
+        yield: s.cashYield != null ? `${parseFloat(s.cashYield).toFixed(1)}%` : "—",
         npv: s.npv ? fmt(s.npv) : "—",
       });
     });
