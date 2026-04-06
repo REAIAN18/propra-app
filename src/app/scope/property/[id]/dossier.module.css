@@ -354,6 +354,34 @@
 .backBtn2 { padding: 8px 18px; border-radius: 8px; background: var(--s2); border: 1px solid var(--s3); color: var(--tx2); font-size: 12px; font-weight: 600; cursor: pointer; font-family: var(--sans); transition: background .15s; }
 .backBtn2:hover { background: var(--s3); }
 
+/* ── RIGHT SIDEBAR TWO-COLUMN LAYOUT ── */
+.dossierLayout {
+  display: grid;
+  grid-template-columns: 1fr 268px;
+  gap: 0;
+  align-items: start;
+}
+.dossierMain { min-width: 0; }
+.dossierSide {
+  padding: 12px 0 40px 16px;
+  position: sticky;
+  top: 0;
+  max-height: 100vh;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.dossierSide::-webkit-scrollbar { display: none; }
+@media (max-width: 1100px) {
+  .dossierLayout { grid-template-columns: 1fr; }
+  .dossierSide { display: none; }
+}
+
+/* ── RELATED PROPERTY ROW ── */
+.relPropRow { display: flex; justify-content: space-between; gap: 8px; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,.03); align-items: flex-start; }
+.relPropRow:last-child { border-bottom: none; }
+.relPropAddr { font-size: 11px; color: var(--tx2); flex: 1; min-width: 0; line-height: 1.4; }
+.relPropPrice { font-family: var(--mono); font-size: 10px; color: var(--grn); flex-shrink: 0; margin-top: 1px; }
+
 /* ── 4-TAB PAGE LAYOUT (Steps 4 & 5 rebuild) ── */
 .addr { font-family: var(--serif); font-size: 20px; margin-bottom: 4px; letter-spacing: -.3px; font-weight: 400; }
 .backBtn { font-size: 11px; color: var(--tx3); cursor: pointer; margin-bottom: 6px; display: inline-block; transition: color .15s; background: none; border: none; padding: 0; }

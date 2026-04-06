@@ -373,6 +373,77 @@ function DueDiligenceTab({ deal }: { deal: RawDeal }) {
   );
 }
 
+function DossierSidebar({ deal }: { deal: RawDeal }) {
+  const ds = (deal.dataSources ?? {}) as Record<string, unknown>;
+  const ai = ds.aiAnalysis as Record<string, unknown> | undefined;
+  const mandateTag = (ds.mandate as string | undefined) ?? (ai?.mandateTag as string | undefined);
+  const mandateMatch = (ai?.mandateMatch as string | undefined) ?? (ai?.mandateMatchReason as string | undefined);
+
+  const DATA_SOURCE_KEYS = [
+    { key: "epcData",           label: "EPC" },
+    { key: "landRegistry",      label: "Land Registry" },
+    { key: "companiesHouse",    label: "Companies House" },
+    { key: "gazette",           label: "London Gazette" },
+    { key: "planning",          label: "Planning data" },
+    { key: "historicEngland",   label: "Historic England" },
+    { key: "environmentalData", label: "Environment Agency" },
+    { key: "images",            label: "Property images" },
+    { key: "listing",           label: "Listing data" },
+    { key: "aiAnalysis",        label: "AI analysis" },
+  ] as const;
+  const presentSources = DATA_SOURCE_KEYS.filter(({ key }) => {
+    const v = ds[key];
+    if (v == null) return false;
+    if (Array.isArray(v)) return (v as unknown[]).length > 0;
+    return true;
+  });
+
+  const relatedRaw = (ds.relatedProperties as Record<string, unknown>[] | undefined)
+    ?? (ds.nearby as Record<string, unknown>[] | undefined)
+    ?? [];
+  const related = (Array.isArray(relatedRaw) ? relatedRaw : []).slice(0, 5);
+
+  return (
+    <>
+      <div className={s.sideCard}>
+        <div className={s.cardTitle}>Mandate match</div>
+        {mandateTag && <div className={s.mandateBadge}>{mandateTag}</div>}
+        <div className={s.sideText} style={{ marginTop: mandateTag ? 6 : 0 }}>
+          {mandateMatch ?? (mandateTag ? "Matches active mandate criteria." : "No mandate configured for this deal.")}
+        </div>
+      </div>
+
+      {presentSources.length > 0 && (
+        <div className={s.sideCard}>
+          <div className={s.cardTitle}>Data sources</div>
+          <div className={s.sourceList}>
+            {presentSources.map(({ label }) => (
+              <div key={label} style={{ display: "flex", alignItems: "center", gap: 6, padding: "2px 0" }}>
+                <span className={s.sourceCheck}>✓</span>
+                <span>{label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {related.length > 0 && (
+        <div className={s.sideCard}>
+          <div className={s.cardTitle}>Related properties</div>
+          {related.map((p, i) => (
+            <div key={i} className={s.relPropRow}>
+              <div className={s.relPropAddr}>{(p.address ?? p.name ?? "Property") as string}</div>
+              {(p.price ?? p.askingPrice) != null && (
+                <div className={s.relPropPrice}>{fmtCcy((p.price ?? p.askingPrice) as number)}</div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
 const PIPELINE_STAGES = ["Identified", "Researched", "Approached", "Negotiating", "Under offer", "Completing"];
 const WATCH_REASONS = ["Price change", "Admin resolution / sale", "Auction listing", "Planning application", "EPC change", "Any change"];
 
@@ -551,18 +622,25 @@ export default function PropertyDossierPage() {
               ↓ Excel
             </button>
           </div>
-          <div className={s.tabContent} style={{ paddingBottom: 40 }}>
-            {activeTab === "Overview"       && <OverviewTab      deal={deal} prop={prop} />}
-            {activeTab === "Property"       && <PropertyTab      deal={deal} />}
-            {activeTab === "Planning"       && <PlanningTab      deal={deal} />}
-            {activeTab === "Title & Legal"  && <TitleTab deal={deal} />}
-            {activeTab === "Environmental"  && <EnvironmentalTab />}
-            {activeTab === "Ownership"      && <OwnershipTab />}
-            {activeTab === "Financials"     && <FinancialsTabV2  deal={deal} prop={prop} />}
-            {activeTab === "Comparables"    && <ComparablesTab   deal={deal} />}
-            {activeTab === "Market"         && <MarketTab />}
-            {activeTab === "Approach"       && <ApproachTab />}
-            {activeTab === "Due Diligence"  && <DueDiligenceTab  deal={deal} />}
+          <div className={s.dossierLayout}>
+            <div className={s.dossierMain}>
+              <div className={s.tabContent} style={{ paddingBottom: 40 }}>
+                {activeTab === "Overview"       && <OverviewTab      deal={deal} prop={prop} />}
+                {activeTab === "Property"       && <PropertyTab      deal={deal} />}
+                {activeTab === "Planning"       && <PlanningTab      deal={deal} />}
+                {activeTab === "Title & Legal"  && <TitleTab />}
+                {activeTab === "Environmental"  && <EnvironmentalTab />}
+                {activeTab === "Ownership"      && <OwnershipTab />}
+                {activeTab === "Financials"     && <FinancialsTabV2  deal={deal} prop={prop} />}
+                {activeTab === "Comparables"    && <ComparablesTab   deal={deal} />}
+                {activeTab === "Market"         && <MarketTab />}
+                {activeTab === "Approach"       && <ApproachTab />}
+                {activeTab === "Due Diligence"  && <DueDiligenceTab  deal={deal} />}
+              </div>
+            </div>
+            <div className={s.dossierSide}>
+              <DossierSidebar deal={deal} />
+            </div>
           </div>
         </div>
 
