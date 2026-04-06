@@ -15,6 +15,11 @@ type CashFlowRow = {
   cashFlow: number;
 };
 
+type SensitivityCell = {
+  label: string;
+  value: number;
+};
+
 type UnderwritingData = {
   deal: {
     id: string;
@@ -49,6 +54,13 @@ type UnderwritingData = {
     annualDebtService: number;
   };
   cashFlows: CashFlowRow[];
+  sensitivity?: {
+    capRates: SensitivityCell[];
+    growthRates: SensitivityCell[];
+    matrix: number[][];
+    currentCapRateIdx: number;
+    currentGrowthIdx: number;
+  };
 };
 
 export default function UnderwritePage() {
@@ -505,6 +517,64 @@ export default function UnderwritePage() {
           </div>
         </div>
 
+        {/* Sensitivity Matrix */}
+        {data.sensitivity && (
+          <div className="bg-[var(--s1)] border border-[var(--bdr)] rounded-[14px] mb-4 overflow-hidden">
+            <div className="px-5 py-3.5 border-b border-[var(--bdr)]">
+              <h4 className="text-[13px] font-medium text-[var(--tx)]">Sensitivity — IRR by Cap Rate × Rent Growth</h4>
+              <p className="text-[11px] text-[var(--tx3)] mt-0.5">
+                Levered IRR at each combination. Highlighted cell = current assumption.
+              </p>
+            </div>
+            <div className="overflow-x-auto p-4">
+              <table className="w-full border-collapse text-[11px]">
+                <thead>
+                  <tr>
+                    <th className="px-3 py-2 text-left text-[8px] font-mono font-medium text-[var(--tx3)] uppercase tracking-wider">
+                      Exit Cap Rate ↓ / Growth →
+                    </th>
+                    {data.sensitivity.growthRates.map((g, gi) => (
+                      <th
+                        key={gi}
+                        className={`px-3 py-2 text-center text-[8px] font-mono font-medium uppercase tracking-wider ${
+                          gi === data.sensitivity!.currentGrowthIdx ? "text-[var(--acc)]" : "text-[var(--tx3)]"
+                        }`}
+                      >
+                        {g.label} growth
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.sensitivity.capRates.map((cr, ci) => (
+                    <tr key={ci} className={ci < data.sensitivity!.capRates.length - 1 ? "border-b border-[var(--bdr)]" : ""}>
+                      <td className={`px-3 py-3 font-mono text-[10px] font-medium ${
+                        ci === data.sensitivity!.currentCapRateIdx ? "text-[var(--acc)]" : "text-[var(--tx2)]"
+                      }`}>
+                        {cr.value.toFixed(1)}% cap
+                      </td>
+                      {data.sensitivity.matrix[ci].map((irr, gi) => {
+                        const isCurrent = ci === data.sensitivity!.currentCapRateIdx && gi === data.sensitivity!.currentGrowthIdx;
+                        const irrColor = irr >= 15 ? "text-[var(--grn)]" : irr >= 10 ? "text-[var(--tx)]" : "text-[var(--red)]";
+                        return (
+                          <td
+                            key={gi}
+                            className={`px-3 py-3 text-center font-mono text-[12px] font-semibold rounded ${irrColor} ${
+                              isCurrent ? "bg-[var(--acc-lt)] border border-[var(--acc-bdr)]" : ""
+                            }`}
+                          >
+                            {irr.toFixed(1)}%
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
         {/* Action Buttons */}
         <div className="flex gap-2 mb-3">
           <button
@@ -534,9 +604,6 @@ export default function UnderwritePage() {
             className="flex-1 px-4 py-3 bg-[var(--s1)] text-[var(--tx)] border border-[var(--bdr)] rounded-lg text-[13px] font-medium hover:bg-[var(--s2)]"
           >
             View finance options →
-          </button>
-          <button className="flex-1 px-4 py-3 bg-[var(--s1)] text-[var(--tx)] border border-[var(--bdr)] rounded-lg text-[13px] font-medium hover:bg-[var(--s2)]">
-            Sensitivity analysis →
           </button>
         </div>
         <button
