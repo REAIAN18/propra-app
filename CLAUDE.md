@@ -1,5 +1,13 @@
 # RealHQ — Engineering Rules
 
+> ## 🚨 DEPLOYMENT FREEZE — ACTIVE (PRO-1010)
+> **ALL DEPLOYMENTS ARE FROZEN. Board directive issued 2026-04-06.**
+> - Do NOT run `vercel --prod` or any deploy command
+> - Do NOT trigger GitHub Actions deploys
+> - Do NOT push code intended for immediate deployment
+> - Push code to main for review ONLY — it will NOT be deployed until freeze is lifted
+> - **Only the board can lift this freeze.**
+
 > **STOP. Read this ENTIRE file before doing anything.**
 > **Read DECISIONS.md next.**
 > **Read CODE_INVENTORY.md before writing any code.**
@@ -154,16 +162,17 @@ Frontend: src/app/*/page.tsx, src/components/*, globals.css
 Backend: src/app/api/*, src/lib/*, prisma/schema.prisma
 Infra: vercel.json, .github/*, package.json, tsconfig.json
 
-## ⚠️ DEPLOYMENT — CRITICAL RULES
+## ⚠️ DEPLOYMENT — CRITICAL RULES — FREEZE IN EFFECT
+
+**🚨 DEPLOYMENT FREEZE ACTIVE (PRO-1010) — NO DEPLOYMENTS BY ANY MEANS.**
 
 **NEVER run `vercel --prod`, `vercel deploy`, or any Vercel CLI deploy command.**
 
-Agents do NOT trigger deployments. Deployments happen automatically on a schedule.
-
-### How deployments work
-- **Git push to main** — does NOT auto-deploy (disabled to control costs)
-- **GitHub Actions** — deploys to production every 4 hours (`0 */4 * * *`)
-- **Manual trigger** — board can trigger via GitHub Actions `workflow_dispatch` if urgent
+### Current deployment state (freeze active)
+- **Git push to main** — does NOT auto-deploy (disabled)
+- **GitHub Actions schedule** — paused, `workflow_dispatch` only
+- **Manual CLI deploy** — FORBIDDEN
+- **Who can deploy** — board only, by manually triggering GitHub Actions `workflow_dispatch`
 
 ### What agents must do
 1. Push code to main (git push only)
