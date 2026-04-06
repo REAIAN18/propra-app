@@ -225,6 +225,44 @@ function generateOpportunities(asset: {
     });
   }
 
+  // 11. NAMING RIGHTS
+  if (["office", "retail", "commercial", "mixed"].includes(assetType) && niaSqft >= 20000) {
+    const income = Math.round(8000 * fx);
+    const confidence = 42;
+    opportunities.push({
+      type: "naming_rights",
+      label: "Naming Rights",
+      annualIncome: income,
+      note: "Sell naming rights to a corporate sponsor",
+      confidence,
+      methodology: `Corporate naming deal: ${currency}8,000/yr for prominent building name placement`,
+      comparables: [],
+      riskFactors: [
+        { factor: "Requires brand-appropriate tenant mix", severity: "medium" },
+        { factor: "May conflict with anchor tenant branding", severity: "medium" },
+      ],
+    });
+  }
+
+  // 12. SHARED AMENITIES
+  if (["office", "flex", "mixed"].includes(assetType) && niaSqft >= 15000) {
+    const income = Math.round(niaSqft * 0.3 * fx);
+    const confidence = 52;
+    opportunities.push({
+      type: "shared_amenities",
+      label: "Shared Amenities",
+      annualIncome: income,
+      note: "Monetise gym, conference rooms, or rooftop for external bookings",
+      confidence,
+      methodology: `${Math.floor(niaSqft * 0.3)} sqft amenity space × ${currency}1/sqft/yr avg booking revenue = ${currency}${Math.round(niaSqft * 0.3 * fx).toLocaleString()}/yr`,
+      comparables: [],
+      riskFactors: [
+        { factor: "Access control and security required", severity: "medium" },
+        { factor: "Tenant approval may be needed", severity: "low" },
+      ],
+    });
+  }
+
   return opportunities.sort((a, b) => b.confidence - a.confidence);
 }
 

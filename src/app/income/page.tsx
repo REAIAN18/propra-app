@@ -21,6 +21,9 @@ const CATEGORY_BADGES: Record<string, string> = {
   "roofspace": "roofspace",
   "coworking": "coworking",
   "storage": "storage",
+  "laundry": "laundry",
+  "naming_rights": "naming",
+  "shared_amenities": "amenities",
 };
 
 const STATUS_TAG_STYLES: Record<string, { bg: string; color: string; border: string }> = {
@@ -471,6 +474,41 @@ export default function IncomePage() {
                     background: "var(--red-lt)",
                     color: "var(--red)",
                     border: "1px solid var(--red-bdr)"
+                  }),
+                  ...(CATEGORY_BADGES[cat.categoryKey] === "vending" && {
+                    background: "rgba(168,85,247,0.07)",
+                    color: "#a855f7",
+                    border: "1px solid rgba(168,85,247,0.22)"
+                  }),
+                  ...(CATEGORY_BADGES[cat.categoryKey] === "roofspace" && {
+                    background: "rgba(251,146,60,0.07)",
+                    color: "#fb923c",
+                    border: "1px solid rgba(251,146,60,0.22)"
+                  }),
+                  ...(CATEGORY_BADGES[cat.categoryKey] === "coworking" && {
+                    background: "rgba(45,212,191,0.07)",
+                    color: "#2dd4bf",
+                    border: "1px solid rgba(45,212,191,0.22)"
+                  }),
+                  ...(CATEGORY_BADGES[cat.categoryKey] === "storage" && {
+                    background: "var(--s3)",
+                    color: "var(--tx3)",
+                    border: "1px solid var(--bdr)"
+                  }),
+                  ...(CATEGORY_BADGES[cat.categoryKey] === "laundry" && {
+                    background: "rgba(99,102,241,0.07)",
+                    color: "#6366f1",
+                    border: "1px solid rgba(99,102,241,0.22)"
+                  }),
+                  ...(CATEGORY_BADGES[cat.categoryKey] === "naming" && {
+                    background: "rgba(236,72,153,0.07)",
+                    color: "#ec4899",
+                    border: "1px solid rgba(236,72,153,0.22)"
+                  }),
+                  ...(CATEGORY_BADGES[cat.categoryKey] === "amenities" && {
+                    background: "rgba(20,184,166,0.07)",
+                    color: "#14b8a6",
+                    border: "1px solid rgba(20,184,166,0.22)"
                   })
                 }}>
                   {CATEGORY_BADGES[cat.categoryKey]?.toUpperCase() || cat.categoryKey.toUpperCase()}

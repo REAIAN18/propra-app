@@ -22,6 +22,8 @@ export interface PlanningEntry {
   type: string;
   status: string;
   distanceFt?: number;
+  lat?: number;
+  lng?: number;
   impact: "threat" | "opportunity" | "neutral";
   impactScore: number;
   submittedDate: string;
@@ -36,6 +38,8 @@ export interface AssetPlanningData {
   assetId: string;
   assetName: string;
   location: string;
+  assetLat?: number;
+  assetLng?: number;
   planningHistory: PlanningEntry[];
   planningImpactSignal?: string | null;
   planningLastFetched?: string | null;
@@ -51,6 +55,8 @@ export async function GET() {
           assetId: "demo-1",
           assetName: "FL Mixed Portfolio",
           location: "Miami, FL",
+          assetLat: 25.7617,
+          assetLng: -80.1918,
           planningHistory: [
             {
               id: "demo-1-app-0",
@@ -60,6 +66,8 @@ export async function GET() {
               type: "major_commercial",
               status: "approved",
               distanceFt: 820,
+              lat: 25.7635,
+              lng: -80.1900,
               impact: "opportunity",
               impactScore: 8,
               submittedDate: "2025-08-15",
@@ -77,6 +85,8 @@ export async function GET() {
               type: "infrastructure",
               status: "pending",
               distanceFt: 1240,
+              lat: 25.7580,
+              lng: -80.1882,
               impact: "opportunity",
               impactScore: 7,
               submittedDate: "2026-02-01",
@@ -94,6 +104,8 @@ export async function GET() {
               type: "zoning_change",
               status: "withdrawn",
               distanceFt: 2640,
+              lat: 25.7550,
+              lng: -80.1922,
               impact: "neutral",
               impactScore: 3,
               submittedDate: "2025-11-10",
@@ -111,6 +123,8 @@ export async function GET() {
               type: "major_residential",
               status: "pending",
               distanceFt: 340,
+              lat: 25.7627,
+              lng: -80.1930,
               impact: "threat",
               impactScore: 6,
               submittedDate: "2026-01-15",
@@ -135,6 +149,8 @@ export async function GET() {
       name: true,
       location: true,
       address: true,
+      latitude: true,
+      longitude: true,
       planningHistory: true,
       // Wave 2 fields (null if migration hasn't run yet)
       planningImpactSignal: true,
@@ -165,6 +181,8 @@ export async function GET() {
         distanceFt:    app.distanceMetres
           ? Math.round(app.distanceMetres * 3.28084)
           : undefined,
+        lat:           app.latitude ?? undefined,
+        lng:           app.longitude ?? undefined,
         impact:        (app.impact ?? "neutral") as "threat" | "opportunity" | "neutral",
         impactScore:   app.impactScore ?? 5,
         submittedDate: app.submittedDate?.toISOString().split("T")[0] ?? "",
@@ -200,6 +218,8 @@ export async function GET() {
       assetId:              a.id,
       assetName:            a.name,
       location:             a.location ?? a.address ?? "",
+      assetLat:             (a as { latitude?: number | null }).latitude ?? undefined,
+      assetLng:             (a as { longitude?: number | null }).longitude ?? undefined,
       planningHistory,
       planningImpactSignal: (a as { planningImpactSignal?: string | null }).planningImpactSignal ?? null,
       planningLastFetched:  (a as { planningLastFetched?: Date | null }).planningLastFetched

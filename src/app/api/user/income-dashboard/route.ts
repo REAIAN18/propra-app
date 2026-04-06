@@ -108,6 +108,8 @@ const CATEGORY_LABELS: Record<string, string> = {
   "coworking": "Co-Working Conversion",
   "storage": "Storage Units",
   "laundry": "Laundry / Services",
+  "naming_rights": "Naming Rights",
+  "shared_amenities": "Shared Amenities",
 };
 
 const CATEGORY_PROVIDERS: Record<string, string[]> = {

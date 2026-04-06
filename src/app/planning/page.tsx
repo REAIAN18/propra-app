@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
 import { useNav } from "@/components/layout/NavContext";
@@ -17,6 +17,8 @@ type PlanningApplication = {
   impact: "positive" | "negative" | "neutral";
   impactReason?: string;
   submittedDate: string;
+  lat?: number;
+  lng?: number;
 };
 
 type DevPotential = {
@@ -50,6 +52,8 @@ type ApiEntry = {
   type: string;
   status: string;
   distanceFt?: number;
+  lat?: number;
+  lng?: number;
   impact: "opportunity" | "threat" | "neutral";
   impactScore: number;
   submittedDate: string;
@@ -64,6 +68,8 @@ type ApiAsset = {
   assetId: string;
   assetName: string;
   location: string;
+  assetLat?: number;
+  assetLng?: number;
   planningHistory: ApiEntry[];
   planningImpactSignal?: string | null;
   devPotential?: {
@@ -91,6 +97,23 @@ function mapStatus(status: string): "PENDING" | "APPROVED" | "REJECTED" {
   return "PENDING";
 }
 
+// ── Google Maps dark theme styles ──────────────────────────────────────
+const DARK_MAP_STYLES = [
+  { elementType: "geometry", stylers: [{ color: "#111116" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#09090b" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#555568" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#1f1f28" }] },
+  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#252533" }] },
+  { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#8888a0" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#09090b" }] },
+  { featureType: "poi", stylers: [{ visibility: "off" }] },
+  { featureType: "transit", stylers: [{ visibility: "off" }] },
+  { featureType: "administrative", elementType: "geometry", stylers: [{ color: "#252533" }] },
+  { featureType: "administrative.country", elementType: "labels.text.fill", stylers: [{ color: "#8888a0" }] },
+  { featureType: "administrative.locality", elementType: "labels.text.fill", stylers: [{ color: "#8888a0" }] },
+  { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#18181f" }] },
+];
+
 // ── Main Page ─────────────────────────────────────────────────────────
 export default function PlanningPage() {
   const { portfolioId } = useNav();
@@ -98,6 +121,13 @@ export default function PlanningPage() {
   const [viewMode, setViewMode] = useState<"list" | "map">("map");
   const [expandedApp, setExpandedApp] = useState<string | null>(null);
   const [applications, setApplications] = useState<PlanningApplication[]>([]);
+  const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
+  const [mapKey, setMapKey] = useState<string | null>(null);
+  const [mapsReady, setMapsReady] = useState(false);
+  const mapRef = useRef<HTMLDivElement>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mapInstance = useRef<any>(null);
+  const mapScriptLoaded = useRef(false);
   const [devPotential, setDevPotential] = useState<DevPotential>({
     level: "medium",
     upliftValue: 0,
@@ -124,12 +154,19 @@ export default function PlanningPage() {
             impact: mapImpact(e.impact),
             impactReason: e.notes,
             submittedDate: e.submittedDate ? new Date(e.submittedDate).toLocaleDateString("en-US", { month: "short", year: "numeric" }) : "—",
+            lat: e.lat,
+            lng: e.lng,
           }))
         );
         setApplications(apps);
 
-        // Use devPotential from first asset if available
+        // Set map center from first asset lat/lng
         const firstAsset = assets[0];
+        if (firstAsset?.assetLat && firstAsset?.assetLng) {
+          setMapCenter({ lat: firstAsset.assetLat, lng: firstAsset.assetLng });
+        }
+
+        // Use devPotential from first asset if available
         if (firstAsset?.devPotential) {
           const dp = firstAsset.devPotential;
           setDevPotential({
@@ -142,7 +179,119 @@ export default function PlanningPage() {
         }
       })
       .catch(() => {});
+
+    // Fetch map key for authenticated users
+    fetch("/api/user/planning/map-key")
+      .then((r) => r.json())
+      .then((d: { key?: string | null }) => {
+        if (d.key) setMapKey(d.key);
+      })
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Load Google Maps JS API once we have the key
+  useEffect(() => {
+    if (!mapKey || mapScriptLoaded.current) return;
+    mapScriptLoaded.current = true;
+    const script = document.createElement("script");
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${mapKey}`;
+    script.async = true;
+    script.onload = () => setMapsReady(true);
+    document.head.appendChild(script);
+  }, [mapKey]);
+
+  // Initialise or update Google Maps when ready
+  const initMap = useCallback(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const google = (window as any).google;
+    if (!google?.maps || !mapRef.current) return;
+
+    const center = mapCenter ?? { lat: 25.7617, lng: -80.1918 };
+
+    if (!mapInstance.current) {
+      mapInstance.current = new google.maps.Map(mapRef.current, {
+        center,
+        zoom: 14,
+        styles: DARK_MAP_STYLES,
+        disableDefaultUI: true,
+        zoomControl: true,
+        zoomControlOptions: { position: google.maps.ControlPosition.RIGHT_BOTTOM },
+      });
+    } else {
+      mapInstance.current.setCenter(center);
+    }
+
+    const gMap = mapInstance.current;
+
+    // Clear existing overlays by re-creating (simple approach)
+    // Distance circles
+    [402, 805, 1609].forEach((radius) => {
+      new google.maps.Circle({
+        map: gMap,
+        center,
+        radius,
+        strokeColor: "#252533",
+        strokeOpacity: 1,
+        strokeWeight: 1,
+        fillOpacity: 0,
+      });
+    });
+
+    // Property centre pin
+    new google.maps.Marker({
+      position: center,
+      map: gMap,
+      zIndex: 10,
+      icon: {
+        path: google.maps.SymbolPath.CIRCLE,
+        fillColor: "#7c6af0",
+        fillOpacity: 1,
+        strokeColor: "#09090b",
+        strokeWeight: 2,
+        scale: 10,
+      },
+      title: "Your property",
+    });
+
+    // Application pins
+    const infoWindow = new google.maps.InfoWindow();
+    applications.forEach((app) => {
+      if (app.lat == null || app.lng == null) return;
+      const fillColor =
+        app.impact === "positive" ? "#34d399" :
+        app.impact === "negative" ? "#f87171" : "#fbbf24";
+      const marker = new google.maps.Marker({
+        position: { lat: app.lat, lng: app.lng },
+        map: gMap,
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          fillColor,
+          fillOpacity: 1,
+          strokeColor: "#09090b",
+          strokeWeight: 1,
+          scale: 7,
+        },
+        title: app.description,
+      });
+      marker.addListener("click", () => {
+        const statusLabel = app.status === "APPROVED" ? "Approved" : app.status === "REJECTED" ? "Refused" : "Pending";
+        infoWindow.setContent(
+          `<div style="background:#111116;color:#e4e4ec;padding:10px 12px;border-radius:8px;max-width:220px;font-family:system-ui,sans-serif;font-size:12px;line-height:1.5">` +
+          `<div style="font-weight:600;margin-bottom:4px">${app.description}</div>` +
+          `<div style="color:#8888a0">${app.distance} away · ${statusLabel}</div>` +
+          `<div style="margin-top:4px;font-size:11px;color:${fillColor};text-transform:uppercase;font-weight:600">${app.impact}</div>` +
+          `</div>`
+        );
+        infoWindow.open(gMap, marker);
+      });
+    });
+  }, [mapCenter, applications]);
+
+  useEffect(() => {
+    if (!mapsReady || viewMode !== "map") return;
+    initMap();
+  }, [mapsReady, viewMode, initMap]);
 
   const stats = {
     total: applications.length,
@@ -259,51 +408,12 @@ export default function PlanningPage() {
 
         {/* Map View */}
         {viewMode === "map" && (
-          <div style={{ background: "var(--s2)", border: "1px solid var(--bdr)", borderRadius: "var(--r)", height: "320px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginBottom: "24px", position: "relative", overflow: "hidden" }}>
-            {/* Distance rings */}
-            {[120, 220, 340].map((size) => (
-              <div key={size} style={{ position: "absolute", width: `${size}px`, height: `${size}px`, top: "50%", left: "50%", transform: "translate(-50%, -50%)", border: "1px dashed var(--bdr)", borderRadius: "50%" }} />
-            ))}
+          <div style={{ border: "1px solid var(--bdr)", borderRadius: "var(--r)", height: "360px", marginBottom: "24px", position: "relative", overflow: "hidden", background: "var(--s2)" }}>
+            {/* Google Maps container */}
+            <div ref={mapRef} style={{ width: "100%", height: "100%" }} />
 
-            {/* Your property pin */}
-            <div style={{ position: "absolute", top: "45%", left: "48%", width: "32px", height: "32px", borderRadius: "50% 50% 50% 0", transform: "rotate(-45deg)", background: "var(--acc)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid var(--bg)", zIndex: 2 }}>
-              <span style={{ transform: "rotate(45deg)", fontSize: "14px", fontWeight: 700 }}>★</span>
-            </div>
-
-            {/* Application pins */}
-            {[
-              { top: "32%", left: "42%", type: "neg", label: "−" },
-              { top: "55%", left: "62%", type: "neg", label: "−" },
-              { top: "38%", left: "58%", type: "pos", label: "+" },
-              { top: "62%", left: "40%", type: "pos", label: "+" },
-              { top: "50%", left: "30%", type: "neu", label: "·" },
-            ].map((pin, idx) => (
-              <div
-                key={idx}
-                style={{
-                  position: "absolute",
-                  top: pin.top,
-                  left: pin.left,
-                  width: "24px",
-                  height: "24px",
-                  borderRadius: "50% 50% 50% 0",
-                  transform: "rotate(-45deg)",
-                  background: pin.type === "pos" ? "var(--grn)" : pin.type === "neg" ? "var(--red)" : "var(--amb)",
-                  color: "#fff",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  cursor: "pointer",
-                  fontSize: "12px",
-                  fontWeight: 700,
-                }}
-              >
-                <span style={{ transform: "rotate(45deg)" }}>{pin.label}</span>
-              </div>
-            ))}
-
-            {/* Legend */}
-            <div style={{ position: "absolute", bottom: "12px", left: "12px", display: "flex", gap: "10px", font: "400 9px var(--sans)", color: "var(--tx3)" }}>
+            {/* Legend overlay */}
+            <div style={{ position: "absolute", bottom: "12px", left: "12px", display: "flex", gap: "10px", font: "400 9px var(--sans)", color: "var(--tx3)", background: "rgba(9,9,11,0.75)", padding: "5px 10px", borderRadius: "6px", pointerEvents: "none" }}>
               {[
                 { label: "Your property", color: "var(--acc)" },
                 { label: "Positive", color: "var(--grn)" },
@@ -316,8 +426,7 @@ export default function PlanningPage() {
                 </span>
               ))}
             </div>
-            <div style={{ position: "absolute", bottom: "12px", right: "12px", font: "400 8px var(--mono)", color: "var(--tx3)" }}>Rings: 0.25mi · 0.5mi · 1mi</div>
-            <div style={{ position: "absolute", top: "12px", right: "12px", font: "300 10px var(--sans)", color: "var(--tx3)" }}>Illustrative — actual view uses Google Maps</div>
+            <div style={{ position: "absolute", bottom: "12px", right: "12px", font: "400 8px var(--mono)", color: "var(--tx3)", background: "rgba(9,9,11,0.75)", padding: "4px 8px", borderRadius: "5px", pointerEvents: "none" }}>Rings: 0.25mi · 0.5mi · 1mi</div>
           </div>
         )}
 

@@ -1,6 +1,6 @@
 "use client";
 
-type Stage = "identified" | "researching" | "quoting" | "approved" | "installing" | "live";
+type Stage = "identified" | "researching" | "quoting" | "approved" | "installing" | "live" | "renewing";
 
 const STAGES: { key: Stage; label: string }[] = [
   { key: "identified", label: "Identified" },
@@ -9,6 +9,7 @@ const STAGES: { key: Stage; label: string }[] = [
   { key: "approved", label: "Approved" },
   { key: "installing", label: "Installing" },
   { key: "live", label: "Live" },
+  { key: "renewing", label: "Renewing" },
 ];
 
 export function StagePipeline({ currentStage }: { currentStage: Stage }) {
