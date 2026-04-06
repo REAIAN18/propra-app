@@ -154,14 +154,33 @@ Frontend: src/app/*/page.tsx, src/components/*, globals.css
 Backend: src/app/api/*, src/lib/*, prisma/schema.prisma
 Infra: vercel.json, .github/*, package.json, tsconfig.json
 
+## ⚠️ DEPLOYMENT — CRITICAL RULES
+
+**NEVER run `vercel --prod`, `vercel deploy`, or any Vercel CLI deploy command.**
+
+Agents do NOT trigger deployments. Deployments happen automatically on a schedule.
+
+### How deployments work
+- **Git push to main** — does NOT auto-deploy (disabled to control costs)
+- **GitHub Actions** — deploys to production every 4 hours (`0 */4 * * *`)
+- **Manual trigger** — board can trigger via GitHub Actions `workflow_dispatch` if urgent
+
+### What agents must do
+1. Push code to main (git push only)
+2. TypeScript must compile — `npx tsc --noEmit` passes
+3. **Do NOT run `vercel --prod`** — this wastes budget and creates duplicate deployments
+4. For verification: check `vercel list --prod` to confirm your commit hash appears in the most recent Ready deployment
+
+Running `vercel --prod` or `vercel deploy` is a **budget violation** — each deploy costs money and the board has explicitly forbidden excess deployments (PRO-1007).
+
 ## Workflow
 
 1. Feature branch from main
-2. npx tsc --noEmit && npm run lint — FIX ALL ERRORS before pushing. Do not push code that fails type-check.
+2. `npx tsc --noEmit && npm run lint` — FIX ALL ERRORS before pushing. Do not push code that fails type-check.
 3. Push branch. Merge to main only after CI passes.
-4. After merge: wait 2–3 minutes then load https://propra-app-orcin.vercel.app and verify your changes are LIVE. If the page is broken or changes don't appear, investigate and fix before moving on.
+4. After merge: your changes will be live on the next scheduled deploy (every 4h). Check `vercel list --prod` to confirm commit is deployed. Do NOT trigger a manual deploy.
 5. Never push directly to main.
-6. If Vercel build fails, check the build logs, fix the errors, push again. Repeat until build succeeds and site loads.
+6. If the TypeScript build fails locally, fix it before pushing — do not rely on Vercel to catch errors.
 
 ## ⚠️ DEFINITION OF DONE — ALL 4 STEPS REQUIRED
 
@@ -169,9 +188,9 @@ A ticket is NOT done until ALL of the following are true:
 1. **Code written** — .tsx/.ts files created at the correct paths
 2. **TypeScript compiles** — `npx tsc --noEmit` passes with zero errors
 3. **Merged to main** — PR reviewed and merged, CI green
-4. **Deployed and verified live** — https://propra-app-orcin.vercel.app shows the change
+4. **Verified on production** — run `vercel list --prod` and confirm your commit appears in a Ready deployment, then load https://propra-app-orcin.vercel.app to verify visually
 
-**Do not mark a ticket Done without completing Step 4.** Merging to main is not enough — confirm the Vercel deployment succeeded and the feature is visible on the production URL.
+**Do not mark a ticket Done without completing Step 4.** Do NOT run `vercel --prod` to force a deployment — wait for the scheduled deploy or ask the board to trigger a manual deploy via GitHub Actions.
 
 ## Production
 Production URL: https://propra-app-orcin.vercel.app
