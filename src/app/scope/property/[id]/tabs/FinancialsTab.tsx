@@ -105,9 +105,9 @@ export function FinancialsTab({ deal, prop }: Props) {
     { label: "Stabilised", valueLow: equityResult.exitValue * 0.95, valueMid: equityResult.exitValue * 1.05, valueHigh: equityResult.exitValue * 1.15, method: "Fully let at ERV",   confidence: "medium" },
   ];
 
-  // Letting scenarios from live data
+  // Letting scenarios: prefer live data from dataSources, fall back to computed from property fields
   const rawScenarios = ((ds.scenarios ?? ds.lettingScenarios) as unknown[] | undefined) ?? [];
-  const lettingScenarios: LettingScenario[] = (Array.isArray(rawScenarios) ? rawScenarios : []).map((sc: unknown) => {
+  const liveScenarios: LettingScenario[] = (Array.isArray(rawScenarios) ? rawScenarios : []).map((sc: unknown) => {
     const s = sc as Record<string, unknown>;
     const label = (s.label ?? s.name ?? "") as string;
     return {
@@ -122,6 +122,7 @@ export function FinancialsTab({ deal, prop }: Props) {
       equityMultiple: typeof s.equityMultiple === "number" ? s.equityMultiple : undefined,
     };
   });
+  const lettingScenarios: LettingScenario[] = liveScenarios.length > 0 ? liveScenarios : buildLettingScenarios(prop, irrResult, equityResult);
 
   // Comparables
   const rawComps = ((ds.comps ?? ds.comparables) as unknown[] | undefined) ?? [];
@@ -195,10 +196,12 @@ export function FinancialsTab({ deal, prop }: Props) {
       </div>
 
       {/* Letting scenarios */}
-      <div className={`${s.card} ${s.a2}`}>
-        <div className={s.cardTitle}>Letting scenarios</div>
-        <LettingScenariosTable scenarios={lettingScenarios} title="" />
-      </div>
+      {lettingScenarios.length > 0 && (
+        <div className={`${s.card} ${s.a2}`}>
+          <div className={s.cardTitle}>Letting scenarios</div>
+          <LettingScenariosTable scenarios={lettingScenarios} title="" />
+        </div>
+      )}
 
       {/* Comparables */}
       {comps.length > 0 && (
@@ -224,18 +227,6 @@ export function FinancialsTab({ deal, prop }: Props) {
           <ServiceCharges items={serviceItems} />
         </div>
       )}
-
-      {/* Letting scenarios */}
-      {(() => {
-        const lettingScenarios = buildLettingScenarios(prop, irrResult, equityResult);
-        if (lettingScenarios.length === 0) return null;
-        return (
-          <div className={`${s.card} ${s.a3}`}>
-            <div className={s.cardTitle}>Letting scenarios</div>
-            <LettingScenariosTable scenarios={lettingScenarios} title="" />
-          </div>
-        );
-      })()}
     </>
   );
 }
