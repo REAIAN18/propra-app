@@ -36,25 +36,41 @@ const STATUS_TAG_STYLES: Record<string, { bg: string; color: string; border: str
 };
 
 export default function IncomePage() {
-  const { data, loading } = useIncomeDashboard();
+  const { data, loading, error } = useIncomeDashboard();
 
-  if (loading || !data) {
+  if (loading) {
     return (
       <AppShell>
         <TopBar title="Income" />
         <main style={{ padding: "28px 32px 80px" }}>
           <div style={{ maxWidth: "1080px" }}>
             <div style={{ marginBottom: "20px" }}>
-              <div style={{
-                fontFamily: "var(--serif)",
-                fontSize: "24px",
-                color: "var(--tx)",
-                marginBottom: "4px"
-              }}>
+              <div style={{ fontFamily: "var(--serif)", fontSize: "24px", color: "var(--tx)", marginBottom: "4px" }}>
+                Income Opportunities
+              </div>
+              <div style={{ font: "300 13px var(--sans)", color: "var(--tx3)" }}>Loading...</div>
+            </div>
+          </div>
+        </main>
+      </AppShell>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <AppShell>
+        <TopBar title="Income" />
+        <main style={{ padding: "28px 32px 80px" }}>
+          <div style={{ maxWidth: "1080px" }}>
+            <div style={{ marginBottom: "20px" }}>
+              <div style={{ fontFamily: "var(--serif)", fontSize: "24px", color: "var(--tx)", marginBottom: "4px" }}>
                 Income Opportunities
               </div>
               <div style={{ font: "300 13px var(--sans)", color: "var(--tx3)" }}>
-                Loading...
+                Unable to load data. <span
+                  style={{ color: "var(--acc)", cursor: "pointer" }}
+                  onClick={() => window.location.reload()}
+                >Retry</span>
               </div>
             </div>
           </div>
