@@ -31,6 +31,7 @@ import {
 import { checkCovenantUK } from "@/lib/covenant-check";
 import { getCompanyOwner, findPropertiesByCompany } from "@/lib/dealscope-ccod";
 import { classifyDevPotential } from "@/lib/dev-potential";
+import { estimateMarketERV } from "@/lib/dealscope-rental-intelligence";
 
 // ── Address extraction from URL slug ──
 function extractAddressFromUrl(url: string): string | null {
@@ -116,7 +117,7 @@ async function fetchFloodRisk(lat: number, lng: number): Promise<any> {
 }
 
 // ── Build assumptions when data is missing — NEVER returns null/blank ──
-function buildAssumptions(
+async function buildAssumptions(
   aiData: AIExtractedData | null,
   epcData: any,
   askingPrice: number | undefined,
@@ -124,7 +125,8 @@ function buildAssumptions(
   region: string,
   listingDescription: string | null,
   scrapedSqft?: number,
-): {
+  address?: string | null,
+): Promise<{
   sqft: number; sqftSource: string;
   erv: number; ervSource: string;
   yearBuilt: number; yearBuiltSource: string;
@@ -134,9 +136,8 @@ function buildAssumptions(
   epcRating: string; epcRatingSource: string;
   occupancyPct: number; occupancySource: string;
   voidMonths: number; voidReasoning: string;
-} {
+}> {
   const mktCapRate = getMarketCapRate(assetType, region);
-  const mktERV = getMarketERV(assetType, region);
 
   // ── Size — never blank ──
   let sqft = aiData?.size_sqft || scrapedSqft || epcData?.floorAreaSqft || null;
@@ -151,16 +152,39 @@ function buildAssumptions(
     sqftSource = `estimated (${est.method})`;
   }
 
-  // ── ERV — never blank ──
+  // ── ERV — prefer listing passing rent, then AI market analysis, then static benchmark ──
   let erv = 0;
   let ervSource = "data";
   if (aiData?.passingRent) {
     erv = aiData.passingRent;
     ervSource = "listing passing rent";
+  } else if (address && sqft > 0) {
+    // Use AI-based market ERV estimation for location-aware accuracy.
+    // This avoids static benchmark tables that are wrong for secondary/regional markets.
+    try {
+      const aiERV = await estimateMarketERV(address, assetType, sqft, {
+        yearBuilt: aiData?.yearBuilt,
+        epcRating: aiData?.epcRating || epcData?.epcRating,
+        condition: aiData?.condition,
+        occupancy: aiData?.vacancy,
+      });
+      if (aiERV && aiERV.ervPsf > 0) {
+        erv = aiERV.ervAnnual;
+        ervSource = `AI market analysis — £${aiERV.ervPsf.toFixed(2)}/sqft (${aiERV.confidence} confidence): ${aiERV.reasoning}`;
+      }
+    } catch (e) {
+      console.warn("[enrich] AI ERV estimation failed, falling back to benchmark:", e);
+    }
+    // Fallback to static benchmark if AI call failed
+    if (!erv) {
+      const est = estimateRent(sqft, assetType, region);
+      erv = est.value;
+      ervSource = `benchmark estimate (${est.method})`;
+    }
   } else {
     const est = estimateRent(sqft, assetType, region);
     erv = est.value;
-    ervSource = `estimated (${est.method})`;
+    ervSource = `benchmark estimate (${est.method})`;
   }
 
   // ── Year built — never blank ──
@@ -527,7 +551,7 @@ export async function POST(req: NextRequest) {
 
     // ── BUILD ASSUMPTIONS (never returns blank fields) ──
     const askingPrice = guidePrice || price;
-    const assumptions = buildAssumptions(aiData, epcData, askingPrice, normAsset, normRegion, rawListingText, scrapedSqft);
+    const assumptions = await buildAssumptions(aiData, epcData, askingPrice, normAsset, normRegion, rawListingText, scrapedSqft, address);
 
     // ── SCORING ──
     const signals = buildSignals(
