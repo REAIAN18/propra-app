@@ -19,6 +19,8 @@ import type { ServiceChargeItem } from "@/components/dealscope/ServiceCharges";
 import { LettingScenariosTable } from "@/components/dealscope/LettingScenariosTable";
 import { EnvironmentalRiskBars } from "@/components/dealscope/EnvironmentalRiskBars";
 import type { EnvironmentalRisk } from "@/components/dealscope/EnvironmentalRiskBars";
+import { DocumentList } from "@/components/dealscope/DocumentList";
+import type { DocumentItem } from "@/components/dealscope/DocumentList";
 import { calculateIRR } from "@/lib/dealscope/calculations/irr";
 import { calculateCAPEX } from "@/lib/dealscope/calculations/capex";
 import { calculateEquityMultiple } from "@/lib/dealscope/calculations/equity";
@@ -368,6 +370,18 @@ function DueDiligenceTab({ deal }: { deal: RawDeal }) {
             return Object.entries(envData).map(([label, pct]) => ({ label, pct: Math.round(pct * 100) })) as EnvironmentalRisk[];
           })()
         } />
+      </div>
+
+      <div className={`${s.card} ${s.anim} ${s.a3}`}>
+        <div className={s.cardTitle}>Documents</div>
+        <DocumentList items={(() => {
+          const uploadedDocs = (ds.documents as DocumentItem[] | undefined) ?? [];
+          const generated: DocumentItem[] = [
+            { type: "pdf", name: "IC Memo", description: "Investment Committee memorandum", action: "generate", onAction: () => window.open(`/api/dealscope/properties/${deal.id}/export/pdf`, "_blank") },
+            { type: "xlsx", name: "Financial model", description: "IRR, cash flows, scenarios", action: "generate", onAction: () => { const a = document.createElement("a"); a.href = `/api/dealscope/properties/${deal.id}/export/excel`; a.download = ""; a.click(); } },
+          ];
+          return [...uploadedDocs, ...generated];
+        })()} />
       </div>
     </>
   );
