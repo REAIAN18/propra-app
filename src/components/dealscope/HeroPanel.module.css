@@ -1,266 +1,166 @@
 /* ═══════════════════════════════════════════════════
-   HeroPanel — DS-T06 — matches 02-dossier-full.html lines 171-203
+   HeroPanel — class names match HeroPanel.tsx exactly
    Uses global dark theme CSS vars only
    ═══════════════════════════════════════════════════ */
 
-/* .d-top */
-.dTop {
-  padding: 16px 20px;
+/* Outer wrapper */
+.heroPanel {
+  padding: 0;
+}
+
+/* ── Property header ── */
+.propertyHeader {
+  padding: 16px 20px 8px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
   background: linear-gradient(180deg, var(--s1), var(--bg));
   border-bottom: 1px solid var(--s2);
-  position: relative;
-  z-index: 1;
 }
 
-/* .d-back */
-.dBack {
-  font-size: 11px;
-  color: var(--tx3, #555566);
-  cursor: pointer;
-  margin-bottom: 6px;
-  display: inline-block;
-  transition: color 0.15s;
-}
-.dBack:hover { color: var(--acc2, #a899ff); }
-
-/* .d-hdr */
-.dHdr {
-  display: flex;
-  gap: 14px;
-}
-
-/* .d-gallery */
-.dGallery {
-  width: 240px;
-  flex-shrink: 0;
-}
-
-/* .d-hero */
-.dHero {
-  width: 240px;
-  height: 140px;
-  background: linear-gradient(135deg, var(--s2), var(--s3, #1f1f2c));
-  border-radius: 10px;
-  margin-bottom: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--tx3, #555566);
-  font-size: 11px;
-  position: relative;
-  cursor: pointer;
-  overflow: hidden;
-}
-
-/* .d-hero-lbl */
-.dHeroLbl {
-  position: absolute;
-  bottom: 4px;
-  left: 4px;
-  font-size: 8px;
-  background: rgba(0, 0, 0, 0.7);
-  color: #fff;
-  padding: 2px 5px;
-  border-radius: 3px;
-}
-
-/* .d-thumbs */
-.dThumbs {
-  display: flex;
-  gap: 3px;
-}
-
-/* .d-thumb */
-.dThumb {
-  width: 37px;
-  height: 26px;
-  background: var(--s2);
-  border-radius: 3px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 7px;
-  color: var(--tx3, #555566);
-  border: 1.5px solid transparent;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-.dThumb:hover,
-.dThumbOn {
-  border-color: var(--acc);
-  box-shadow: 0 0 8px rgba(124, 106, 240, 0.15);
-}
-
-/* .d-info */
-.dInfo {
+.propertyTitle {
   flex: 1;
   min-width: 0;
 }
 
-/* .d-addr */
-.dAddr {
+.propertyTitle h1 {
   font-family: 'Instrument Serif', serif;
   font-size: 20px;
-  margin-bottom: 4px;
-  letter-spacing: -0.3px;
+  font-weight: 400;
   color: var(--tx);
+  margin: 0 0 4px;
+  letter-spacing: -0.3px;
+  line-height: 1.2;
 }
 
-/* .d-specs */
-.dSpecs {
+/* Meta tags row — e.g. "Office · 38,330 sq ft NLA · Freehold" */
+.propertyMeta {
   display: flex;
-  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0;
   font-size: 11px;
   color: var(--tx2, #8e8ea0);
-  margin-bottom: 5px;
-  flex-wrap: wrap;
-}
-.dSpecs strong {
-  color: var(--tx);
-  font-weight: 500;
-  margin-right: 2px;
 }
 
-/* .d-sigs */
-.dSigs {
-  display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
-  margin-bottom: 6px;
+/* Dot separator between spans */
+.propertyMeta span + span::before {
+  content: ' · ';
+  color: var(--tx3, #555566);
 }
 
-/* .d-acts */
-.dActs {
-  display: flex;
-  gap: 5px;
-  flex-wrap: wrap;
-}
-
-/* .d-sum */
-.dSum {
-  background: var(--s2);
-  border-radius: 10px;
-  padding: 12px;
-  min-width: 190px;
-  border: 1px solid var(--s3, #1f1f2c);
-}
-
-/* Score row */
-.scoreRow {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  margin-bottom: 8px;
-}
-.scoreLabel { font-size: 11px; color: var(--tx); }
-.scoreHint  { font-size: 9px; color: var(--grn); }
-
-/* .d-sc */
-.dSc {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  border: 2.5px solid var(--grn);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--grn);
-  box-shadow: 0 0 12px rgba(52, 211, 153, 0.35);
+.backBtn {
+  font-size: 11px;
+  color: var(--tx3, #555566);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  white-space: nowrap;
+  transition: color 0.15s;
   flex-shrink: 0;
+  margin-top: 4px;
 }
+.backBtn:hover { color: var(--acc2, #a899ff); }
 
-/* .dr */
-.dr {
+/* ── Metrics grid ── */
+.metricsGrid {
   display: flex;
-  justify-content: space-between;
-  padding: 3px 0;
-  font-size: 12px;
-}
-.drL { color: var(--tx3, #555566); }
-.drV {
-  color: var(--tx);
-  font-family: 'JetBrains Mono', monospace;
-  font-weight: 500;
-}
-.g { color: var(--grn); }
-
-/* .sep */
-.sep {
-  border-top: 1px solid var(--s3, #1f1f2c);
-  margin: 8px 0;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 20px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--s2);
 }
 
-/* Badge base: .b */
-.b {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 10px;
+/* Verdict card */
+.verdictCell {
+  flex: 1;
+  min-width: 200px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--verdictBg, rgba(124,106,240,.06));
+  border: 1px solid var(--verdictBorder, rgba(124,106,240,.2));
+}
+
+.verdictTitle {
+  font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.3px;
+  color: var(--tx);
+  margin: 6px 0 2px;
+  line-height: 1.3;
 }
-.b-red  { background: rgba(240, 96, 96, 0.08);   color: var(--red); }
-.b-amb  { background: rgba(234, 176, 32, 0.08);  color: var(--amb); }
-.b-grn  { background: rgba(45, 212, 168, 0.08);  color: var(--grn); }
-.b-blu  { background: rgba(85, 153, 240, 0.08);  color: #5599f0; }
-.b-acc  { background: rgba(124, 106, 240, 0.08); color: var(--acc2, #a899ff); }
 
-/* Buttons */
-.btn {
-  padding: 8px 16px;
+.verdictSubtitle {
+  font-size: 11px;
+  color: var(--tx2, #8e8ea0);
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* ── Action bar ── */
+.actionBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px 20px;
+  background: var(--s1);
+  border-bottom: 1px solid var(--s2);
+}
+
+.btnPrimary {
+  padding: 7px 14px;
   border-radius: 8px;
   border: none;
   cursor: pointer;
   font-family: 'DM Sans', sans-serif;
   font-size: 12px;
   font-weight: 600;
-  transition: background 0.2s, transform 0.2s;
+  background: var(--acc);
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(124,106,240,.25);
   display: inline-flex;
   align-items: center;
   gap: 5px;
+  transition: background 0.2s, transform 0.15s;
 }
-.btnSm { padding: 5px 11px; font-size: 11px; }
+.btnPrimary:hover { background: var(--acc2, #a899ff); transform: translateY(-1px); }
 
-.btnP {
-  background: var(--acc);
-  color: #fff;
-  box-shadow: 0 2px 12px rgba(124, 106, 240, 0.25);
-}
-.btnP:hover { background: var(--acc2, #a899ff); transform: translateY(-1px); }
-
-.btnG {
-  background: var(--grn);
-  color: #000;
-  box-shadow: 0 2px 10px rgba(45, 212, 168, 0.35);
-}
-.btnG:hover { opacity: 0.9; }
-
-.btnS {
+.btnSecondary {
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--s3, #1f1f2c);
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
   background: var(--s2);
   color: var(--tx2, #8e8ea0);
-  border: 1px solid var(--s3, #1f1f2c);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: background 0.2s, color 0.2s;
 }
-.btnS:hover { background: var(--s3, #1f1f2c); color: var(--tx); }
+.btnSecondary:hover { background: var(--s3, #1f1f2c); color: var(--tx); }
 
-.btnWatched {
-  background: rgba(124, 106, 240, 0.15);
-  border-color: rgba(124, 106, 240, 0.4);
-  color: var(--acc2, #a899ff);
+.btnDisabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
 }
 
-.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.btnActive {
+  background: rgba(124,106,240,.15) !important;
+  border-color: rgba(124,106,240,.4) !important;
+  color: var(--acc2, #a899ff) !important;
+}
 
 /* Responsive */
-@media (max-width: 800px) {
-  .dHdr { flex-wrap: wrap; }
-  .dGallery { width: 100%; }
-  .dHero { width: 100%; }
-  .dSum { width: 100%; min-width: unset; }
-}
-@media (max-width: 480px) {
-  .dTop { padding: 12px 16px; }
-  .dAddr { font-size: 16px; }
+@media (max-width: 640px) {
+  .propertyTitle h1 { font-size: 16px; }
+  .propertyHeader { padding: 12px 16px 8px; }
+  .metricsGrid { padding: 10px 16px; }
+  .actionBar { padding: 8px 16px; }
+  .verdictCell { min-width: 100%; }
 }
