@@ -119,6 +119,11 @@ function OverviewTab({ deal, prop }: { deal: RawDeal; prop: Property }) {
   const irrResult = calculateIRR(prop);
   const capexResult = calculateCAPEX(prop);
   const equityResult = calculateEquityMultiple(prop);
+  // Single source of truth: prefer RICS analysis (comprehensive DCF) then enriched returns, then frontend calc
+  const authEM: number =
+    (ds.ricsAnalysis as Record<string, any>)?.returns?.equityMultiple ??
+    (ds.returns as Record<string, any>)?.equityMultiple ??
+    equityResult.equityMultiple;
   const verdictColor = verdict.verdict === "PROCEED" ? "var(--grn)" : verdict.verdict === "CONDITIONAL" ? "var(--amb)" : "var(--red)";
   const verdictBg = verdict.verdict === "PROCEED" ? "rgba(45,212,168,.06)" : verdict.verdict === "CONDITIONAL" ? "rgba(234,176,32,.06)" : "rgba(240,96,96,.06)";
   const verdictBorder = verdict.verdict === "PROCEED" ? "rgba(45,212,168,.2)" : verdict.verdict === "CONDITIONAL" ? "rgba(234,176,32,.2)" : "rgba(240,96,96,.2)";
@@ -133,7 +138,7 @@ function OverviewTab({ deal, prop }: { deal: RawDeal; prop: Property }) {
             <div style={{ display: "flex", gap: 16, flexWrap: "wrap" as const, marginBottom: 8 }}>
               {[
                 { label: "IRR (10yr)", value: fmtPct(irrResult.irr), color: irrResult.irr >= 0.12 ? "var(--grn)" : irrResult.irr >= 0.07 ? "var(--amb)" : "var(--red)" },
-                { label: "Equity Multiple", value: fmtX(equityResult.equityMultiple), color: equityResult.equityMultiple >= 1.8 ? "var(--grn)" : equityResult.equityMultiple >= 1.2 ? "var(--amb)" : "var(--red)" },
+                { label: "Equity Multiple", value: fmtX(authEM), color: authEM >= 1.8 ? "var(--grn)" : authEM >= 1.2 ? "var(--amb)" : "var(--red)" },
                 { label: "CAPEX", value: fmtCcy(capexResult.capex), color: "var(--tx)" },
                 { label: "Total cost in", value: fmtCcy(equityResult.totalCostIn), color: "var(--tx)" },
               ].map(m => (
