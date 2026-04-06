@@ -1408,12 +1408,12 @@ export default function DashboardPage() {
                     const opexPerSqft = portfolio!.sqft > 0 ? ((portfolio!.rentRoll - portfolio!.noi) / portfolio!.sqft).toFixed(2) : null;
                     const sym = portfolio!.currency === "USD" ? "$" : "£";
                     return [
-                      { label: "Cap Rate", value: capRate, comparison: "mkt 6.5%", status: portfolio!.totalValue > 0 && (portfolio!.noi / portfolio!.totalValue * 100) >= 6.5 ? "good" as const : "warn" as const },
-                      { label: "NOI Margin", value: noiMargin, comparison: "mkt 58%", status: portfolio!.rentRoll > 0 && (portfolio!.noi / portfolio!.rentRoll) >= 0.58 ? "good" as const : "warn" as const },
-                      { label: "Occupancy", value: occ, comparison: "mkt 94%", status: portfolio!.occupancy >= 90 ? "warn" as const : "bad" as const },
-                      { label: "Rent/sqft", value: rentPerSqft ? `${sym}${rentPerSqft}` : "—", comparison: `mkt ${sym}14.50`, status: "good" as const },
-                      { label: "OpEx/sqft", value: opexPerSqft ? `${sym}${opexPerSqft}` : "—", comparison: `mkt ${sym}4.29`, status: "bad" as const },
-                      { label: "Ins/sqft", value: "—", comparison: `mkt ${sym}1.11`, status: "warn" as const },
+                      { label: "Cap Rate", value: capRate, comparison: "mkt 6.5% EST", status: portfolio!.totalValue > 0 && (portfolio!.noi / portfolio!.totalValue * 100) >= 6.5 ? "good" as const : "warn" as const },
+                      { label: "NOI Margin", value: noiMargin, comparison: "mkt 58% EST", status: portfolio!.rentRoll > 0 && (portfolio!.noi / portfolio!.rentRoll) >= 0.58 ? "good" as const : "warn" as const },
+                      { label: "Occupancy", value: occ, comparison: "mkt 94% EST", status: portfolio!.occupancy >= 90 ? "warn" as const : "bad" as const },
+                      { label: "Rent/sqft", value: rentPerSqft ? `${sym}${rentPerSqft}` : "—", comparison: `mkt ${sym}14.50 EST`, status: "good" as const },
+                      { label: "OpEx/sqft", value: opexPerSqft ? `${sym}${opexPerSqft}` : "—", comparison: `mkt ${sym}4.29 EST`, status: "bad" as const },
+                      { label: "Ins/sqft", value: "—", comparison: `mkt ${sym}1.11 EST`, status: "warn" as const },
                     ];
                   })().map((metric, i) => (
                     <div
