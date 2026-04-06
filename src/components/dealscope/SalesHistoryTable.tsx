@@ -1,5 +1,7 @@
 "use client";
 
+import { Skeleton } from "./ui/Skeleton";
+
 export interface SaleRecord {
   date: string;
   price: number;
@@ -11,6 +13,7 @@ export interface SaleRecord {
 interface SalesHistoryTableProps {
   sales: SaleRecord[];
   title?: string;
+  isLoading?: boolean;
 }
 
 function fmtCurrency(n: number): string {
@@ -27,7 +30,25 @@ function fmtDate(d: string): string {
   }
 }
 
-export function SalesHistoryTable({ sales, title = "Sales history" }: SalesHistoryTableProps) {
+export function SalesHistoryTable({ sales, title = "Sales history", isLoading = false }: SalesHistoryTableProps) {
+  if (isLoading) {
+    return (
+      <div>
+        {title && <Skeleton height={10} width={120} borderRadius={3} style={{ marginBottom: 10 }} />}
+        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          {[1, 2, 3].map(i => (
+            <div key={i} style={{ display: "flex", gap: 8, padding: "8px 0", borderBottom: "1px solid var(--s2)" }}>
+              <Skeleton height={12} width="20%" />
+              <Skeleton height={12} width="20%" />
+              <Skeleton height={12} width="20%" />
+              <Skeleton height={12} width="25%" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   if (!sales || sales.length === 0) {
     return (
       <div style={{ padding: 10, background: "var(--s2)", borderRadius: 6, border: "1px dashed var(--s3)", fontSize: 11, color: "var(--tx3)", textAlign: "center" }}>

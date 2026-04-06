@@ -1,5 +1,7 @@
 "use client";
 
+import { Skeleton } from "./ui/Skeleton";
+
 interface RiskFlagsProps {
   signals?: string[];
   hasLisPendens?: boolean;
@@ -7,6 +9,7 @@ interface RiskFlagsProps {
   hasPlanningApplication?: boolean;
   inFloodZone?: boolean;
   epcRating?: string;
+  isLoading?: boolean;
 }
 
 type FlagSeverity = "red" | "amber" | "blue" | "green";
@@ -30,7 +33,16 @@ export function RiskFlags({
   hasPlanningApplication,
   inFloodZone,
   epcRating,
+  isLoading = false,
 }: RiskFlagsProps) {
+  if (isLoading) {
+    return (
+      <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+        {[64, 80, 56].map((w, i) => <Skeleton key={i} height={20} width={w} borderRadius={4} />)}
+      </div>
+    );
+  }
+
   const flags: Flag[] = [];
 
   if (hasInsolvency) flags.push({ label: "Administration", severity: "red" });
