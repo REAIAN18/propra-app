@@ -305,16 +305,17 @@ function DueDiligenceTab({ deal }: { deal: RawDeal }) {
         </div>
       )}
 
-      <div className={`${s.card} ${s.anim} ${s.a2}`}>
-        <div className={s.cardTitle}>Environmental risk profile</div>
-        <EnvironmentalRiskBars risks={
-          (() => {
-            const envData = ds.environmentalRisks as Record<string, number> | undefined;
-            if (!envData) return undefined;
-            return Object.entries(envData).map(([label, pct]) => ({ label, pct: Math.round(pct * 100) })) as EnvironmentalRisk[];
-          })()
-        } />
-      </div>
+      {(() => {
+        const envData = ds.environmentalRisks as Record<string, number> | undefined;
+        if (!envData) return null;
+        const envRisks = Object.entries(envData).map(([label, pct]) => ({ label, pct: Math.round(pct * 100) })) as EnvironmentalRisk[];
+        return (
+          <div className={`${s.card} ${s.anim} ${s.a2}`}>
+            <div className={s.cardTitle}>Environmental risk profile</div>
+            <EnvironmentalRiskBars risks={envRisks} />
+          </div>
+        );
+      })()}
 
       <div className={`${s.card} ${s.anim} ${s.a3}`}>
         <div className={s.cardTitle}>Documents</div>
