@@ -1,5 +1,7 @@
 "use client";
 
+import { Skeleton } from "./ui/Skeleton";
+
 /* ═══════════════════════════════════════════════════
    DocumentList — DS-T15 — matches 02-dossier-full.html
    List of documents with icon, name, description, action button
@@ -17,9 +19,27 @@ export interface DocumentItem {
 
 interface DocumentListProps {
   items: DocumentItem[];
+  isLoading?: boolean;
 }
 
-export function DocumentList({ items }: DocumentListProps) {
+export function DocumentList({ items, isLoading = false }: DocumentListProps) {
+  if (isLoading) {
+    return (
+      <div>
+        {[1, 2, 3].map(i => (
+          <div key={i} style={{ display: "flex", gap: 10, padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,.02)", alignItems: "center" }}>
+            <Skeleton height={30} width={30} borderRadius={5} style={{ flexShrink: 0 }} />
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 5 }}>
+              <Skeleton height={11} width="50%" />
+              <Skeleton height={9} width="35%" />
+            </div>
+            <Skeleton height={28} width={72} borderRadius={8} />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   if (!items || items.length === 0) {
     return (
       <div style={{ padding: 10, background: "var(--s2)", borderRadius: 6, border: "1px dashed var(--s3)", fontSize: 11, color: "var(--tx3)", textAlign: "center" }}>
@@ -42,7 +62,6 @@ export function DocumentList({ items }: DocumentListProps) {
             transition: ".15s",
           }}
         >
-          {/* Icon */}
           <div
             style={{
               width: 30,
@@ -62,7 +81,6 @@ export function DocumentList({ items }: DocumentListProps) {
             {item.type.slice(0, 4)}
           </div>
 
-          {/* Name + description */}
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 11, fontWeight: 500, color: "var(--tx)" }}>{item.name}</div>
             {item.description && (
@@ -70,7 +88,6 @@ export function DocumentList({ items }: DocumentListProps) {
             )}
           </div>
 
-          {/* Action button */}
           {(item.action || item.onAction || item.url) && (
             item.url && item.action !== "generate" ? (
               <a

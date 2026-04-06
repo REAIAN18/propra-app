@@ -1,5 +1,7 @@
 "use client";
 
+import { Skeleton } from "./ui/Skeleton";
+
 /* ═══════════════════════════════════════════════════
    BuildingSpecCard — DS-T09 — matches 02-dossier-full.html
    Building specification card with .dr row pattern
@@ -19,12 +21,12 @@ export interface BuildingSpec {
   utilities?: string;
   broadband?: string;
   drainage?: string;
-  // Additional free-form fields
   extra?: Array<{ label: string; value: string }>;
 }
 
 interface BuildingSpecCardProps {
   spec: BuildingSpec;
+  isLoading?: boolean;
 }
 
 function Row({ label, value }: { label: string; value: string }) {
@@ -36,7 +38,20 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
-export function BuildingSpecCard({ spec }: BuildingSpecCardProps) {
+export function BuildingSpecCard({ spec, isLoading = false }: BuildingSpecCardProps) {
+  if (isLoading) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        {[1, 2, 3, 4, 5, 6].map(i => (
+          <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "3px 0" }}>
+            <Skeleton height={12} width="35%" />
+            <Skeleton height={12} width="40%" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   const mainFields: Array<[string, string | undefined]> = [
     ["Address",       spec.address],
     ["Construction",  spec.construction],
