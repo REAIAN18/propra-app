@@ -1,9 +1,7 @@
 name: Scheduled Deploy to Vercel
 
 on:
-  schedule:
-    - cron: "0 */4 * * *" # Every 4 hours
-  workflow_dispatch: # Allow manual trigger
+  workflow_dispatch: # Manual trigger only — schedule paused until board re-enables
 
 jobs:
   deploy:
