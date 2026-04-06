@@ -155,7 +155,7 @@ export function FinancialsTab({ deal, prop }: Props) {
       <div className={s.card}>
         <div className={s.cardTitle}>Returns summary</div>
         <div className={s.statRow}>
-          <MetricCard label="IRR (10yr)"      value={fmtPct(irrResult.irr)}               subtitle={`Confidence: ${irrResult.confidence}`} color={irrColor} />
+          <MetricCard label="IRR (10yr, unlevered)"      value={fmtPct(irrResult.irr)}               subtitle={`Confidence: ${irrResult.confidence}`} color={irrColor} />
           <MetricCard label="Equity multiple" value={fmtX(equityResult.equityMultiple)}    subtitle="Unlevered"                             color={emColor} />
           <MetricCard label="Deal score"      value={String(verdict.dealScore)}             subtitle={verdict.verdict} />
           <MetricCard label="Total cost in"   value={fmtCcy(equityResult.totalCostIn)}      subtitle="Inc. SDLT + fees" />        </div>
