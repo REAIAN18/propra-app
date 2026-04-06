@@ -20,27 +20,6 @@ export async function GET(request: NextRequest) {
       live: true, // All live for now
     }));
 
-    // Get user mandates (placeholders for now - would come from UserMandate model)
-    const mandates = [
-      {
-        id: "m1",
-        name: "SE Industrial <£800k",
-        desc: "Industrial · South East · £200k–£800k",
-        matches: 23,
-        newCount: 3,
-        pipeline: 5,
-      },
-      {
-        id: "m2",
-        name: "London Office MEES",
-        desc: "Office · London · £1M–£5M · EPC F/G",
-        client: "Harrow Capital",
-        matches: 8,
-        newCount: 1,
-        pipeline: 0,
-      },
-    ];
-
     // Get latest alerts from recent deals
     const recentDeals = await prisma.scoutDeal.findMany({
       where: { status: "active" },
@@ -69,7 +48,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       sources,
-      mandates,
       alerts,
     });
   } catch (error) {

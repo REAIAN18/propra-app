@@ -17,6 +17,8 @@ import type { ValuationScenario } from "@/components/dealscope/MultipleValuation
 import { ServiceCharges } from "@/components/dealscope/ServiceCharges";
 import type { ServiceChargeItem } from "@/components/dealscope/ServiceCharges";
 import { LettingScenariosTable } from "@/components/dealscope/LettingScenariosTable";
+import { SalesHistoryTable } from "@/components/dealscope/SalesHistoryTable";
+import type { SaleRecord } from "@/components/dealscope/SalesHistoryTable";
 import { EnvironmentalRiskBars } from "@/components/dealscope/EnvironmentalRiskBars";
 import type { EnvironmentalRisk } from "@/components/dealscope/EnvironmentalRiskBars";
 import { DocumentList } from "@/components/dealscope/DocumentList";
@@ -310,6 +312,20 @@ function ComparablesTab({ deal }: { deal: RawDeal }) {
           <ServiceCharges items={serviceItems} />
         </div>
       )}
+
+      <div className={`${s.card} ${s.anim} ${s.a3}`}>
+        <div className={s.cardTitle}>Subject property sales history</div>
+        <SalesHistoryTable sales={(() => {
+          const raw = (ds.salesHistory as Record<string, unknown>[] | undefined) ?? [];
+          return (Array.isArray(raw) ? raw : []).map((r: Record<string, unknown>): SaleRecord => ({
+            date: (r.date ?? r.transferDate ?? r.dateSold ?? "") as string,
+            price: (r.price ?? r.pricePaid ?? 0) as number,
+            type: (r.type ?? r.propertyType) as string | undefined,
+            tenure: (r.tenure) as string | undefined,
+            newBuild: (r.newBuild ?? r.isNew) as boolean | undefined,
+          }));
+        })()} title="" />
+      </div>
     </>
   );
 }

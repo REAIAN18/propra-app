@@ -8,29 +8,8 @@ import styles from "./scope.module.css";
 
 type HomeData = {
   sources: Array<{ key: string; label: string; count: number; live: boolean }>;
-  mandates: Array<any>;
   alerts: Array<any>;
 };
-
-const DEFAULT_MANDATES = [
-  {
-    id: "m1",
-    name: "SE Industrial <£800k",
-    desc: "Industrial · South East · £200k–£800k",
-    matches: 23,
-    newCount: 3,
-    pipeline: 5,
-  },
-  {
-    id: "m2",
-    name: "London Office MEES",
-    desc: "Office · London · £1M–£5M · EPC F/G",
-    client: "Harrow Capital",
-    matches: 8,
-    newCount: 1,
-    pipeline: 0,
-  },
-];
 
 export default function ScopePage() {
   const [input, setInput] = useState("");
@@ -80,9 +59,15 @@ export default function ScopePage() {
   }, []);
 
   const sources = homeData?.sources || [];
-  const mandates = liveMandates.length > 0
-    ? liveMandates.map((m) => ({ id: m.id, name: m.name, desc: m.clientName ? `${m.clientName} — ` : "" + JSON.stringify(m.criteria || {}).slice(0, 60), client: m.clientName, matches: m.matches || 0, newCount: 0, pipeline: 0 }))
-    : homeData?.mandates || DEFAULT_MANDATES;
+  const mandates = liveMandates.map((m) => ({
+    id: m.id,
+    name: m.name,
+    desc: m.clientName ? `${m.clientName} — ${JSON.stringify(m.criteria || {}).slice(0, 40)}` : JSON.stringify(m.criteria || {}).slice(0, 60),
+    client: m.clientName,
+    matches: m.matches || 0,
+    newCount: 0,
+    pipeline: 0,
+  }));
   const alerts = homeData?.alerts || [];
 
   const handleSearch = async (e: React.FormEvent) => {
@@ -256,6 +241,10 @@ export default function ScopePage() {
             >
               {uploadingPDF ? "Uploading..." : "Upload PDF"}
             </button>
+            <span className={styles.hintOr}>or</span>
+            <Link href="/scope/search-company" className={styles.hint}>
+              Search by company
+            </Link>
           </div>
 
           <input

@@ -39,52 +39,6 @@ const STAGES = [
 ];
 
 // Demo data
-const DEMO_PROPERTIES: Record<string, Property[]> = {
-  identified: [
-    {
-      id: '1',
-      propertyId: 'meridian-roch',
-      name: 'Meridian Business Park',
-      owner: 'Meridian Holdings',
-      score: 92,
-      scoreLevel: 'hot',
-      lastAction: '1h ago',
-    },
-    {
-      id: '2',
-      propertyId: 'redfield-manor',
-      name: 'Redfield Manor',
-      owner: 'Redfield Estates',
-      score: 86,
-      scoreLevel: 'hot',
-      lastAction: '3h ago',
-    },
-    {
-      id: '3',
-      propertyId: 'vale-trading',
-      name: 'Vale Trading Estate',
-      owner: 'Vale Properties',
-      score: 78,
-      scoreLevel: 'warm',
-      lastAction: '5h ago',
-    },
-  ],
-  researched: [
-    {
-      id: '4',
-      propertyId: 'industrial-manchester',
-      name: 'Industrial Unit Manchester',
-      owner: 'Manchester Holdings',
-      score: 72,
-      scoreLevel: 'warm',
-      lastAction: '1 day ago',
-    },
-  ],
-  approached: [],
-  in_negotiation: [],
-  under_offer: [],
-  completing: [],
-};
 
 export default function PipelinePage() {
   const [stages, setStages] = useState<PipelineStage[]>(
@@ -101,48 +55,34 @@ export default function PipelinePage() {
         const response = await fetch('/api/dealscope/pipeline');
         const data = await response.json();
 
-        if (data.isDemo || !data.entries || data.entries.length === 0) {
-          // Use demo data
-          const demoStages = STAGES.map((s) => ({
-            ...s,
-            properties: DEMO_PROPERTIES[s.stageValue as keyof typeof DEMO_PROPERTIES] || [],
-          }));
-          setStages(demoStages);
-        } else {
-          // Load real data from pipeline entries
-          // Group properties by stage
-          const propertiesByStage: Record<string, Property[]> = {};
-          STAGES.forEach((s) => {
-            propertiesByStage[s.stageValue] = [];
-          });
+        // Group real entries by stage
+        const propertiesByStage: Record<string, Property[]> = {};
+        STAGES.forEach((s) => { propertiesByStage[s.stageValue] = []; });
 
-          (data.entries as PipelineEntry[]).forEach((entry) => {
-            // Find property in demo data to get additional info
-            const demoProps = Object.values(DEMO_PROPERTIES).flat();
-            const prop = demoProps.find((p) => p.propertyId === entry.propertyId);
+        const entries: PipelineEntry[] = data.entries ?? [];
+        entries.forEach((entry) => {
+          const stageKey = entry.stage as keyof typeof propertiesByStage;
+          if (propertiesByStage[stageKey]) {
+            propertiesByStage[stageKey].push({
+              id: entry.id,
+              propertyId: entry.propertyId,
+              name: entry.propertyId,
+              owner: "",
+              score: 0,
+              scoreLevel: "watch",
+              lastAction: entry.addedAt ? new Date(entry.addedAt).toLocaleDateString() : "—",
+            });
+          }
+        });
 
-            if (prop) {
-              const stageKey = entry.stage as keyof typeof propertiesByStage;
-              if (propertiesByStage[stageKey]) {
-                propertiesByStage[stageKey].push(prop);
-              }
-            }
-          });
-
-          const loadedStages = STAGES.map((s) => ({
-            ...s,
-            properties: propertiesByStage[s.stageValue] || [],
-          }));
-          setStages(loadedStages);
-        }
+        const loadedStages = STAGES.map((s) => ({
+          ...s,
+          properties: propertiesByStage[s.stageValue] || [],
+        }));
+        setStages(loadedStages);
       } catch (error) {
         console.error('Error loading pipeline:', error);
-        // Fallback to demo data
-        const demoStages = STAGES.map((s) => ({
-          ...s,
-          properties: DEMO_PROPERTIES[s.stageValue as keyof typeof DEMO_PROPERTIES] || [],
-        }));
-        setStages(demoStages);
+        setStages(STAGES.map((s) => ({ ...s, properties: [] })));
       }
     };
 

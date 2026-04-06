@@ -4,7 +4,6 @@ import { useState } from "react";
 import s from "./dossier.module.css";
 import { SalesHistoryTable } from "@/components/dealscope/SalesHistoryTable";
 import type { SaleRecord } from "@/components/dealscope/SalesHistoryTable";
-import type { RawDeal } from "./tabs/types";
 
 /* ═══════════════════════════════════════════════════
    SHARED HELPERS
@@ -25,8 +24,8 @@ const ILLUSTRATIVE_BANNER = (
   </div>
 );
 
-export function TitleTab({ deal }: { deal: RawDeal }) {
-  const salesHistory = ((deal.dataSources?.salesHistory ?? []) as SaleRecord[]);
+export function TitleTab() {
+  const salesHistory: SaleRecord[] = [];
   return (
     <>
       {ILLUSTRATIVE_BANNER}

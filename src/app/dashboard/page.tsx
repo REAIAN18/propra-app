@@ -127,15 +127,17 @@ export default function DashboardPage() {
   const [scoutDeals, setScoutDeals] = useState<Array<{ id: string; address: string; assetType: string; capRate: number | null; askingPrice: number | null; guidePrice: number | null; matchScore: number | null; currency: string }>>([]);
   const [pipelineGroups, setPipelineGroups] = useState<Array<{ stage: string; deals: Array<{ id: string; address: string; assetType: string; askingPrice: number | null; currency: string }> }>>([]);
   const [workOrders, setWorkOrders] = useState<Array<{ id: string; jobType: string; asset?: { name: string }; status: string; budgetEstimate: number | null; currency: string; timing?: string | null }>>([]);
+  const [sofrRate, setSofrRate] = useState<{ value: number; date: string } | null>(null);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [portfolioRes, scoutRes, pipelineRes, woRes] = await Promise.all([
+        const [portfolioRes, scoutRes, pipelineRes, woRes, sofrRes] = await Promise.all([
           fetch("/api/portfolios/user"),
           fetch("/api/scout/deals"),
           fetch("/api/scout/pipeline"),
           fetch("/api/user/work-orders"),
+          fetch("/api/macro/sofr"),
         ]);
         const data: PortfolioType = await portfolioRes.json();
         setRawPortfolio(data);
@@ -147,6 +149,10 @@ export default function DashboardPage() {
         setPipelineGroups(pipelineData.pipeline ?? []);
         const woData = await woRes.json();
         setWorkOrders((woData.orders ?? []).slice(0, 4));
+        const sofrData = await sofrRes.json();
+        if (sofrData.sofr?.value != null) {
+          setSofrRate({ value: sofrData.sofr.value, date: sofrData.sofr.date });
+        }
         setLoading(false);
       } catch (error) {
         console.error("Dashboard data fetch failed:", error);
@@ -409,7 +415,7 @@ export default function DashboardPage() {
                       margin
                     </small>
                   </div>
-                  <div style={{ fontSize: "12px", color: "var(--tx3, #555568)" }}>Benchmark 72–78%</div>
+                  <div style={{ fontSize: "12px", color: "var(--tx3, #555568)" }}>Benchmark 72–78% <span style={{ fontSize: "9px", opacity: 0.6 }}>EST</span></div>
                 </div>
 
                 <div style={{ height: "6px", background: "var(--s3, #1f1f28)", borderRadius: "3px", overflow: "visible", position: "relative", marginBottom: "24px" }}>
@@ -1285,10 +1291,15 @@ export default function DashboardPage() {
                   }}
                 >
                   {[
-                    { label: "SOFR 30-Day", value: "5.32%", note: "Live", pulse: true },
-                    { label: "10Y Treasury", value: "4.28%", note: "+12bps this week", pulse: false },
-                    { label: "CRE Spread", value: "+175–250", note: "bps over SOFR", pulse: false },
-                    { label: "All-in Range", value: "7.1–7.8%", note: "Current rates", pulse: false },
+                    {
+                      label: "SOFR 30-Day",
+                      value: sofrRate ? `${sofrRate.value.toFixed(2)}%` : "—",
+                      note: sofrRate ? "Federal Reserve" : "Not yet fetched",
+                      pulse: sofrRate != null,
+                    },
+                    { label: "10Y Treasury", value: "—", note: "Not available", pulse: false },
+                    { label: "CRE Spread", value: "+175–250", note: "EST · bps over SOFR", pulse: false },
+                    { label: "All-in Range", value: "7.1–7.8%", note: "EST · current range", pulse: false },
                   ].map((cell, i) => (
                     <div
                       key={i}
@@ -1397,12 +1408,12 @@ export default function DashboardPage() {
                     const opexPerSqft = portfolio!.sqft > 0 ? ((portfolio!.rentRoll - portfolio!.noi) / portfolio!.sqft).toFixed(2) : null;
                     const sym = portfolio!.currency === "USD" ? "$" : "£";
                     return [
-                      { label: "Cap Rate", value: capRate, comparison: "mkt 6.5%", status: portfolio!.totalValue > 0 && (portfolio!.noi / portfolio!.totalValue * 100) >= 6.5 ? "good" as const : "warn" as const },
-                      { label: "NOI Margin", value: noiMargin, comparison: "mkt 58%", status: portfolio!.rentRoll > 0 && (portfolio!.noi / portfolio!.rentRoll) >= 0.58 ? "good" as const : "warn" as const },
-                      { label: "Occupancy", value: occ, comparison: "mkt 94%", status: portfolio!.occupancy >= 90 ? "warn" as const : "bad" as const },
-                      { label: "Rent/sqft", value: rentPerSqft ? `${sym}${rentPerSqft}` : "—", comparison: `mkt ${sym}14.50`, status: "good" as const },
-                      { label: "OpEx/sqft", value: opexPerSqft ? `${sym}${opexPerSqft}` : "—", comparison: `mkt ${sym}4.29`, status: "bad" as const },
-                      { label: "Ins/sqft", value: "—", comparison: `mkt ${sym}1.11`, status: "warn" as const },
+                      { label: "Cap Rate", value: capRate, comparison: "mkt 6.5% EST", status: portfolio!.totalValue > 0 && (portfolio!.noi / portfolio!.totalValue * 100) >= 6.5 ? "good" as const : "warn" as const },
+                      { label: "NOI Margin", value: noiMargin, comparison: "mkt 58% EST", status: portfolio!.rentRoll > 0 && (portfolio!.noi / portfolio!.rentRoll) >= 0.58 ? "good" as const : "warn" as const },
+                      { label: "Occupancy", value: occ, comparison: "mkt 94% EST", status: portfolio!.occupancy >= 90 ? "warn" as const : "bad" as const },
+                      { label: "Rent/sqft", value: rentPerSqft ? `${sym}${rentPerSqft}` : "—", comparison: `mkt ${sym}14.50 EST`, status: "good" as const },
+                      { label: "OpEx/sqft", value: opexPerSqft ? `${sym}${opexPerSqft}` : "—", comparison: `mkt ${sym}4.29 EST`, status: "bad" as const },
+                      { label: "Ins/sqft", value: "—", comparison: `mkt ${sym}1.11 EST`, status: "warn" as const },
                     ];
                   })().map((metric, i) => (
                     <div
