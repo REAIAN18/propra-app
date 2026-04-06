@@ -49,14 +49,25 @@ export const MARKET_CAP_RATES: Record<string, Record<string, number>> = {
     mixed:       0.0525,
   },
   se_uk: {
-    // SE England (Thames corridor, Kent, Sussex, Hampshire) — logistics premium
+    // Prime SE England (M25 corridor, Kent, Sussex, Hampshire) — logistics premium
     industrial:  0.0525,
     warehouse:   0.0525,
     logistics:   0.0500,  // best-in-class logistics (sub-50k sqft) tighter than generic industrial
-    office:      0.0650,  // SE UK out-of-town office
+    office:      0.0625,  // Prime M25 out-of-town office (Guildford, St Albans, Windsor)
     retail:      0.0750,  // high street; out-of-town retail 6.5%
     flex:        0.0600,
     mixed:       0.0575,
+  },
+  regional_uk: {
+    // Secondary regional UK — Essex, East Anglia, Beds/Herts towns, South Coast non-prime
+    // Higher cap rates reflect thinner markets, longer voids, lower liquidity
+    industrial:  0.0625,
+    warehouse:   0.0600,
+    logistics:   0.0575,
+    office:      0.0900,  // Secondary regional office: 8.5–10% (thin market, long voids)
+    retail:      0.0950,
+    flex:        0.0750,
+    mixed:       0.0700,
   },
   midlands: {
     industrial:  0.0575,
@@ -75,6 +86,17 @@ export const MARKET_CAP_RATES: Record<string, Record<string, number>> = {
     retail:      0.0850,
     flex:        0.0700,
     mixed:       0.0675,
+  },
+  east_uk: {
+    // Outer SE / East England — Essex (SS, CO, CM), East Anglia (IP, NR, CB), Beds/Herts fringe
+    // NOT prime SE England (Guildford, Reading, Crawley). Thin occupier demand, higher cap rates.
+    industrial:  0.0625,
+    warehouse:   0.0600,
+    logistics:   0.0575,
+    office:      0.0825,  // Basildon/Chelmsford/Colchester out-of-town office: 8–9%
+    retail:      0.0900,  // High street/retail park; weak footfall in secondary Essex towns
+    flex:        0.0700,
+    mixed:       0.0750,
   },
   fl_us: {
     // Florida — Miami, Broward, Palm Beach, Tampa, Orlando
@@ -139,14 +161,26 @@ export const MARKET_ERV: Record<string, Record<string, number>> = {
     mixed:       22.00,
   },
   se_uk: {
-    // SE England ERV — mid-point of Q1 2026 range
+    // SE England ERV — prime M25 corridor (Surrey, Herts, Berks, Bucks, prime Kent/Sussex)
     industrial:  11.50,  // £9.50–£14.50/sqft/yr (Ashford/Sittingbourne mid)
     warehouse:   11.50,
     logistics:   14.00,  // distribution warehouses commanding premium
-    office:      28.00,  // SE UK out-of-town grade B; grade A up to £45
+    office:      32.00,  // Prime M25 out-of-town grade A/B (Guildford, St Albans, Windsor)
     retail:      35.00,  // zone A estimate; actual varies widely
     flex:        14.00,
     mixed:       12.00,
+  },
+  regional_uk: {
+    // Secondary / regional UK towns — Essex (Basildon, Chelmsford), East Anglia,
+    // Beds/Herts towns, Oxon outside prime, South Coast non-prime. Lower ERVs
+    // than M25 prime corridor; validated against CBRE/JLL regional Q1 2026 data.
+    industrial:   9.50,  // £8–£11/sqft/yr secondary industrial estates
+    warehouse:    9.50,
+    logistics:   11.00,
+    office:      20.00,  // Secondary regional grade B office: £17–£24/sqft/yr
+    retail:      22.00,  // Secondary high street / out-of-town retail
+    flex:        11.00,
+    mixed:       10.00,
   },
   midlands: {
     industrial:  8.50,
@@ -165,6 +199,18 @@ export const MARKET_ERV: Record<string, Record<string, number>> = {
     retail:      22.00,
     flex:        9.50,
     mixed:       8.00,
+  },
+  east_uk: {
+    // Outer SE / East England ERV — £/sqft/yr
+    // Essex (Basildon, Southend, Colchester, Chelmsford), East Anglia (Ipswich, Norwich)
+    // Realistic Q1 2026 ERVs for secondary office/industrial in these towns.
+    industrial:  8.00,   // £6.50–£9.50/sqft/yr for Essex industrial
+    warehouse:   8.50,
+    logistics:   10.00,
+    office:      13.00,  // Basildon/Chelmsford Grade B office: £11–£16/sqft/yr
+    retail:      18.00,  // secondary high street; actual varies widely
+    flex:        10.00,
+    mixed:       9.00,
   },
   fl_us: {
     // Florida ERV — $/sqft/yr NNN basis
@@ -206,6 +252,7 @@ export function normaliseRegion(region: string | null | undefined): string {
   const r = region.toLowerCase().replace(/[\s_-]+/g, "_");
   if (r.includes("prime_london") || r.includes("west_end") || r.includes("city_of_london") || r.includes("mayfair") || r.includes("fitzrovia") || r.includes("victoria") || r.includes("pimlico") || r.includes("marylebone") || r.includes("soho") || r.includes("covent_garden") || r.includes("knightsbridge") || r.includes("chelsea") || r.includes("kensington")) return "prime_london";
   if (r.includes("london") || r.includes("greater_london")) return "greater_london";
+  if (r.includes("regional_uk") || r.includes("regional"))                return "regional_uk";
   if (r.includes("se") || r.includes("south_east") || r.includes("kent") || r.includes("sussex") || r.includes("hamp")) return "se_uk";
   if (r.includes("midland") || r.includes("birmingham"))                   return "midlands";
   if (r.includes("north") || r.includes("manchester") || r.includes("leeds") || r.includes("liverpool") || r.includes("newcastle") || r.includes("sheffield") || r.includes("glasgow") || r.includes("edinburgh") || r.includes("scotland")) return "north_uk";
@@ -237,7 +284,13 @@ export function detectRegionFromAddress(address: string): string {
   // Midlands
   if (/\b(birmingham|coventry|leicester|derby|wolverhampton|stoke|telford)\b/i.test(address)) return "midlands";
 
-  return "se_uk"; // default
+  // Secondary regional UK postcodes: Essex (SS, CM), East Anglia (CO, IP, NR, CB, PE),
+  // Beds/Herts towns (MK, LU, SG, AL outside prime), South Coast secondary (PO, BN non-prime)
+  // These markets have lower ERVs and higher cap rates than prime M25 corridor.
+  if (/\b(ss\d|cm\d|co\d|ip\d|nr\d|cb\d|pe\d|mk\d|lu\d|sg\d)\b/i.test(address)) return "regional_uk";
+  if (/\b(basildon|chelmsford|southend|colchester|ipswich|norwich|cambridge|peterborough|milton keynes|luton|stevenage|hatfield)\b/i.test(address)) return "regional_uk";
+
+  return "se_uk"; // default (prime M25 corridor)
 }
 
 /** Normalise an asset type string to a key in the benchmark tables. */
