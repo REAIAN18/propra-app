@@ -558,7 +558,7 @@ function DueDiligenceTab({ deal }: { deal: RawDeal }) {
       <div className={s.section}>
         <h3 className={s.sectionTitle}>✅ Conditions for Success</h3>
 
-        {verdict.verdict === "AVOID" && hasAskingPrice && (
+        {verdict.verdict === "REJECT" && hasAskingPrice && (
           <div className={`${s.callout} ${s.calloutCritical}`}>
             <h4>AT CURRENT ASKING PRICE: DO NOT PROCEED</h4>
             <p>Returns fall below target thresholds. Downside scenario risks capital loss with no margin for error.</p>
