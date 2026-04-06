@@ -16,7 +16,7 @@ interface OpportunityDetail {
   annualIncome: number;
   confidence: number;
   capex: number;
-  currentStage: "identified" | "researching" | "quoting" | "approved" | "installing" | "live";
+  currentStage: "identified" | "researching" | "quoting" | "approved" | "installing" | "live" | "renewing";
   methodology: {
     baseEstimate: string;
     utilisationAssumptions: string;
