@@ -127,15 +127,17 @@ export default function DashboardPage() {
   const [scoutDeals, setScoutDeals] = useState<Array<{ id: string; address: string; assetType: string; capRate: number | null; askingPrice: number | null; guidePrice: number | null; matchScore: number | null; currency: string }>>([]);
   const [pipelineGroups, setPipelineGroups] = useState<Array<{ stage: string; deals: Array<{ id: string; address: string; assetType: string; askingPrice: number | null; currency: string }> }>>([]);
   const [workOrders, setWorkOrders] = useState<Array<{ id: string; jobType: string; asset?: { name: string }; status: string; budgetEstimate: number | null; currency: string; timing?: string | null }>>([]);
+  const [sofrRate, setSofrRate] = useState<{ value: number; date: string } | null>(null);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [portfolioRes, scoutRes, pipelineRes, woRes] = await Promise.all([
+        const [portfolioRes, scoutRes, pipelineRes, woRes, sofrRes] = await Promise.all([
           fetch("/api/portfolios/user"),
           fetch("/api/scout/deals"),
           fetch("/api/scout/pipeline"),
           fetch("/api/user/work-orders"),
+          fetch("/api/macro/sofr"),
         ]);
         const data: PortfolioType = await portfolioRes.json();
         setRawPortfolio(data);
@@ -147,6 +149,10 @@ export default function DashboardPage() {
         setPipelineGroups(pipelineData.pipeline ?? []);
         const woData = await woRes.json();
         setWorkOrders((woData.orders ?? []).slice(0, 4));
+        const sofrData = await sofrRes.json();
+        if (sofrData.sofr?.value != null) {
+          setSofrRate({ value: sofrData.sofr.value, date: sofrData.sofr.date });
+        }
         setLoading(false);
       } catch (error) {
         console.error("Dashboard data fetch failed:", error);
@@ -1285,10 +1291,15 @@ export default function DashboardPage() {
                   }}
                 >
                   {[
-                    { label: "SOFR 30-Day", value: "5.32%", note: "Live", pulse: true },
-                    { label: "10Y Treasury", value: "4.28%", note: "+12bps this week", pulse: false },
-                    { label: "CRE Spread", value: "+175–250", note: "bps over SOFR", pulse: false },
-                    { label: "All-in Range", value: "7.1–7.8%", note: "Current rates", pulse: false },
+                    {
+                      label: "SOFR 30-Day",
+                      value: sofrRate ? `${sofrRate.value.toFixed(2)}%` : "—",
+                      note: sofrRate ? "Federal Reserve" : "Not yet fetched",
+                      pulse: sofrRate != null,
+                    },
+                    { label: "10Y Treasury", value: "—", note: "Not available", pulse: false },
+                    { label: "CRE Spread", value: "+175–250", note: "EST · bps over SOFR", pulse: false },
+                    { label: "All-in Range", value: "7.1–7.8%", note: "EST · current range", pulse: false },
                   ].map((cell, i) => (
                     <div
                       key={i}
