@@ -34,7 +34,7 @@ function buildThumbs(
     { label: "EPC", url: null },
     { label: "Title", url: null },
   ];
-  let slotsNeeded = Math.max(0, 5 - thumbs.length);
+  const slotsNeeded = Math.max(0, 5 - thumbs.length);
   for (let i = 0; i < slotsNeeded && i < slots.length; i++) {
     thumbs.push(slots[i]);
   }

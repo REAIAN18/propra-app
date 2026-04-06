@@ -215,7 +215,7 @@ export default function SearchCompanyPage() {
         <div className={`${s.stepLabel} ${s.anim} ${s.a1}`}>Add properties</div>
         <h1 className={`${s.stepH} ${s.anim} ${s.a2}`}>Find properties by company</h1>
         <p className={`${s.stepSub} ${s.anim} ${s.a3}`}>
-          Enter a company or entity name. We'll find commercial properties linked to it from Land Registry ownership records.
+          Enter a company or entity name. We&apos;ll find commercial properties linked to it from Land Registry ownership records.
         </p>
 
         <div className={`${s.searchBox} ${s.anim} ${s.a3}`}>
