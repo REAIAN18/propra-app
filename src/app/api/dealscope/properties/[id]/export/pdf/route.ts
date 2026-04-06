@@ -5,7 +5,6 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { renderToStaticMarkup } from "react-dom/server";
 import React from "react";
 import { prisma } from "@/lib/prisma";
 import { ICMemoTemplate } from "@/lib/dealscope/exports/ic-memo-template";
@@ -49,6 +48,8 @@ export async function GET(
       guidePrice: deal.guidePrice ?? undefined,
     }, { confidential: true });
 
+    // Dynamic import avoids Next.js static analysis rejecting react-dom/server in route handlers
+    const { renderToStaticMarkup } = await import("react-dom/server");
     const markup = renderToStaticMarkup(React.createElement(ICMemoTemplate, memoProps));
     const html = `<!DOCTYPE html>\n${markup}`;
 
