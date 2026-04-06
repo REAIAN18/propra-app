@@ -415,7 +415,7 @@ export default function DashboardPage() {
                       margin
                     </small>
                   </div>
-                  <div style={{ fontSize: "12px", color: "var(--tx3, #555568)" }}>Benchmark 72–78%</div>
+                  <div style={{ fontSize: "12px", color: "var(--tx3, #555568)" }}>Benchmark 72–78% <span style={{ fontSize: "9px", opacity: 0.6 }}>EST</span></div>
                 </div>
 
                 <div style={{ height: "6px", background: "var(--s3, #1f1f28)", borderRadius: "3px", overflow: "visible", position: "relative", marginBottom: "24px" }}>
