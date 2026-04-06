@@ -128,7 +128,7 @@ async function buildAssumptions(
   address?: string | null,
 ): Promise<{
   sqft: number; sqftSource: string;
-  erv: number; ervSource: string; ervAvailable: boolean;
+  erv: number; ervSource: string;
   yearBuilt: number; yearBuiltSource: string;
   capRate: number; capRateSource: string;
   noi: number; noiSource: string;
@@ -153,37 +153,27 @@ async function buildAssumptions(
   }
 
   // ── ERV — listing passing rent (priority 1) or AI market analysis (priority 2) ──
-  // No static benchmark fallback: hardcoded tables are wrong for niche assets
-  // (cinema in Devon, cold store in Florida) and create false confidence.
-  // If AI estimation fails, ERV is marked unavailable so the UI can prompt the
-  // user to enter it manually rather than silently computing with wrong data.
-  let erv = 0;
-  let ervSource = "unavailable — enter market rent manually";
-  let ervAvailable = false;
+  // estimateMarketERV() NEVER returns null — it always produces a number.
+  // There is always available market data; we never prompt the user to enter ERV manually.
+  let erv: number;
+  let ervSource: string;
 
   if (aiData?.passingRent) {
     erv = aiData.passingRent;
     ervSource = "listing passing rent";
-    ervAvailable = true;
-  } else if (address && sqft > 0) {
-    // AI-based market ERV estimation — works for any location and asset type.
+  } else {
+    // AI-based market ERV estimation — works for any location and asset type worldwide.
     // Claude reasons about the specific submarket rather than using a lookup table.
-    try {
-      const aiERV = await estimateMarketERV(address, assetType, sqft, {
-        yearBuilt: aiData?.yearBuilt,
-        epcRating: aiData?.epcRating || epcData?.epcRating,
-        condition: aiData?.condition,
-        occupancy: aiData?.vacancy,
-      });
-      if (aiERV && aiERV.ervPsf > 0) {
-        erv = aiERV.ervAnnual;
-        ervSource = `AI market analysis — £${aiERV.ervPsf.toFixed(2)}/sqft (${aiERV.confidence} confidence): ${aiERV.reasoning}`;
-        ervAvailable = true;
-      }
-    } catch (e) {
-      console.warn("[enrich] AI ERV estimation failed:", e);
-      // ervAvailable stays false — downstream will surface "ERV required" to user
-    }
+    // Falls back through multiple retry attempts; never returns null.
+    const effectiveAddress = address || `${assetType} property, ${region}`;
+    const aiERV = await estimateMarketERV(effectiveAddress, assetType, sqft, {
+      yearBuilt: aiData?.yearBuilt,
+      epcRating: aiData?.epcRating || epcData?.epcRating,
+      condition: aiData?.condition,
+      occupancy: aiData?.vacancy,
+    });
+    erv = aiERV.ervAnnual;
+    ervSource = `AI market analysis — £${aiERV.ervPsf.toFixed(2)}/sqft (${aiERV.confidence} confidence): ${aiERV.reasoning}`;
   }
 
   // ── Year built — never blank ──
@@ -225,16 +215,16 @@ async function buildAssumptions(
   const capRate = mktCapRate;
   const capRateSource = `market benchmark for ${region} ${assetType} (${(mktCapRate * 100).toFixed(1)}%)`;
 
-  // ── NOI — null if ERV unavailable (prevents false returns calculations) ──
-  const noi = ervAvailable ? erv * 0.85 : 0;
-  const noiSource = ervAvailable ? "estimated (ERV × 85% after opex)" : "unavailable — ERV required";
+  // ── NOI — always computed from ERV (ERV is always available) ──
+  const noi = erv * 0.85;
+  const noiSource = "estimated (ERV × 85% after opex)";
 
   // ── Passing rent ──
   const passingRent = occupancyPct === 0 ? 0 : (aiData?.passingRent || erv);
   const passingRentSource = occupancyPct === 0 ? "vacant (£0 current income)" : (aiData?.passingRent ? "listing" : "estimated (= ERV)");
 
   return {
-    sqft, sqftSource, erv, ervSource, ervAvailable, yearBuilt: yearBuilt!, yearBuiltSource,
+    sqft, sqftSource, erv, ervSource, yearBuilt: yearBuilt!, yearBuiltSource,
     capRate, capRateSource, noi, noiSource, passingRent, passingRentSource,
     epcRating, epcRatingSource, occupancyPct, occupancySource,
     voidMonths: voidEst.months, voidReasoning: voidEst.reasoning,
