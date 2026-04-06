@@ -12,11 +12,8 @@ import { PlanningTab } from "./tabs/PlanningTab";
 import { FinancialsTab as FinancialsTabV2 } from "./tabs/FinancialsTab";
 import { TitleTab, EnvironmentalTab, OwnershipTab, MarketTab, ApproachTab } from "./dossier-tabs";
 import type { Comparable } from "@/components/dealscope/ComparablesTable";
-import { MultipleValuations } from "@/components/dealscope/MultipleValuations";
-import type { ValuationScenario } from "@/components/dealscope/MultipleValuations";
 import { ServiceCharges } from "@/components/dealscope/ServiceCharges";
 import type { ServiceChargeItem } from "@/components/dealscope/ServiceCharges";
-import { LettingScenariosTable } from "@/components/dealscope/LettingScenariosTable";
 import { SalesHistoryTable } from "@/components/dealscope/SalesHistoryTable";
 import type { SaleRecord } from "@/components/dealscope/SalesHistoryTable";
 import { EnvironmentalRiskBars } from "@/components/dealscope/EnvironmentalRiskBars";
@@ -193,76 +190,6 @@ function OverviewTab({ deal, prop }: { deal: RawDeal; prop: Property }) {
           <div style={{ fontSize: 13, color: "var(--tx)", lineHeight: 1.7 }}>{(ds.aiSummary as string) || (ds.listingDescription as string)}</div>
         </div>
       )}
-    </>
-  );
-}
-
-function FinancialsTab({ prop }: { prop: Property }) {
-  const irrResult = calculateIRR(prop);
-  const capexResult = calculateCAPEX(prop);
-  const equityResult = calculateEquityMultiple(prop);
-  const verdict = calculateVerdict(prop);
-  const scenarios: ValuationScenario[] = [
-    { label: "Bear case",    valueLow: equityResult.exitValue * 0.75, valueMid: equityResult.exitValue * 0.80, valueHigh: equityResult.exitValue * 0.85, method: "Exit yield +150bps", confidence: "low" },
-    { label: "Base case",    valueLow: equityResult.exitValue * 0.90, valueMid: equityResult.exitValue,        valueHigh: equityResult.exitValue * 1.10, method: "8% exit yield",      confidence: "medium" },
-    { label: "Bull case",    valueLow: equityResult.exitValue * 1.10, valueMid: equityResult.exitValue * 1.20, valueHigh: equityResult.exitValue * 1.30, method: "Exit yield -100bps", confidence: "low" },
-    { label: "Stabilised",   valueLow: equityResult.exitValue * 0.95, valueMid: equityResult.exitValue * 1.05, valueHigh: equityResult.exitValue * 1.15, method: "Fully let at ERV",   confidence: "medium" },
-  ];
-  return (
-    <>
-      <div className={`${s.card} ${s.anim}`}>
-        <div className={s.cardTitle}>Returns summary</div>
-        <div className={s.statRow}>
-          {[
-            { label: "IRR (10yr)",     val: fmtPct(irrResult.irr),             sub: `Confidence: ${irrResult.confidence}`, color: irrResult.irr >= 0.12 ? "var(--grn)" : irrResult.irr >= 0.07 ? "var(--amb)" : "var(--red)" },
-            { label: "Equity Multiple",val: fmtX(equityResult.equityMultiple),  sub: "Unlevered",  color: equityResult.equityMultiple >= 1.8 ? "var(--grn)" : equityResult.equityMultiple >= 1.2 ? "var(--amb)" : "var(--red)" },
-            { label: "Deal score",     val: String(verdict.dealScore),           sub: verdict.verdict, color: "var(--tx)" },
-            { label: "Total cost in",  val: fmtCcy(equityResult.totalCostIn),   sub: "Inc. SDLT + fees", color: "var(--tx)" },
-          ].map(m => (
-            <div key={m.label} className={s.statBox}>
-              <div className={s.statLabel}>{m.label}</div>
-              <div className={s.statVal} style={{ color: m.color }}>{m.val}</div>
-              <div className={s.statSub}>{m.sub}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className={`${s.card} ${s.anim} ${s.a1}`}>
-        <div className={s.cardTitle}>Cash flow breakdown</div>
-        <Row l="Purchase price"             v={fmtCcy(prop.askingPrice)} mono />
-        <Row l="SDLT + legal + survey"      v={fmtCcy(equityResult.totalCostIn - (prop.askingPrice ?? 0) - capexResult.capex)} mono />
-        {capexResult.capex > 0 && <Row l="CAPEX" v={fmtCcy(capexResult.capex)} mono />}
-        <Row l="Total cost in"              v={fmtCcy(equityResult.totalCostIn)} mono color="amber" />
-        <div className={s.sep} />
-        <Row l="Void + letting costs (yr 1)" v={fmtCcy(irrResult.breakdown.voidCosts + irrResult.breakdown.lettingCosts)} mono color="red" />
-        <Row l="Annual NOI (stabilised)"    v={fmtCcy(irrResult.breakdown.annualNOI)} mono color="green" />
-        <Row l="Exit proceeds (yr 10)"      v={fmtCcy(irrResult.breakdown.exitProceeds)} mono color="green" />
-        <div className={s.sep} />
-        <table className={s.tbl}>
-          <thead><tr><th>Year</th><th>Cash flow</th><th>Description</th></tr></thead>
-          <tbody>
-            {irrResult.cashFlows.map(cf => (
-              <tr key={cf.year}>
-                <td className={s.mono}>{cf.year}</td>
-                <td className={s.mono} style={{ color: cf.amount >= 0 ? "var(--grn)" : "var(--red)" }}>
-                  {cf.amount >= 0 ? "+" : ""}{fmtCcy(Math.abs(cf.amount))}
-                </td>
-                <td style={{ color: "var(--tx3)" }}>{cf.description}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <div className={`${s.card} ${s.anim} ${s.a2}`}>
-        <div className={s.cardTitle}>Exit value scenarios (4 scenarios)</div>
-        <MultipleValuations scenarios={scenarios} />
-      </div>
-
-      <div className={`${s.card} ${s.anim} ${s.a2}`}>
-        <LettingScenariosTable />
-      </div>
     </>
   );
 }
