@@ -1,10 +1,7 @@
 /**
- * GET /api/dealscope/export/memo?id=<propertyId>&format=pdf|html
- *
- * Generates an investment memorandum.
- *  - format=html (default) — returns printable HTML; user prints to PDF
- *  - format=pdf            — server-side renders a real PDF via puppeteer-core
- *                            + @sparticuz/chromium (Vercel serverless pattern)
+ * GET /api/dealscope/export/memo?id=<propertyId>
+ * Generates a printable HTML investment memorandum.
+ * Opens in a new tab — user prints to PDF via browser (Cmd+P).
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -13,42 +10,12 @@ import { renderMemoHTML, type MemoData } from "@/lib/dealscope-memo-template";
 import { analyseProperty, type AnalysisInput, type ComparableSale } from "@/lib/dealscope-deal-analysis";
 import { normaliseRegion, normaliseAssetType } from "@/lib/data/scout-benchmarks";
 
-export const maxDuration = 60;
-
-/**
- * Render HTML → PDF buffer using puppeteer-core + @sparticuz/chromium.
- * Lazy-imported so cold starts stay snappy for the default HTML path.
- */
-async function htmlToPdf(html: string): Promise<Buffer> {
-  const [chromium, puppeteer] = await Promise.all([
-    import("@sparticuz/chromium").then((m) => m.default),
-    import("puppeteer-core"),
-  ]);
-  const browser = await puppeteer.launch({
-    args: chromium.args,
-    executablePath: await chromium.executablePath(),
-    headless: true,
-  });
-  try {
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: "networkidle0", timeout: 30_000 });
-    const pdf = await page.pdf({
-      format: "A4",
-      printBackground: true,
-      margin: { top: "12mm", right: "12mm", bottom: "14mm", left: "12mm" },
-      preferCSSPageSize: true,
-    });
-    return Buffer.from(pdf);
-  } finally {
-    await browser.close().catch(() => {});
-  }
-}
+export const maxDuration = 30;
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
-    const format = (searchParams.get("format") || "html").toLowerCase();
 
     if (!id) {
       return NextResponse.json({ error: "id is required" }, { status: 400 });
@@ -189,26 +156,6 @@ export async function GET(req: NextRequest) {
     } catch (renderErr: any) {
       console.error("[export/memo] renderMemoHTML crashed:", renderErr?.message, renderErr?.stack);
       return NextResponse.json({ error: `Memo render failed: ${renderErr?.message || "unknown"}` }, { status: 500 });
-    }
-
-    if (format === "pdf") {
-      try {
-        const pdf = await htmlToPdf(html);
-        const safeName = (deal.address || "memo")
-          .replace(/[^a-z0-9]+/gi, "-")
-          .replace(/^-+|-+$/g, "")
-          .slice(0, 60) || "memo";
-        return new NextResponse(new Uint8Array(pdf), {
-          headers: {
-            "Content-Type": "application/pdf",
-            "Content-Disposition": `attachment; filename="${safeName}.pdf"`,
-            "Cache-Control": "private, no-store",
-          },
-        });
-      } catch (pdfErr: any) {
-        console.error("[export/memo] PDF render failed, falling back to HTML:", pdfErr?.message);
-        // Fall through to HTML response so the user still gets their memo.
-      }
     }
 
     return new NextResponse(html, {
