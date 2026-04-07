@@ -9,6 +9,26 @@
 
 const EPC_BASE = "https://epc.opendatacommunities.org/api/v1";
 
+/**
+ * EPC opendatacommunities.org uses HTTP Basic auth where the username is the
+ * registered email and the password is the API key. We also accept a raw
+ * `Bearer <key>` format for back-compat, and emit an Accept: application/json
+ * header so we don't get CSV back.
+ */
+function buildEpcAuthHeaders(): Record<string, string> {
+  const apiKey = process.env.EPC_API_KEY || "";
+  const email = process.env.EPC_EMAIL || process.env.EPC_API_EMAIL || "";
+  const headers: Record<string, string> = { Accept: "application/json" };
+  if (email && apiKey) {
+    const token = Buffer.from(`${email}:${apiKey}`).toString("base64");
+    headers.Authorization = `Basic ${token}`;
+  } else if (apiKey) {
+    // Fall back to basic auth with api key only (some registrations work this way)
+    headers.Authorization = `Basic ${Buffer.from(`:${apiKey}`).toString("base64")}`;
+  }
+  return headers;
+}
+
 export interface EPCCertificate {
   address: string;
   postcode?: string;
@@ -37,10 +57,7 @@ export async function lookupEPCByPostcode(postcode: string): Promise<EPCCertific
     const cleanPostcode = postcode.replace(/\s/g, "").toUpperCase();
     const res = await fetch(
       `${EPC_BASE}/non-domestic/search?postcode=${encodeURIComponent(cleanPostcode)}&size=100`,
-      {
-        headers: { Authorization: `Bearer ${apiKey}` },
-        signal: AbortSignal.timeout(10_000),
-      }
+      { headers: buildEpcAuthHeaders(), signal: AbortSignal.timeout(10_000) }
     );
 
     if (!res.ok) {
@@ -87,10 +104,7 @@ export async function lookupEPCByAddress(address: string): Promise<EPCCertificat
   try {
     const res = await fetch(
       `${EPC_BASE}/non-domestic/search?address=${encodeURIComponent(address)}&size=10`,
-      {
-        headers: { Authorization: `Bearer ${apiKey}` },
-        signal: AbortSignal.timeout(10_000),
-      }
+      { headers: buildEpcAuthHeaders(), signal: AbortSignal.timeout(10_000) }
     );
 
     if (!res.ok) {

@@ -47,17 +47,46 @@ export async function findComps(
     const cutoffDate = new Date();
     cutoffDate.setMonth(cutoffDate.getMonth() - monthsBack);
 
-    // Query Land Registry Price Paid data
+    // Normalise postcode → sector. UK Land Registry stores sector as
+    // "OUTCODE INCODE-FIRST-DIGIT" e.g. "W8 4". Accept inputs with or
+    // without spaces ("W84PF" / "W8 4PF") and derive the sector reliably.
+    const compact = postcode.replace(/\s+/g, '').toUpperCase();
+    // Sector = outcode + first digit of incode (outcode length varies 2-4)
+    const sectorMatch = compact.match(/^([A-Z]{1,2}[0-9][A-Z0-9]?)([0-9])[A-Z]{2}$/);
+    const sectorPrefix = sectorMatch ? `${sectorMatch[1]} ${sectorMatch[2]}` : compact.slice(0, 4);
+
+    // Land Registry Price Paid only tags residential property types
+    // (D/S/T/F/O). For commercial assets the field is typically "O" (other)
+    // and filtering by "retail"/"office" etc. returns zero rows. Only apply
+    // the filter for clearly residential inputs.
+    const lrResidentialType = (() => {
+      const pt = (propertyType || '').toLowerCase();
+      if (/detached/.test(pt)) return 'D';
+      if (/semi/.test(pt)) return 'S';
+      if (/terrace/.test(pt)) return 'T';
+      if (/flat|apartment/.test(pt)) return 'F';
+      return null;
+    })();
+
     const results = await prisma.landRegistryPricePaid.findMany({
       where: {
-        postcodeSector: {
-          startsWith: postcode.substring(0, 4), // Match postcode sector
-          mode: 'insensitive',
-        },
-        propertyType: {
-          equals: propertyType,
-          mode: 'insensitive',
-        },
+        OR: [
+          {
+            postcodeSector: {
+              startsWith: sectorPrefix,
+              mode: 'insensitive',
+            },
+          },
+          {
+            postcode: {
+              startsWith: sectorPrefix,
+              mode: 'insensitive',
+            },
+          },
+        ],
+        ...(lrResidentialType
+          ? { propertyType: { equals: lrResidentialType, mode: 'insensitive' as const } }
+          : {}),
         transferDate: {
           gte: cutoffDate,
         },

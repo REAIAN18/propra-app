@@ -110,24 +110,82 @@ function buildStreetViewUrl(lat: number, lng: number): string | null {
 }
 
 // ── Environment Agency flood risk ──
+// The EA flood-monitoring API returns STATIC flood area polygons (rivers &
+// coastal zones) plus any ACTIVE warnings/alerts. A property is considered
+// "in a flood zone" if it falls within ≤1km of any defined flood area.
+// Active warnings elevate the risk level from Medium → High/Severe.
+//
+// severityLevel legend (EA API):
+//   1 = Severe Flood Warning   (Severe)
+//   2 = Flood Warning          (High)
+//   3 = Flood Alert            (Medium)
+//   4 = Warning no longer in force (Low)
 async function fetchFloodRisk(lat: number, lng: number): Promise<any> {
   try {
-    const res = await fetch(
-      `https://environment.data.gov.uk/flood-monitoring/id/floodAreas?lat=${lat}&long=${lng}&dist=1`,
-      { signal: AbortSignal.timeout(8000) }
-    );
-    if (!res.ok) return null;
-    const data = await res.json();
-    const items = data?.items || [];
-    if (items.length === 0) return { inFloodZone: false, zones: [], riskLevel: "Low" };
+    const [areasRes, floodsRes] = await Promise.all([
+      fetch(
+        `https://environment.data.gov.uk/flood-monitoring/id/floodAreas?lat=${lat}&long=${lng}&dist=1`,
+        { signal: AbortSignal.timeout(8000) }
+      ),
+      fetch(
+        `https://environment.data.gov.uk/flood-monitoring/id/floods?lat=${lat}&long=${lng}&dist=5`,
+        { signal: AbortSignal.timeout(8000) }
+      ),
+    ]);
+
+    const areasJson = areasRes.ok ? await areasRes.json() : { items: [] };
+    const floodsJson = floodsRes.ok ? await floodsRes.json() : { items: [] };
+
+    const areas = areasJson?.items || [];
+    const floods = floodsJson?.items || [];
+
+    if (areas.length === 0 && floods.length === 0) {
+      return {
+        inFloodZone: false,
+        zones: [],
+        activeWarnings: 0,
+        riskLevel: "Low",
+        source: "EA flood-monitoring (floodAreas + floods within 1km/5km)",
+      };
+    }
+
+    // Map EA severity levels → human labels
+    const severityLabel = (n: number | undefined): string => {
+      switch (n) {
+        case 1: return "Severe";
+        case 2: return "High";
+        case 3: return "Medium";
+        case 4: return "Low";
+        default: return "Unknown";
+      }
+    };
+
+    // Active warning severity = minimum (most severe) level of any active flood
+    const activeSeverities = floods
+      .map((f: any) => f.severityLevel)
+      .filter((s: any) => typeof s === "number" && s >= 1 && s <= 4);
+    const worstActive = activeSeverities.length ? Math.min(...activeSeverities) : null;
+
+    // Overall risk level derivation
+    let riskLevel: string;
+    if (worstActive === 1) riskLevel = "Severe";
+    else if (worstActive === 2) riskLevel = "High";
+    else if (worstActive === 3) riskLevel = "Medium";
+    else if (areas.length > 0) riskLevel = "Medium"; // in defined flood zone, no active warning
+    else riskLevel = "Low";
+
     return {
-      inFloodZone: true,
-      zones: items.slice(0, 5).map((item: any) => ({
+      inFloodZone: areas.length > 0,
+      zones: areas.slice(0, 5).map((item: any) => ({
         label: item.label || item.notation || "Flood area",
-        riskLevel: item.currentWarning?.severityLevel || "Unknown",
         description: item.description || null,
+        county: item.county || null,
+        riverOrSea: item.riverOrSea || null,
       })),
-      riskLevel: items.some((i: any) => i.currentWarning) ? "High" : "Medium",
+      activeWarnings: floods.length,
+      worstActiveSeverity: worstActive ? severityLabel(worstActive) : null,
+      riskLevel,
+      source: "EA flood-monitoring (floodAreas + floods within 1km/5km)",
     };
   } catch (e) {
     console.warn("[scope-enrich] Flood API failed:", e);
