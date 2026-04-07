@@ -6,9 +6,10 @@
   "framework": "nextjs",
   "git": {
     "deploymentEnabled": {
-      "main": false
+      "main": true
     }
   },
+  "ignoreCommand": "bash scripts/should-deploy.sh",
   "github": {
     "silent": true,
     "autoJobCancelation": true
