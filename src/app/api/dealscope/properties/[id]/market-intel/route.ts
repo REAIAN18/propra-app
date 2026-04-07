@@ -45,6 +45,68 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
   const subjectERV = sqft && erv ? sqft * erv : null;
   const subjectYield = subjectERV && ask ? subjectERV / ask : null;
 
+  // ── Sales evidence (real comps from enrichment) ──
+  // ds.comps shape: { address, postcode, price, date, propertyType, sqft?, pricePerSqft?, isNew? }
+  // Implied yield is computed at the regional ERV rate (labelled as such).
+  const ds = (property.dataSources ?? {}) as Record<string, unknown>;
+  const rawSalesComps = (ds.comps as Record<string, unknown>[] | undefined)
+    ?? (ds.comparables as Record<string, unknown>[] | undefined)
+    ?? [];
+  const salesComps = (Array.isArray(rawSalesComps) ? rawSalesComps : []).map((c) => {
+    const price = (c.price ?? c.salePrice) as number | null;
+    const compSqft = (c.sqft ?? c.size) as number | null;
+    const psf = compSqft && price ? Math.round(price / compSqft) : null;
+    const compErv = compSqft && erv ? compSqft * erv : null;
+    const impliedYield = compErv && price ? compErv / price : null;
+    return {
+      address: (c.address ?? c.name ?? "—") as string,
+      type: (c.propertyType ?? c.type ?? c.assetType ?? asset) as string,
+      sqft: compSqft,
+      price: price,
+      pricePerSqft: psf,
+      impliedYield, // computed at regional ERV — labelled in UI
+      date: (c.date ?? c.saleDate ?? c.transferDate ?? null) as string | null,
+      source: (c.source ?? "Land Registry PPD") as string,
+    };
+  });
+
+  // Sales summary stats
+  const validPsf = salesComps.map((c) => c.pricePerSqft).filter((v): v is number => v != null);
+  const validYields = salesComps.map((c) => c.impliedYield).filter((v): v is number => v != null);
+  const salesStats = {
+    avgPsf: validPsf.length > 0 ? Math.round(validPsf.reduce((a, b) => a + b, 0) / validPsf.length) : null,
+    minPsf: validPsf.length > 0 ? Math.min(...validPsf) : null,
+    maxPsf: validPsf.length > 0 ? Math.max(...validPsf) : null,
+    avgYield: validYields.length > 0 ? validYields.reduce((a, b) => a + b, 0) / validYields.length : null,
+    count: salesComps.length,
+  };
+
+  // ── Rental evidence (only if enrichment populated it) ──
+  const rawRentalComps = (ds.rentalComps as Record<string, unknown>[] | undefined)
+    ?? (ds.lettings as Record<string, unknown>[] | undefined)
+    ?? [];
+  const rentalComps = (Array.isArray(rawRentalComps) ? rawRentalComps : []).map((c) => {
+    const rentPa = (c.rentPa ?? c.annualRent ?? c.rent) as number | null;
+    const compSqft = (c.sqft ?? c.size) as number | null;
+    const rentPsf = (c.rentPsf as number | null) ?? (rentPa && compSqft ? rentPa / compSqft : null);
+    return {
+      address: (c.address ?? "—") as string,
+      type: (c.propertyType ?? c.type ?? asset) as string,
+      sqft: compSqft,
+      rentPa,
+      rentPsf,
+      lease: (c.lease ?? c.term ?? null) as string | null,
+      date: (c.date ?? null) as string | null,
+    };
+  });
+  const validRentPsf = rentalComps.map((c) => c.rentPsf).filter((v): v is number => v != null);
+  const rentalStats = {
+    avgRentPsf: validRentPsf.length > 0 ? validRentPsf.reduce((a, b) => a + b, 0) / validRentPsf.length : null,
+    minRentPsf: validRentPsf.length > 0 ? Math.min(...validRentPsf) : null,
+    maxRentPsf: validRentPsf.length > 0 ? Math.max(...validRentPsf) : null,
+    count: rentalComps.length,
+  };
+
   // Latest SOFR (only macro series we currently track)
   const sofr = await prisma.macroRate.findFirst({
     where: { series: "SOFR" },
@@ -78,5 +140,9 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
       cpi: null,
       gdp: null,
     },
+    salesComps,
+    salesStats,
+    rentalComps,
+    rentalStats,
   });
 }

@@ -25,6 +25,38 @@ type MarketIntel = {
     ervMax: number | null;
   };
   macro: { sofr: number | null; sofrDate: string | null; basRate: number | null; cpi: number | null; gdp: number | null };
+  salesComps: Array<{
+    address: string;
+    type: string;
+    sqft: number | null;
+    price: number | null;
+    pricePerSqft: number | null;
+    impliedYield: number | null;
+    date: string | null;
+    source: string;
+  }>;
+  salesStats: {
+    avgPsf: number | null;
+    minPsf: number | null;
+    maxPsf: number | null;
+    avgYield: number | null;
+    count: number;
+  };
+  rentalComps: Array<{
+    address: string;
+    type: string;
+    sqft: number | null;
+    rentPa: number | null;
+    rentPsf: number | null;
+    lease: string | null;
+    date: string | null;
+  }>;
+  rentalStats: {
+    avgRentPsf: number | null;
+    minRentPsf: number | null;
+    maxRentPsf: number | null;
+    count: number;
+  };
 };
 
 function fmtPct(n: number | null | undefined): string {
@@ -66,7 +98,7 @@ export function MarketTab({ propertyId }: Props) {
     return <div className={s.tabContent}>Could not load market intelligence.</div>;
   }
 
-  const { market, macro, property } = data;
+  const { market, macro, property, salesComps, salesStats, rentalComps, rentalStats } = data;
 
   return (
     <div className={s.tabContent}>
@@ -89,6 +121,123 @@ export function MarketTab({ propertyId }: Props) {
         <div style={{ fontSize: 9, color: "var(--tx3)", marginTop: 8 }}>
           Source: scout-benchmarks.ts (CBRE/Savills SE England commercial market reports, updated quarterly).
         </div>
+      </div>
+
+      <div className={s.sideCard} style={{ marginBottom: 12 }}>
+        <div className={s.cardTitle}>Sales evidence (comparable sales)</div>
+        {salesComps.length === 0 ? (
+          <div style={{ fontSize: 12, color: "var(--tx3)", padding: "12px 0" }}>
+            No comparable sales retrieved. Re-run enrichment to query Land Registry PPD.
+          </div>
+        ) : (
+          <>
+            <table className={s.tbl}>
+              <thead>
+                <tr>
+                  <th>Property</th>
+                  <th>Type</th>
+                  <th>Size</th>
+                  <th>Price</th>
+                  <th>£/sqft</th>
+                  <th>Implied yield</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {salesComps.slice(0, 20).map((c, i) => (
+                  <tr key={i}>
+                    <td>{c.address}</td>
+                    <td>{c.type}</td>
+                    <td className={s.mono}>{c.sqft != null ? c.sqft.toLocaleString() : "—"}</td>
+                    <td className={s.mono}>{fmtCcy(c.price)}</td>
+                    <td className={s.mono}>{c.pricePerSqft != null ? `£${c.pricePerSqft.toLocaleString()}` : "—"}</td>
+                    <td className={s.mono}>{fmtPct(c.impliedYield)}</td>
+                    <td className={s.mono}>{c.date ?? "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className={s.grid3} style={{ marginTop: 10 }}>
+              <div style={{ padding: 10, background: "var(--s2)", border: "1px solid var(--s3)", borderRadius: 6 }}>
+                <div className={s.statLabel}>Avg £/sqft</div>
+                <div className={s.mono} style={{ fontSize: 14, color: "var(--tx)", marginTop: 2 }}>{salesStats.avgPsf != null ? `£${salesStats.avgPsf.toLocaleString()}` : "—"}</div>
+              </div>
+              <div style={{ padding: 10, background: "var(--s2)", border: "1px solid var(--s3)", borderRadius: 6 }}>
+                <div className={s.statLabel}>Range £/sqft</div>
+                <div className={s.mono} style={{ fontSize: 14, color: "var(--tx)", marginTop: 2 }}>
+                  {salesStats.minPsf != null && salesStats.maxPsf != null
+                    ? `£${salesStats.minPsf.toLocaleString()} – £${salesStats.maxPsf.toLocaleString()}`
+                    : "—"}
+                </div>
+              </div>
+              <div style={{ padding: 10, background: "var(--s2)", border: "1px solid var(--s3)", borderRadius: 6 }}>
+                <div className={s.statLabel}>Avg implied yield</div>
+                <div className={s.mono} style={{ fontSize: 14, color: "var(--tx)", marginTop: 2 }}>{fmtPct(salesStats.avgYield)}</div>
+              </div>
+            </div>
+            <div style={{ fontSize: 9, color: "var(--tx3)", marginTop: 8 }}>
+              Source: Land Registry Price Paid Data. Implied yield = comp sqft × regional ERV ÷ sale price (labelled — not transacted yield).
+            </div>
+          </>
+        )}
+      </div>
+
+      <div className={s.sideCard} style={{ marginBottom: 12 }}>
+        <div className={s.cardTitle}>Rental evidence (comparable lettings)</div>
+        {rentalComps.length === 0 ? (
+          <div style={{ fontSize: 12, color: "var(--tx3)", padding: "12px 0" }}>
+            No comparable lettings retrieved. Lettings feed not yet wired into enrichment.
+          </div>
+        ) : (
+          <>
+            <table className={s.tbl}>
+              <thead>
+                <tr>
+                  <th>Property</th>
+                  <th>Type</th>
+                  <th>Size</th>
+                  <th>Rent p.a.</th>
+                  <th>£/sqft</th>
+                  <th>Lease</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rentalComps.slice(0, 20).map((c, i) => (
+                  <tr key={i}>
+                    <td>{c.address}</td>
+                    <td>{c.type}</td>
+                    <td className={s.mono}>{c.sqft != null ? c.sqft.toLocaleString() : "—"}</td>
+                    <td className={s.mono}>{fmtCcy(c.rentPa)}</td>
+                    <td className={s.mono}>{c.rentPsf != null ? `£${c.rentPsf.toFixed(2)}` : "—"}</td>
+                    <td>{c.lease ?? "—"}</td>
+                    <td className={s.mono}>{c.date ?? "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className={s.grid3} style={{ marginTop: 10 }}>
+              <div style={{ padding: 10, background: "var(--s2)", border: "1px solid var(--s3)", borderRadius: 6 }}>
+                <div className={s.statLabel}>Avg £/sqft</div>
+                <div className={s.mono} style={{ fontSize: 14, color: "var(--tx)", marginTop: 2 }}>
+                  {rentalStats.avgRentPsf != null ? `£${rentalStats.avgRentPsf.toFixed(2)}` : "—"}
+                </div>
+              </div>
+              <div style={{ padding: 10, background: "var(--s2)", border: "1px solid var(--s3)", borderRadius: 6 }}>
+                <div className={s.statLabel}>Range £/sqft</div>
+                <div className={s.mono} style={{ fontSize: 14, color: "var(--tx)", marginTop: 2 }}>
+                  {rentalStats.minRentPsf != null && rentalStats.maxRentPsf != null
+                    ? `£${rentalStats.minRentPsf.toFixed(2)} – £${rentalStats.maxRentPsf.toFixed(2)}`
+                    : "—"}
+                </div>
+              </div>
+              <div style={{ padding: 10, background: "var(--s2)", border: "1px solid var(--s3)", borderRadius: 6 }}>
+                <div className={s.statLabel}>Comps</div>
+                <div className={s.mono} style={{ fontSize: 14, color: "var(--tx)", marginTop: 2 }}>{rentalStats.count}</div>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       <div className={s.sideCard} style={{ marginBottom: 12 }}>
