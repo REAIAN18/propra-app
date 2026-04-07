@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import styles from "./settings.module.css";
 
@@ -407,7 +408,7 @@ export default function SettingsPage() {
                     ))}
                   </tbody>
                 </table>
-                <button className={styles.primaryButton}>+ Add property</button>
+                <Link href="/scope/property/new" className={styles.primaryButton} style={{ display: "inline-block", textDecoration: "none" }}>+ Add property</Link>
               </div>
             </div>
           )}
