@@ -78,6 +78,27 @@ export async function parsePropertyUrl(url: string): Promise<ParsedPropertyData>
       visibleBodyLength < 400
       || /<title>\s*(?:Allsop|Acuitus|Strettons|Auctioneers?)\s*<\/title>/i.test(html)
     )
+    // Savills-specific: even when the direct fetch looks successful we also
+    // ask Jina Reader for the raw HTML (X-Return-Format: html) so we can
+    // harvest JSON-LD blocks that the direct fetch might be missing behind a
+    // bot-detection wall. This is opportunistic — we don't block on failure.
+    let jinaRawHtml = ''
+    if (url.includes('savills')) {
+      try {
+        const jinaHtmlRes = await fetch(`https://r.jina.ai/${url}`, {
+          headers: {
+            'Accept': 'text/html',
+            'X-Return-Format': 'html',
+            'User-Agent': 'Mozilla/5.0',
+          },
+          signal: AbortSignal.timeout(20000),
+        })
+        if (jinaHtmlRes.ok) jinaRawHtml = await jinaHtmlRes.text()
+      } catch {
+        /* non-blocking */
+      }
+    }
+
     if (directFetchBlocked || looksLikeSpaShell) {
       try {
         const jinaRes = await fetch(`https://r.jina.ai/${url}`, {
@@ -326,7 +347,7 @@ export async function parsePropertyUrl(url: string): Promise<ParsedPropertyData>
     // We scan BOTH the combined html (which may include Jina markdown) and
     // the raw direct-fetch html (which still has the original <script> tags
     // that Jina strips) so the ld+json blocks are always visible.
-    const ldSearchCorpus = [rawDirectHtml, html].filter(Boolean).join("\n")
+    const ldSearchCorpus = [rawDirectHtml, jinaRawHtml, html].filter(Boolean).join("\n")
     let savillsLdDescription: string | null = null
     let savillsLdSqft: number | null = null
     let savillsLdPrice: number | null = null
