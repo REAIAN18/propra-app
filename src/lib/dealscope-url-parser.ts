@@ -317,8 +317,79 @@ export async function parsePropertyUrl(url: string): Promise<ParsedPropertyData>
       mdTenure = labelled('Tenure')
     }
 
+    // ── Savills-specific JSON-LD extraction ──
+    // Savills renders listings as an SPA so the server HTML only contains
+    // a short og:description (~60 chars). The full description, sqft,
+    // tenure and images are in a JSON-LD RealEstateListing / Product block.
+    let savillsLdDescription: string | null = null
+    let savillsLdSqft: number | null = null
+    let savillsLdPrice: number | null = null
+    let savillsLdImages: string[] = []
+    if (source === 'savills') {
+      const ldBlocks = html.match(/<script[^>]+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi) || []
+      for (const block of ldBlocks) {
+        const raw = block.replace(/<script[^>]*>/i, '').replace(/<\/script>/i, '').trim()
+        try {
+          const parsedLd = JSON.parse(raw)
+          const nodes = Array.isArray(parsedLd) ? parsedLd : (parsedLd['@graph'] || [parsedLd])
+          for (const node of nodes) {
+            if (!node || typeof node !== 'object') continue
+            const type = String(node['@type'] || '').toLowerCase()
+            if (
+              type.includes('realestate') ||
+              type.includes('product') ||
+              type.includes('residence') ||
+              type.includes('apartment') ||
+              type.includes('house') ||
+              type.includes('accommodation') ||
+              type.includes('place')
+            ) {
+              if (typeof node.description === 'string' && node.description.length > (savillsLdDescription?.length || 0)) {
+                savillsLdDescription = decodeHtmlEntities(node.description).trim()
+              }
+              const floorSize = node.floorSize
+              if (floorSize) {
+                const val = floorSize.value || floorSize.valueReference || null
+                const unit = String(floorSize.unitText || floorSize.unitCode || '').toLowerCase()
+                const n = parseFloat(String(val || '').replace(/,/g, ''))
+                if (!isNaN(n) && n > 0) {
+                  if (/m|mtk/.test(unit)) savillsLdSqft = Math.round(n * 10.764)
+                  else savillsLdSqft = Math.round(n)
+                }
+              }
+              const offerPrice = node.offers?.price || node.offers?.[0]?.price
+              if (offerPrice) {
+                const n = parseFloat(String(offerPrice).replace(/[^0-9.]/g, ''))
+                if (!isNaN(n) && n >= 50_000) savillsLdPrice = n
+              }
+              const img = node.image
+              if (Array.isArray(img)) savillsLdImages.push(...img.filter((i) => typeof i === 'string'))
+              else if (typeof img === 'string') savillsLdImages.push(img)
+              else if (img?.url) savillsLdImages.push(img.url)
+            }
+          }
+        } catch {
+          /* ignore JSON parse errors */
+        }
+      }
+    }
+
     // Deep scrape listing data
     const listing = scrapeListingData(html, url, source)
+
+    // Apply Savills JSON-LD overrides where our scraped values are weak
+    if (source === 'savills') {
+      if (savillsLdDescription && savillsLdDescription.length > 80) {
+        if (!listing.description || listing.description.length < savillsLdDescription.length) {
+          listing.description = savillsLdDescription
+        }
+      }
+      if (savillsLdSqft && !sqft) sqft = savillsLdSqft
+      if (savillsLdPrice && !price) price = savillsLdPrice
+      if (savillsLdImages.length && (!listing.images || listing.images.length < savillsLdImages.length)) {
+        listing.images = Array.from(new Set([...(listing.images || []), ...savillsLdImages])).slice(0, 10)
+      }
+    }
 
     // Calculate price per sqft if both available
     const price_per_sqft = (price && sqft) ? Math.round(price / sqft) : null
