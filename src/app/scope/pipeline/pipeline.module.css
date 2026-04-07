@@ -209,3 +209,80 @@
 @media (max-width: 768px) {
   .ghostStages { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ── BULK APPROACH MODAL (design 04 bulk-approach) ── */
+.modalBg {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.6);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal {
+  background: var(--s1);
+  border: 1px solid var(--s2);
+  border-radius: 14px;
+  width: 90%;
+  max-width: 720px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 80px rgba(0,0,0,.5);
+}
+.modalHdr {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--s2);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.modalTitle { font-family: var(--serif); font-size: 18px; color: var(--tx); }
+.modalSub { font-size: 11px; color: var(--tx2); margin-top: 2px; }
+.modalClose {
+  background: none;
+  border: none;
+  color: var(--tx3);
+  cursor: pointer;
+  font-size: 16px;
+}
+.modalBody { padding: 16px 20px; overflow-y: auto; }
+.modalFooter {
+  padding: 12px 20px;
+  border-top: 1px solid var(--s2);
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.bulkTbl { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 16px; }
+.bulkTbl th {
+  text-align: left;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--tx3);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--s2);
+}
+.bulkTbl td {
+  padding: 8px;
+  border-bottom: 1px solid var(--s2);
+  color: var(--tx2);
+}
+.bulkTbl tr:last-child td { border-bottom: none; }
+.mono { font-family: var(--mono); }
+
+.bulkStats { display: flex; gap: 12px; }
+.bulkStat {
+  flex: 1;
+  padding: 12px;
+  background: var(--s2);
+  border-radius: 8px;
+  text-align: center;
+}
+.bulkStatVal { font-family: var(--mono); font-size: 18px; font-weight: 600; }
+.bulkStatLbl { font-size: 10px; color: var(--tx3); }

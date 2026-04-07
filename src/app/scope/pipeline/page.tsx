@@ -49,6 +49,7 @@ export default function PipelinePage() {
   const [deals, setDeals] = useState<Record<string, Deal[]>>({});
   const [mandates, setMandates] = useState<Mandate[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showBulk, setShowBulk] = useState(false);
 
   useEffect(() => {
     const fetchPipeline = async () => {
@@ -129,7 +130,7 @@ export default function PipelinePage() {
                 ))}
               </div>
               <div className={s.barActions}>
-                <button className={s.btnS}>Bulk approach</button>
+                <button className={s.btnS} onClick={() => setShowBulk(true)}>Bulk approach</button>
                 <Link href="/scope/pipeline/analytics" className={s.btnS}>Analytics</Link>
                 <button className={s.btnS}>Export CSV</button>
               </div>
@@ -189,6 +190,61 @@ export default function PipelinePage() {
                 )}
               </div>
             ))}
+          </div>
+        )}
+
+        {/* ── BULK APPROACH MODAL ── (design 04 bulk-approach) */}
+        {showBulk && (
+          <div className={s.modalBg} onClick={() => setShowBulk(false)}>
+            <div className={s.modal} onClick={(e) => e.stopPropagation()}>
+              <div className={s.modalHdr}>
+                <div>
+                  <div className={s.modalTitle}>Bulk approach</div>
+                  <div className={s.modalSub}>
+                    Send approach letters to {visibleDeals.length} {visibleDeals.length === 1 ? "property" : "properties"}
+                  </div>
+                </div>
+                <button className={s.modalClose} onClick={() => setShowBulk(false)}>✕</button>
+              </div>
+              <div className={s.modalBody}>
+                {visibleDeals.length === 0 ? (
+                  <div className={s.emptyCol}>No deals selected. Add deals to your pipeline first.</div>
+                ) : (
+                  <table className={s.bulkTbl}>
+                    <thead>
+                      <tr><th>Property</th><th>Mandate</th><th>Stage</th><th>Asking</th></tr>
+                    </thead>
+                    <tbody>
+                      {visibleDeals.map((d) => (
+                        <tr key={d.id}>
+                          <td>{d.name}</td>
+                          <td>{d.mandate || "—"}</td>
+                          <td>{
+                            STAGES.find((stg) => (deals[stg] || []).some((x) => x.id === d.id)) || "—"
+                          }</td>
+                          <td className={s.mono}>{d.price || "—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+                <div className={s.bulkStats}>
+                  <div className={s.bulkStat}>
+                    <div className={s.bulkStatVal}>{visibleDeals.length}</div>
+                    <div className={s.bulkStatLbl}>Letters</div>
+                  </div>
+                  <div className={s.bulkStat}>
+                    <div className={s.bulkStatVal} style={{ color: "var(--grn)" }}>{formatTotal(visibleDeals.reduce((sum, d) => sum + (d.priceNum || 0), 0))}</div>
+                    <div className={s.bulkStatLbl}>Total ask</div>
+                  </div>
+                </div>
+              </div>
+              <div className={s.modalFooter}>
+                <button className={s.btnS} onClick={() => setShowBulk(false)}>Cancel</button>
+                <button className={s.btnS} disabled>Preview all letters</button>
+                <button className={s.btnP} disabled>Send all letters</button>
+              </div>
+            </div>
           </div>
         )}
       </div>
