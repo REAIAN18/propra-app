@@ -106,11 +106,14 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      const domain = new URL(url).hostname;
+      const domain = new URL(url).hostname.replace(/^www\./i, "");
+      const rootName = domain.split(".")[0];
       if (domain.includes("savills")) { sourceTag = "Auction"; auctionHouse = "Savills"; }
-      else if (domain.includes("eigproperty") || domain.includes("allsop") || domain.includes("acuitus")) { sourceTag = "Auction"; auctionHouse = domain.split(".")[0]; }
+      else if (domain.includes("allsop")) { sourceTag = "Auction"; auctionHouse = "Allsop"; }
+      else if (domain.includes("acuitus")) { sourceTag = "Auction"; auctionHouse = "Acuitus"; }
+      else if (domain.includes("eigproperty")) { sourceTag = "Auction"; auctionHouse = "EIG"; }
       else if (domain.includes("rightmove") || domain.includes("zoopla") || domain.includes("onthemarket")) { sourceTag = "Listed"; }
-      else { sourceTag = "URL import"; }
+      else { sourceTag = "URL import"; auctionHouse = rootName.length > 2 ? rootName.charAt(0).toUpperCase() + rootName.slice(1) : undefined; }
     }
 
     if (!address) {

@@ -96,8 +96,14 @@ export function EnvironmentalTab({ deal }: Props) {
         {deal.epcRating ? (
           <Row l="EPC rating" v={deal.epcRating} color={["F", "G"].includes(deal.epcRating) ? "red" : ["E"].includes(deal.epcRating) ? "amber" : "green"} />
         ) : (
-          <Row l="EPC rating" v="—" />
+          <>
+            <Row l="EPC rating" v="—" />
+            <div style={{ fontSize: 11, color: "var(--tx3)", marginTop: 4 }}>
+              EPC register lookup pending. MEES risk cannot be assessed until a certificate is retrieved.
+            </div>
+          </>
         )}
+        {/* MEES warning only fires on a real (register-confirmed) F/G rating */}
         {(deal.epcRating === "F" || deal.epcRating === "G") && (
           <div style={{ marginTop: 10, padding: "10px 14px", background: "rgba(240,96,96,.06)", border: "1px solid rgba(240,96,96,.2)", borderRadius: 6, fontSize: 12, color: "var(--tx2)" }}>
             <strong style={{ color: "var(--red)" }}>MEES risk:</strong> EPC {deal.epcRating} cannot be let after 1 Apr 2027 without exemption. Upgrade to E or above required.

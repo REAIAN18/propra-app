@@ -7,6 +7,8 @@ export interface ParsedPropertyData {
   price: number | null
   price_per_sqft: number | null
   sqft: number | null
+  /** Annual passing rent / income, if labelled in the listing. */
+  passingRent: number | null
   description: string | null
   source: 'rightmove' | 'zoopla' | 'loopnet' | 'savills' | 'generic' | 'unknown'
   source_url: string
@@ -46,7 +48,35 @@ export async function parsePropertyUrl(url: string): Promise<ParsedPropertyData>
       throw new Error(`Failed to fetch URL: ${response.statusText}`)
     }
 
-    const html = await response.text()
+    let html = await response.text()
+    let renderedMarkdown: string | null = null
+
+    // ── SPA fallback ──
+    // If the page is a client-rendered SPA (Allsop, modern Acuitus, etc.) the
+    // raw HTML is just an empty shell. Detect this and re-fetch through Jina
+    // Reader (https://r.jina.ai/) which renders JS server-side and returns
+    // clean markdown. We then merge the rendered text into the HTML body for
+    // the regex extractors below, and also keep it as `renderedMarkdown` so
+    // the structured-markdown parser can pull labelled fields directly.
+    const visibleBodyLength = extractBodyText(html)?.length ?? 0
+    const looksLikeSpaShell = visibleBodyLength < 400
+      || /<title>\s*(?:Allsop|Acuitus|Strettons|Auctioneers?)\s*<\/title>/i.test(html)
+    if (looksLikeSpaShell) {
+      try {
+        const jinaRes = await fetch(`https://r.jina.ai/${url}`, {
+          headers: { 'Accept': 'text/plain', 'User-Agent': 'Mozilla/5.0' },
+          signal: AbortSignal.timeout(20000),
+        })
+        if (jinaRes.ok) {
+          renderedMarkdown = await jinaRes.text()
+          // Inject the rendered text into a synthetic body so the existing
+          // regex extractors below have something to chew on.
+          html = html.replace(/<body[^>]*>/i, (m) => `${m}<div>${renderedMarkdown!.replace(/</g, '&lt;')}</div>`)
+        }
+      } catch (e) {
+        console.warn('[parsePropertyUrl] Jina Reader fallback failed:', e)
+      }
+    }
 
     // Determine source based on URL
     let source: ParsedPropertyData['source'] = 'unknown'
@@ -194,6 +224,64 @@ export async function parsePropertyUrl(url: string): Promise<ParsedPropertyData>
       }
     }
 
+    // ── Structured markdown extractor (Allsop / Acuitus / SPA sites) ──
+    // When Jina Reader renders the SPA, the output uses labelled blocks like
+    //   ##### Property Types
+    //   Alternative/Leisure
+    //   ##### Income
+    //   £599,323 PA (£43.06 per sq.ft overall)
+    // Pull these first since they're the most reliable signal.
+    const md = renderedMarkdown
+    let mdAddress: string | null = null
+    let mdPropertyType: string | null = null
+    let mdSqft: number | null = null
+    let mdPrice: number | null = null
+    let mdIncome: number | null = null
+    let mdTenure: string | null = null
+    if (md) {
+      // First non-heading line after title is usually the address
+      const addrMatch = md.match(/##\s+[^\n]+\n+([^\n]{6,200})/)
+      if (addrMatch) {
+        const candidate = addrMatch[1].trim()
+        if (/[A-Z]{1,2}\d{1,2}[A-Z]?\s?\d[A-Z]{2}/i.test(candidate) || /,/.test(candidate)) {
+          mdAddress = candidate
+        }
+      }
+      const labelled = (label: string) => {
+        const re = new RegExp(`#####\\s+${label}\\s*\\n+([^\\n]+)`, 'i')
+        return md.match(re)?.[1]?.trim() ?? null
+      }
+      mdPropertyType = labelled('Property Types?') || labelled('Sector')
+      const siteArea = labelled('Site Area') || labelled('Floor Area') || labelled('Size')
+      if (siteArea) {
+        const m = siteArea.match(/([\d,]+)\s*(?:sq\.?\s*ft|sqft)/i)
+        if (m) mdSqft = parseFloat(m[1].replace(/,/g, ''))
+        else {
+          const sm = siteArea.match(/([\d,]+(?:\.\d+)?)\s*(?:sq\.?\s*m|sqm)/i)
+          if (sm) mdSqft = Math.round(parseFloat(sm[1].replace(/,/g, '')) * 10.764)
+        }
+      }
+      const guide = labelled('Guide Price') || labelled('Guide') || labelled('Price')
+      if (guide) {
+        const m = guide.match(/£\s*([\d,]+(?:\.\d+)?)\s*([mk])?/i)
+        if (m) {
+          let v = parseFloat(m[1].replace(/,/g, ''))
+          if (m[2]?.toLowerCase() === 'm') v *= 1_000_000
+          else if (m[2]?.toLowerCase() === 'k') v *= 1_000
+          if (v >= 50000) mdPrice = v
+        }
+      }
+      const income = labelled('Income') || labelled('Passing Rent') || labelled('Rent')
+      if (income) {
+        const m = income.match(/£\s*([\d,]+(?:\.\d+)?)/)
+        if (m) {
+          const v = parseFloat(m[1].replace(/,/g, ''))
+          if (v > 0) mdIncome = v
+        }
+      }
+      mdTenure = labelled('Tenure')
+    }
+
     // Deep scrape listing data
     const listing = scrapeListingData(html, url, source)
 
@@ -211,15 +299,33 @@ export async function parsePropertyUrl(url: string): Promise<ParsedPropertyData>
       }
     }
 
+    // Markdown overrides — these come from the rendered SPA and are higher fidelity
+    if (mdAddress && (!address || mdAddress.length > address.length || /[A-Z]{1,2}\d{1,2}[A-Z]?\s?\d[A-Z]{2}/i.test(mdAddress))) {
+      address = mdAddress
+    }
+    if (mdPrice && !price) price = mdPrice
+    if (mdSqft && !sqft) sqft = mdSqft
+    // Re-derive postcode from updated address
+    const finalPostcodeMatch = (address || '').match(/([A-Z]{1,2}\d{1,2}[A-Z]?\s?\d[A-Z]{2})/i)
+    const finalPostcode = finalPostcodeMatch ? finalPostcodeMatch[1] : postcode
+    if (md && listing) {
+      if (mdTenure && !listing.tenure) listing.tenure = mdTenure
+      // Use rendered markdown as description if scraped one is empty/short
+      if (!listing.description || listing.description.length < 200) {
+        listing.description = md.slice(0, 5000)
+      }
+    }
+
     return {
       address: address || 'Unknown Address',
-      postcode,
-      property_type: null,
+      postcode: finalPostcode,
+      property_type: mdPropertyType,
       bedrooms,
       bathrooms,
       price,
       price_per_sqft,
       sqft,
+      passingRent: mdIncome,
       description,
       source,
       source_url: url,

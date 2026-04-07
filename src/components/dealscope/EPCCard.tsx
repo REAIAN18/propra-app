@@ -25,6 +25,9 @@ export interface EPCCardProps {
   annualSavings?: string;
   paybackPeriod?: string;
   valueUplift?: string;
+  /** Estimated rating to show only when no real EPC has been retrieved. */
+  estimatedRating?: string;
+  estimatedSource?: string;
 }
 
 function ratingColors(r?: string): { bg: string; color: string } {
@@ -101,8 +104,12 @@ export function EPCCard({
   annualSavings,
   paybackPeriod,
   valueUplift,
+  estimatedRating,
+  estimatedSource,
 }: EPCCardProps) {
-  const { bg, color } = ratingColors(rating);
+  const displayRating = rating ?? estimatedRating;
+  const isEstimate = !rating && !!estimatedRating;
+  const { bg, color } = ratingColors(displayRating);
 
   return (
     <div style={card}>
@@ -123,14 +130,23 @@ export function EPCCard({
             fontSize: 16,
             fontWeight: 600,
             color,
+            opacity: isEstimate ? 0.6 : 1,
           }}
         >
-          {rating ?? "—"}
+          {displayRating ?? "—"}
         </div>
         <div>
-          {(rating || currentScore != null) && (
+          {(displayRating || currentScore != null) && (
             <div style={{ fontSize: 12, fontWeight: 500, color: "var(--tx, #e8e8f0)" }}>
-              Current rating: {rating ?? "—"}{currentScore != null ? ` (${currentScore})` : ""}
+              {isEstimate ? "Estimated" : "Current"} rating: {displayRating ?? "—"}{currentScore != null ? ` (${currentScore})` : ""}
+            </div>
+          )}
+          {isEstimate && estimatedSource && (
+            <div style={{ fontSize: 9, color: "var(--tx3, #555566)", marginTop: 2 }}>↳ {estimatedSource}</div>
+          )}
+          {!displayRating && (
+            <div style={{ fontSize: 11, color: "var(--tx3, #555566)" }}>
+              EPC register lookup pending — no certificate found yet.
             </div>
           )}
           {(potentialRating || potentialScore != null) && (

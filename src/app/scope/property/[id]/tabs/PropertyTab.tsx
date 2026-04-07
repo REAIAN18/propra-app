@@ -58,7 +58,33 @@ export function PropertyTab({ deal }: Props) {
         .trim()
         .substring(0, 1200) || undefined
     : undefined;
-  const size = deal.buildingSizeSqft ?? deal.sqft;
+  // Top-level columns hold facts only. Estimated/AI values live in assumptions
+  // and are surfaced here with their source so the dossier never lies about
+  // what's measured vs. modelled.
+  const assumptions = (ds.assumptions ?? {}) as Record<string, { value: unknown; source: string } | undefined>;
+  const realSize = deal.buildingSizeSqft ?? deal.sqft;
+  const assumedSize = (assumptions.sqft?.value as number | undefined) ?? null;
+  const size = realSize ?? assumedSize ?? null;
+  const sizeIsEstimate = realSize == null && assumedSize != null;
+  const sizeSource = sizeIsEstimate ? assumptions.sqft?.source : null;
+
+  const realYear = deal.yearBuilt;
+  const assumedYear = (assumptions.yearBuilt?.value as number | undefined) ?? null;
+  const year = realYear ?? assumedYear ?? null;
+  const yearIsEstimate = realYear == null && assumedYear != null;
+  const yearSource = yearIsEstimate ? assumptions.yearBuilt?.source : null;
+
+  const realOcc = deal.occupancyPct;
+  const assumedOcc = (assumptions.occupancy?.value as number | undefined) ?? null;
+  const occ = realOcc ?? assumedOcc ?? null;
+  const occIsEstimate = realOcc == null && assumedOcc != null;
+  const occSource = occIsEstimate ? assumptions.occupancy?.source : null;
+
+  const realEpc = (epcData?.epcRating as string | undefined) ?? deal.epcRating ?? null;
+  const assumedEpc = (assumptions.epcRating?.value as string | undefined) ?? null;
+  const epc = realEpc ?? assumedEpc;
+  const epcIsEstimate = realEpc == null && assumedEpc != null;
+  const epcSource = epcIsEstimate ? assumptions.epcRating?.source : null;
 
   const rawSalesHistory = (ds.salesHistory as Record<string, unknown>[] | undefined) ?? [];
   const salesHistory: SaleRecord[] = (Array.isArray(rawSalesHistory) ? rawSalesHistory : []).map(
@@ -105,20 +131,33 @@ export function PropertyTab({ deal }: Props) {
       <div className={s.grid2}>
         <div className={s.card}>
           <div className={s.cardTitle}>Building specification</div>
-          {size != null && <Row l="Size" v={`${size.toLocaleString()} sqft`} mono />}
+          {size != null && (
+            <Row l={`Size${sizeIsEstimate ? " (est.)" : ""}`} v={`${size.toLocaleString()} sqft`} mono />
+          )}
+          {sizeIsEstimate && sizeSource && (
+            <div style={{ fontSize: 9, color: "var(--tx3)", marginTop: -4, marginBottom: 6 }}>↳ {sizeSource}</div>
+          )}
           {deal.tenure && <Row l="Tenure" v={deal.tenure} />}
-          {deal.yearBuilt && <Row l="Year built" v={String(deal.yearBuilt)} mono />}
-          {deal.occupancyPct != null && <Row l="Occupancy" v={`${Math.round(deal.occupancyPct * 100)}%`} />}
+          {year != null && <Row l={`Year built${yearIsEstimate ? " (est.)" : ""}`} v={String(year)} mono />}
+          {yearIsEstimate && yearSource && (
+            <div style={{ fontSize: 9, color: "var(--tx3)", marginTop: -4, marginBottom: 6 }}>↳ {yearSource}</div>
+          )}
+          {occ != null && <Row l={`Occupancy${occIsEstimate ? " (est.)" : ""}`} v={`${Math.round(occ * 100)}%`} />}
+          {occIsEstimate && occSource && (
+            <div style={{ fontSize: 9, color: "var(--tx3)", marginTop: -4, marginBottom: 6 }}>↳ {occSource}</div>
+          )}
           {deal.brokerName && <Row l="Agent" v={deal.brokerName} />}
           {deal.daysOnMarket != null && <Row l="Days on market" v={String(deal.daysOnMarket)} mono />}
           {deal.sourceTag && <Row l="Source" v={deal.sourceTag} />}
-          {!size && !deal.tenure && !deal.yearBuilt && !deal.brokerName && (
+          {!size && !deal.tenure && !year && !deal.brokerName && (
             <p style={{ fontSize: 11, color: "var(--tx3)", margin: 0 }}>No building data available yet.</p>
           )}
         </div>
 
         <EPCCard
-          rating={(epcData?.epcRating as string | undefined) ?? deal.epcRating ?? undefined}
+          rating={realEpc ?? undefined}
+          estimatedRating={epcIsEstimate ? assumedEpc ?? undefined : undefined}
+          estimatedSource={epcIsEstimate ? epcSource ?? undefined : undefined}
           potentialRating={epcData?.epcPotential as string | undefined}
           validUntil={epcData?.validUntil as string | undefined}
           meesCompliance={epcData?.meesRisk as string | undefined}

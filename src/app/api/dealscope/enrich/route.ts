@@ -58,7 +58,15 @@ function extractAddressFromUrl(url: string): string | null {
 }
 
 // ── Geocode ──
-async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
+// Returns lat/lng AND the formatted address (which Google fills with the
+// official postcode even when the input was just a street/city). The caller
+// uses formattedAddress to recover a postcode that the listing didn't expose.
+async function geocodeAddress(address: string): Promise<{
+  lat: number;
+  lng: number;
+  formattedAddress: string | null;
+  postcode: string | null;
+} | null> {
   const mapsKey = process.env.GOOGLE_MAPS_API_KEY;
   if (!mapsKey) return null;
   try {
@@ -70,7 +78,18 @@ async function geocodeAddress(address: string): Promise<{ lat: number; lng: numb
     const data = await res.json();
     const result = data?.results?.[0];
     if (result?.geometry?.location) {
-      return { lat: result.geometry.location.lat, lng: result.geometry.location.lng };
+      const formatted = (result.formatted_address as string | undefined) ?? null;
+      const components = (result.address_components as Array<{ long_name: string; types: string[] }> | undefined) ?? [];
+      const postalComp = components.find((c) => c.types.includes("postal_code"));
+      const postcode = postalComp?.long_name
+        ?? formatted?.match(/\b([A-Z]{1,2}\d{1,2}[A-Z]?\s?\d[A-Z]{2})\b/i)?.[1]
+        ?? null;
+      return {
+        lat: result.geometry.location.lat,
+        lng: result.geometry.location.lng,
+        formattedAddress: formatted,
+        postcode,
+      };
     }
   } catch (e) {
     console.warn("[scope-enrich] Geocode failed:", e);
@@ -391,7 +410,7 @@ export async function POST(req: NextRequest) {
       address = body.address as string | undefined;
       url = body.url as string | undefined;
       price = body.price as number | undefined;
-      existingDealId = body.dealId as string | undefined;
+      existingDealId = (body.dealId ?? body.id ?? body.propertyId) as string | undefined;
     }
 
     // ── STAGE 2: If dealId provided, load existing quick-assessed deal ──
@@ -416,11 +435,15 @@ export async function POST(req: NextRequest) {
     // ── DEEP SCRAPE URL ──
     let ogImage: string | undefined;
     let scrapedSqft: number | undefined;
+    let scrapedPropertyType: string | undefined;
+    let scrapedPassingRent: number | undefined;
     if (url) {
       try {
         const parsed = await parsePropertyUrl(url);
         listingData = parsed.listing;
         rawListingText = parsed.description || listingData?.description || null;
+        if (parsed.property_type) scrapedPropertyType = parsed.property_type;
+        if (parsed.passingRent) scrapedPassingRent = parsed.passingRent;
 
         // If scrape got a better address than what we have (or we have nothing), use it
         if (parsed.address && parsed.address !== "Unknown Address" && parsed.address.length >= 5) {
@@ -451,14 +474,17 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      const domain = new URL(url).hostname;
+      const domain = new URL(url).hostname.replace(/^www\./i, "");
+      const rootName = domain.split(".")[0];
       if (domain.includes("savills")) { sourceTag = "Auction"; auctionHouse = "Savills"; }
-      else if (domain.includes("eigproperty") || domain.includes("allsop") || domain.includes("acuitus")) { sourceTag = "Auction"; auctionHouse = domain.split(".")[0]; }
+      else if (domain.includes("allsop")) { sourceTag = "Auction"; auctionHouse = "Allsop"; }
+      else if (domain.includes("acuitus")) { sourceTag = "Auction"; auctionHouse = "Acuitus"; }
+      else if (domain.includes("eigproperty")) { sourceTag = "Auction"; auctionHouse = "EIG"; }
       else if (domain.includes("strettons")) { sourceTag = "Auction"; auctionHouse = "Strettons"; }
       else if (domain.includes("rib.co.uk")) { sourceTag = "Agent"; auctionHouse = "RIB"; }
       else if (domain.includes("rightmove") || domain.includes("zoopla") || domain.includes("onthemarket")) { sourceTag = "Listed"; }
       else if (domain.includes("loopnet")) { sourceTag = "Listed"; }
-      else { sourceTag = "URL import"; }
+      else { sourceTag = "URL import"; auctionHouse = rootName.length > 2 ? rootName.charAt(0).toUpperCase() + rootName.slice(1) : undefined; }
     }
 
     // ── AI EXTRACTION (parallel with geocode) ──
@@ -484,6 +510,17 @@ export async function POST(req: NextRequest) {
     // Use AI-extracted price
     if (aiData?.price && !guidePrice && !price) {
       guidePrice = aiData.price;
+    }
+
+    // ── POSTCODE RECOVERY ──
+    // If the listing didn't expose a postcode but Google geocoded the address,
+    // upgrade `address` to include the official formatted_address. This is the
+    // single biggest unlock for downstream EPC + CCOD + comps lookups.
+    const addressHasPostcode = !!address && /\b[A-Z]{1,2}\d{1,2}[A-Z]?\s?\d[A-Z]{2}\b/i.test(address);
+    if (!addressHasPostcode && geo?.postcode && address) {
+      address = `${address.replace(/,?\s*$/, "")}, ${geo.postcode}`;
+    } else if (!addressHasPostcode && geo?.formattedAddress && /[A-Z]{1,2}\d{1,2}[A-Z]?\s?\d[A-Z]{2}/i.test(geo.formattedAddress)) {
+      address = geo.formattedAddress;
     }
 
     // ── SATELLITE + STREET VIEW ──
@@ -533,7 +570,12 @@ export async function POST(req: NextRequest) {
     } catch (e) { console.warn("[enrich] Dev potential failed:", e); }
 
     // ── DETERMINE ASSET TYPE + REGION ──
-    const assetType = aiData?.propertyType || "Mixed";
+    // Scraped (markdown-labelled) type wins over AI-inferred which wins over default
+    const assetType = scrapedPropertyType || aiData?.propertyType || "Mixed";
+    // Inject scraped passing rent so buildAssumptions treats it as a listing fact
+    if (scrapedPassingRent && !aiData?.passingRent) {
+      aiData = { ...(aiData || {} as AIExtractedData), passingRent: scrapedPassingRent };
+    }
     const region = detectRegionFromAddress(address!); // Detect from address/postcode
     const normAsset = normaliseAssetType(assetType);
     const normRegion = normaliseRegion(region);
@@ -541,6 +583,22 @@ export async function POST(req: NextRequest) {
     // ── BUILD ASSUMPTIONS (never returns blank fields) ──
     const askingPrice = guidePrice || price;
     const assumptions = await buildAssumptions(aiData, epcData, askingPrice, normAsset, normRegion, rawListingText, scrapedSqft, address);
+
+    // ── PROVENANCE FILTER ──
+    // Top-level ScoutDeal columns must only hold values that come from real
+    // sources. Estimated/AI/benchmark fallbacks live in `dataSources.assumptions`
+    // and the UI surfaces them with their source label. This is enforcing
+    // Rule 3 — no fabricated facts on the dossier.
+    const isRealSource = (s: string | undefined | null) =>
+      !!s && !/^estimated|^assumed|benchmark|^AI market analysis|^typical|^9 months/i.test(s);
+    const realSqft = isRealSource(assumptions.sqftSource) ? assumptions.sqft : null;
+    const realYearBuilt = isRealSource(assumptions.yearBuiltSource) ? assumptions.yearBuilt : null;
+    const realEpc = isRealSource(assumptions.epcRatingSource) ? assumptions.epcRating : null;
+    const realPassingRent = isRealSource(assumptions.passingRentSource) && assumptions.passingRent > 0
+      ? assumptions.passingRent : null;
+    // Occupancy is only "real" if explicitly stated in the listing/AI vacancy field
+    const occupancyIsReal = /listing|stated|tenant|let|vacant/i.test(assumptions.occupancySource);
+    const realOccupancyPct = occupancyIsReal ? assumptions.occupancyPct : null;
 
     // ── SCORING ──
     const signals = buildSignals(
@@ -769,13 +827,17 @@ export async function POST(req: NextRequest) {
         capRate: mktCapRate * 100,
         brokerName: auctionHouse || aiData?.agentName || listingData?.agentContact?.name || undefined,
         satelliteImageUrl: satelliteUrl || undefined,
-        epcRating: assumptions.epcRating,
-        yearBuilt: assumptions.yearBuilt,
-        buildingSizeSqft: assumptions.sqft,
+        // Top-level columns are facts only — estimated values live in
+        // dataSources.assumptions and are surfaced with provenance in the UI.
+        epcRating: realEpc ?? undefined,
+        yearBuilt: realYearBuilt ?? undefined,
+        buildingSizeSqft: realSqft ?? undefined,
         tenure,
-        currentRentPsf: assumptions.sqft > 0 ? parseFloat((assumptions.passingRent / assumptions.sqft).toFixed(2)) : undefined,
-        marketRentPsf: mktERV,
-        occupancyPct: assumptions.occupancyPct,
+        currentRentPsf: realPassingRent && realSqft && realSqft > 0
+          ? parseFloat((realPassingRent / realSqft).toFixed(2))
+          : undefined,
+        marketRentPsf: undefined, // benchmark only — read from assumptions
+        occupancyPct: realOccupancyPct ?? undefined,
         leaseLengthYears: aiData?.leaseExpiry ? Math.max(0, (new Date(aiData.leaseExpiry).getFullYear() - new Date().getFullYear())) : undefined,
         tenantCovenantStrength: undefined,
         auctionDate,
