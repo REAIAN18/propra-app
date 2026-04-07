@@ -38,17 +38,24 @@ export async function GET(
       epcRating: deal.epcRating ?? undefined,
       tenure: deal.tenure ?? (ai.tenure as string | undefined),
       occupancyPct: deal.occupancyPct ?? undefined,
+      brokerName: deal.brokerName ?? undefined,
+      ownerName: deal.ownerName ?? undefined,
+      daysOnMarket: deal.daysOnMarket ?? undefined,
       hasInsolvency: deal.hasInsolvency,
       hasLisPendens: deal.hasLisPendens,
+      hasPlanningApplication: deal.hasPlanningApplication,
       inFloodZone: deal.inFloodZone,
       signals: Array.isArray(ds.signals) ? (ds.signals as string[]) : [],
       dataSources: ds,
       currency: deal.currency ?? "GBP",
       askingPrice: deal.askingPrice ?? undefined,
       guidePrice: deal.guidePrice ?? undefined,
+      satelliteImageUrl: deal.satelliteImageUrl ?? undefined,
       // PSF rates for deriving annual rent figures when full ERV not in dataSources
       currentRentPsf: deal.currentRentPsf ?? undefined,
       marketRentPsf: deal.marketRentPsf ?? undefined,
+      region: deal.region ?? undefined,
+      sourceTag: deal.sourceTag ?? undefined,
     }, { confidential: true });
 
     // Dynamic import avoids Next.js static analysis rejecting react-dom/server in route handlers
