@@ -36,32 +36,47 @@ export interface ListingData {
  */
 export async function parsePropertyUrl(url: string): Promise<ParsedPropertyData> {
   try {
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Accept': 'text/html,application/xhtml+xml',
-      },
-      signal: AbortSignal.timeout(15000),
-    })
+    // ── Stage 1: direct fetch ──
+    // We try the bare HTML fetch first. If the host blocks us (403/429/503,
+    // network error, timeout), we fall through to Jina Reader rather than
+    // throwing. Hard-throwing here used to crash the whole /parse-url route
+    // any time an agent site rate-limited or geoblocked us.
+    let html = ''
+    let renderedMarkdown: string | null = null
+    let directFetchBlocked = false
 
-    if (!response.ok) {
-      throw new Error(`Failed to fetch URL: ${response.statusText}`)
+    try {
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Accept': 'text/html,application/xhtml+xml',
+        },
+        signal: AbortSignal.timeout(15000),
+      })
+      if (response.ok) {
+        html = await response.text()
+      } else {
+        console.warn(`[parsePropertyUrl] Direct fetch returned ${response.status} for ${url}`)
+        directFetchBlocked = true
+      }
+    } catch (e) {
+      console.warn(`[parsePropertyUrl] Direct fetch errored for ${url}:`, e)
+      directFetchBlocked = true
     }
 
-    let html = await response.text()
-    let renderedMarkdown: string | null = null
-
-    // ── SPA fallback ──
-    // If the page is a client-rendered SPA (Allsop, modern Acuitus, etc.) the
-    // raw HTML is just an empty shell. Detect this and re-fetch through Jina
-    // Reader (https://r.jina.ai/) which renders JS server-side and returns
-    // clean markdown. We then merge the rendered text into the HTML body for
-    // the regex extractors below, and also keep it as `renderedMarkdown` so
-    // the structured-markdown parser can pull labelled fields directly.
-    const visibleBodyLength = extractBodyText(html)?.length ?? 0
-    const looksLikeSpaShell = visibleBodyLength < 400
+    // ── Stage 2: Jina Reader fallback ──
+    // Fires when (a) the direct fetch was blocked, OR (b) the page came back
+    // as a client-rendered SPA shell (Allsop, modern Acuitus, etc.). Jina
+    // renders JS server-side and returns clean markdown. We merge the
+    // rendered text into the HTML body so the existing regex extractors
+    // still have something to chew on, and keep it as `renderedMarkdown` for
+    // the structured-markdown parser.
+    const visibleBodyLength = html ? (extractBodyText(html)?.length ?? 0) : 0
+    const looksLikeSpaShell = !directFetchBlocked && (
+      visibleBodyLength < 400
       || /<title>\s*(?:Allsop|Acuitus|Strettons|Auctioneers?)\s*<\/title>/i.test(html)
-    if (looksLikeSpaShell) {
+    )
+    if (directFetchBlocked || looksLikeSpaShell) {
       try {
         const jinaRes = await fetch(`https://r.jina.ai/${url}`, {
           headers: { 'Accept': 'text/plain', 'User-Agent': 'Mozilla/5.0' },
@@ -69,13 +84,33 @@ export async function parsePropertyUrl(url: string): Promise<ParsedPropertyData>
         })
         if (jinaRes.ok) {
           renderedMarkdown = await jinaRes.text()
-          // Inject the rendered text into a synthetic body so the existing
-          // regex extractors below have something to chew on.
-          html = html.replace(/<body[^>]*>/i, (m) => `${m}<div>${renderedMarkdown!.replace(/</g, '&lt;')}</div>`)
+          // Jina occasionally returns its own "Access Denied" body with
+          // status 200 — detect that and treat as a failed fallback.
+          if (/Access Denied|Warning: Target URL returned error 4\d\d/i.test(renderedMarkdown.slice(0, 500))) {
+            console.warn(`[parsePropertyUrl] Jina Reader also blocked for ${url}`)
+            renderedMarkdown = null
+          } else if (!html) {
+            // Build a synthetic HTML envelope so the regex extractors below
+            // can still match against the rendered markdown.
+            html = `<html><head><title></title></head><body><div>${renderedMarkdown.replace(/</g, '&lt;')}</div></body></html>`
+          } else {
+            html = html.replace(/<body[^>]*>/i, (m) => `${m}<div>${renderedMarkdown!.replace(/</g, '&lt;')}</div>`)
+          }
+        } else {
+          console.warn(`[parsePropertyUrl] Jina Reader returned ${jinaRes.status} for ${url}`)
         }
       } catch (e) {
         console.warn('[parsePropertyUrl] Jina Reader fallback failed:', e)
       }
+    }
+
+    // ── Stage 3: slug-only fallback ──
+    // If both stages failed we still want to return a usable result rather
+    // than 500. Build a stub HTML envelope around the URL slug so the
+    // existing extractors run against that and we get at least an address.
+    if (!html) {
+      const slugAddr = extractAddressFromUrlSlug(url)
+      html = `<html><head><title>${slugAddr || url}</title></head><body></body></html>`
     }
 
     // Determine source based on URL
