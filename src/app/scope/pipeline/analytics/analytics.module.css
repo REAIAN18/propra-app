@@ -1,0 +1,129 @@
+/* ═══════════════════════════════════════════════════
+   DealScope Pipeline Analytics — /scope/pipeline/analytics
+   Design: 03-pipeline-alerts-settings.html (pipe-analytics)
+   ═══════════════════════════════════════════════════ */
+
+@keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+.page { min-height: 100vh; }
+
+.bar {
+  padding: 12px 24px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  background: linear-gradient(180deg, var(--s1), var(--bg));
+  border-bottom: 1px solid var(--s2);
+}
+.barTitle { font-family: var(--serif); font-size: 18px; font-weight: 400; }
+.barActions { display: flex; gap: 5px; margin-left: auto; }
+.btnS {
+  padding: 5px 11px;
+  border-radius: 8px;
+  border: 1px solid var(--s3);
+  background: var(--s2);
+  color: var(--tx2);
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  transition: all .2s;
+}
+.btnS:hover { background: var(--s3); color: var(--tx); }
+
+.body { padding: 20px 24px; }
+.loading { padding: 40px; text-align: center; color: var(--tx3); font-size: 13px; }
+
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+  animation: fadeUp .4s ease both;
+}
+.stat {
+  background: var(--s1);
+  border: 1px solid var(--s2);
+  border-radius: 10px;
+  padding: 16px;
+  text-align: center;
+}
+.statVal {
+  font-family: var(--mono);
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--tx);
+  margin-bottom: 4px;
+}
+.statLbl {
+  font-size: 10px;
+  color: var(--tx3);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+
+.twoCol {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+@media (max-width: 900px) {
+  .twoCol { grid-template-columns: 1fr; }
+  .statGrid { grid-template-columns: repeat(2, 1fr); }
+}
+
+.card {
+  background: var(--s1);
+  border: 1px solid var(--s2);
+  border-radius: 10px;
+  padding: 16px;
+  animation: fadeUp .4s ease both;
+}
+.cardTitle {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--tx3);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin-bottom: 12px;
+}
+.muted { font-size: 11px; color: var(--tx3); line-height: 1.6; }
+
+.funnel { display: flex; flex-direction: column; gap: 6px; }
+.funnelRow { display: flex; align-items: center; gap: 8px; }
+.funnelLbl { font-size: 11px; color: var(--tx2); width: 100px; flex-shrink: 0; }
+.funnelBar {
+  height: 24px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: #fff;
+  font-weight: 600;
+  transition: width .4s ease;
+}
+
+.tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+.tbl th {
+  text-align: left;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--tx3);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--s2);
+}
+.tbl td {
+  padding: 10px;
+  border-bottom: 1px solid var(--s2);
+  color: var(--tx2);
+}
+.tbl tr:last-child td { border-bottom: none; }
+.m { font-family: var(--mono); }
