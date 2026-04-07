@@ -99,7 +99,41 @@ export async function extractListingWithAI(
       messages: [
         {
           role: "user",
-          content: `You are a UK commercial property analyst. Extract ALL structured data from this property listing. Return ONLY valid JSON (no markdown, no explanation) matching this schema:
+          content: `You are a UK commercial property analyst. Extract ALL structured data from this property listing. Return ONLY valid JSON (no markdown, no explanation) matching this schema.
+
+CRITICAL EXTRACTION RULES — read before answering:
+
+1. TENANT SCHEDULE — if the listing contains a tenant schedule, rent roll,
+   accommodation table, or any list of occupiers, extract EVERY named tenant
+   into the "tenantNames" array. Do not summarise. Do not stop at the first
+   one. Look for table rows, bullet lists, "let to X", "tenant: X", "occupied
+   by X", and unit-level breakdowns. Brand names like "Costa", "Greggs",
+   "Tesco Express", "WH Smith", numbered units ("Unit 1 — Tenant A") all
+   count.
+
+2. VACANCY LOGIC — set "vacancy" using ONLY these values, derived from the
+   tenants you actually found:
+     - "fully let"        → every unit has a named tenant
+     - "partially let"    → some units have named tenants, others vacant
+     - "vacant"           → ZERO named tenants AND the listing explicitly
+                            states the property is vacant / for owner-occupier
+                            / available with vacant possession
+     - null               → cannot tell
+   NEVER set "vacant" if you populated tenantNames with real names. A listing
+   showing 12 tenants is NOT vacant — it is fully or partially let.
+
+3. PROPERTY TYPE — classify by the CURRENT physical use shown in the listing,
+   not by the planning use class. A jewellers shop is "retail", not "office",
+   even if the planning use class is B1 / E. Use these labels: office, retail,
+   industrial, warehouse, leisure, hotel, residential, mixed-use, land,
+   healthcare, education. If multiple uses (e.g. shop + flat above), use
+   "mixed-use" and describe both in keyFeatures.
+
+4. AGENT NAME — return only the actual selling agent / auction house name
+   (e.g. "Allsop", "Savills", "Acuitus"). NEVER return planning terms ("Use
+   class E"), lot numbers, prices, urls, or generic words. If unsure, null.
+
+Return ONLY valid JSON matching this schema:
 
 {
   "address": "full street address",

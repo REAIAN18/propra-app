@@ -570,8 +570,38 @@ export async function POST(req: NextRequest) {
     } catch (e) { console.warn("[enrich] Dev potential failed:", e); }
 
     // ── DETERMINE ASSET TYPE + REGION ──
-    // Scraped (markdown-labelled) type wins over AI-inferred which wins over default
-    const assetType = scrapedPropertyType || aiData?.propertyType || "Mixed";
+    // Scraped (markdown-labelled) type wins over AI-inferred which wins over default.
+    // Cross-check: if free-text description / title strongly contradicts the
+    // initial classification (e.g. "jewellers shop" labelled as "office"),
+    // reclassify to the term we actually saw. This kills the Rightmove
+    // false-positive where prime-London office ERV got applied to a retail
+    // unit and produced a phantom 38% IRR.
+    const ASSET_KEYWORDS: { type: string; re: RegExp }[] = [
+      { type: "retail",     re: /\b(jeweller|jewellers|shop\b|retail|boutique|showroom|store\b|high\s+street|cafe|caf\u00e9|restaurant|takeaway|bar\b|pub\b|salon|barbers?|tea\s*room|beauty\s+salon)\b/i },
+      { type: "industrial", re: /\b(warehouse|industrial|factory|workshop|distribution|logistics|trade\s+counter)\b/i },
+      { type: "leisure",    re: /\b(gym\b|leisure|nightclub|cinema|hotel\s+leisure)\b/i },
+      { type: "hotel",      re: /\b(hotel|guest\s*house|b&b\b|bed\s*and\s*breakfast|inn\b)\b/i },
+      { type: "residential",re: /\b(flat\b|flats\b|apartment|house\b|hmo\b|residential\s+investment)\b/i },
+      { type: "healthcare", re: /\b(care\s*home|nursing\s*home|surgery|clinic|dental|gp\s*practice)\b/i },
+    ];
+    const haystack = [
+      (rawListingText || "").slice(0, 4000),
+      aiData?.keyFeatures?.join(" ") || "",
+      address || "",
+    ].join(" ").toLowerCase();
+    const initialType = scrapedPropertyType || aiData?.propertyType || "Mixed";
+    let crossCheckedType = initialType;
+    for (const { type, re } of ASSET_KEYWORDS) {
+      if (re.test(haystack)) {
+        // Only override if the initial type disagrees with the keyword hit.
+        if (!new RegExp(`\\b${type}\\b`, "i").test(initialType)) {
+          console.log(`[enrich] Asset-type cross-check: "${initialType}" → "${type}" (keyword match)`);
+          crossCheckedType = type;
+        }
+        break;
+      }
+    }
+    const assetType = crossCheckedType;
     // Inject scraped passing rent so buildAssumptions treats it as a listing fact
     if (scrapedPassingRent && !aiData?.passingRent) {
       aiData = { ...(aiData || {} as AIExtractedData), passingRent: scrapedPassingRent };
