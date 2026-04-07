@@ -7,6 +7,7 @@ import { HeroPanel } from "@/components/dealscope/HeroPanel";
 import { PropertyTab } from "./tabs/PropertyTab";
 import { PlanningTab } from "./tabs/PlanningTab";
 import { FinancialsTab as FinancialsTabV2 } from "./tabs/FinancialsTab";
+import { MarketTab } from "./tabs/MarketTab";
 import { TitleTab, EnvironmentalTab, OwnershipTab, ApproachTab } from "./dossier-tabs";
 import { calculateIRR } from "@/lib/dealscope/calculations/irr";
 import { calculateEquityMultiple } from "@/lib/dealscope/calculations/equity";
@@ -39,8 +40,9 @@ type RawDeal = {
   satelliteImageUrl?: string | null;
 };
 
-// Design source: 02-dossier-full.html — 7 tabs
-const TABS = ["Property", "Planning", "Title & Legal", "Environmental", "Ownership", "Financials", "Approach"] as const;
+// Design source: 02-dossier-full.html — 7 tabs +
+//                06-market-intelligence-errors.html — Market between Financials and Approach
+const TABS = ["Property", "Planning", "Title & Legal", "Environmental", "Ownership", "Financials", "Market", "Approach"] as const;
 type Tab = typeof TABS[number];
 
 function fmtCcy(n: number | undefined | null): string {
@@ -392,6 +394,7 @@ export default function PropertyDossierPage() {
                 {activeTab === "Environmental"  && <EnvironmentalTab />}
                 {activeTab === "Ownership"      && <OwnershipTab />}
                 {activeTab === "Financials"     && <FinancialsTabV2  deal={deal} prop={prop} />}
+                {activeTab === "Market"         && <MarketTab        propertyId={deal.id} />}
                 {activeTab === "Approach"       && <ApproachTab />}
               </div>
             </div>
