@@ -4,24 +4,11 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { HeroPanel } from "@/components/dealscope/HeroPanel";
-import { DealScore } from "@/components/dealscope/DealScore";
-import { RiskFlags } from "@/components/dealscope/RiskFlags";
-import { ComparablesTable } from "@/components/dealscope/ComparablesTable";
 import { PropertyTab } from "./tabs/PropertyTab";
 import { PlanningTab } from "./tabs/PlanningTab";
 import { FinancialsTab as FinancialsTabV2 } from "./tabs/FinancialsTab";
-import { TitleTab, EnvironmentalTab, OwnershipTab, MarketTab, ApproachTab } from "./dossier-tabs";
-import type { Comparable } from "@/components/dealscope/ComparablesTable";
-import { ServiceCharges } from "@/components/dealscope/ServiceCharges";
-import type { ServiceChargeItem } from "@/components/dealscope/ServiceCharges";
-import { SalesHistoryTable } from "@/components/dealscope/SalesHistoryTable";
-import type { SaleRecord } from "@/components/dealscope/SalesHistoryTable";
-import { EnvironmentalRiskBars } from "@/components/dealscope/EnvironmentalRiskBars";
-import type { EnvironmentalRisk } from "@/components/dealscope/EnvironmentalRiskBars";
-import { DocumentList } from "@/components/dealscope/DocumentList";
-import type { DocumentItem } from "@/components/dealscope/DocumentList";
+import { TitleTab, EnvironmentalTab, OwnershipTab, ApproachTab } from "./dossier-tabs";
 import { calculateIRR } from "@/lib/dealscope/calculations/irr";
-import { calculateCAPEX } from "@/lib/dealscope/calculations/capex";
 import { calculateEquityMultiple } from "@/lib/dealscope/calculations/equity";
 import { calculateVerdict } from "@/lib/dealscope/calculations/verdict";
 import type { Property } from "@/types/dealscope";
@@ -52,7 +39,8 @@ type RawDeal = {
   satelliteImageUrl?: string | null;
 };
 
-const TABS = ["Overview", "Property", "Planning", "Title & Legal", "Environmental", "Ownership", "Financials", "Comparables", "Market", "Approach", "Due Diligence"] as const;
+// Design source: 02-dossier-full.html — 7 tabs
+const TABS = ["Property", "Planning", "Title & Legal", "Environmental", "Ownership", "Financials", "Approach"] as const;
 type Tab = typeof TABS[number];
 
 function fmtCcy(n: number | undefined | null): string {
@@ -65,11 +53,6 @@ function fmtPct(n: number | undefined | null): string {
   if (n == null) return "—";
   return `${(n * 100).toFixed(1)}%`;
 }
-function fmtX(n: number | undefined | null): string {
-  if (n == null) return "—";
-  return `${n.toFixed(2)}x`;
-}
-
 function Row({ l, v, color, mono }: { l: string; v: string; color?: "green" | "amber" | "red"; mono?: boolean }) {
   const c = color === "green" ? "var(--grn)" : color === "amber" ? "var(--amb)" : color === "red" ? "var(--red)" : "var(--tx)";
   return (
@@ -112,224 +95,6 @@ function toProperty(d: RawDeal): Property {
       ?? (ds.description as string | undefined)
       ?? ((ds.listing as Record<string, unknown> | undefined)?.description as string | undefined),
   };
-}
-
-function OverviewTab({ deal, prop }: { deal: RawDeal; prop: Property }) {
-  const ds = (deal.dataSources ?? {}) as Record<string, unknown>;
-  const verdict = calculateVerdict(prop);
-  const irrResult = calculateIRR(prop);
-  const capexResult = calculateCAPEX(prop);
-  const equityResult = calculateEquityMultiple(prop);
-  const verdictColor = verdict.verdict === "PROCEED" ? "var(--grn)" : verdict.verdict === "CONDITIONAL" ? "var(--amb)" : "var(--red)";
-  const verdictBg = verdict.verdict === "PROCEED" ? "rgba(45,212,168,.06)" : verdict.verdict === "CONDITIONAL" ? "rgba(234,176,32,.06)" : "rgba(240,96,96,.06)";
-  const verdictBorder = verdict.verdict === "PROCEED" ? "rgba(45,212,168,.2)" : verdict.verdict === "CONDITIONAL" ? "rgba(234,176,32,.2)" : "rgba(240,96,96,.2)";
-  return (
-    <>
-      <div className={`${s.card} ${s.anim}`} style={{ background: verdictBg, borderColor: verdictBorder }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 10, fontWeight: 600, color: verdictColor, textTransform: "uppercase", letterSpacing: ".8px", marginBottom: 6 }}>
-              Deal verdict — {verdict.verdict}
-            </div>
-            <div style={{ display: "flex", gap: 16, flexWrap: "wrap" as const, marginBottom: 8 }}>
-              {[
-                { label: "IRR (10yr)", value: fmtPct(irrResult.irr), color: irrResult.irr >= 0.12 ? "var(--grn)" : irrResult.irr >= 0.07 ? "var(--amb)" : "var(--red)" },
-                { label: "Equity Multiple", value: fmtX(equityResult.equityMultiple), color: equityResult.equityMultiple >= 1.8 ? "var(--grn)" : equityResult.equityMultiple >= 1.2 ? "var(--amb)" : "var(--red)" },
-                { label: "CAPEX", value: fmtCcy(capexResult.capex), color: "var(--tx)" },
-                { label: "Total cost in", value: fmtCcy(equityResult.totalCostIn), color: "var(--tx)" },
-              ].map(m => (
-                <div key={m.label}>
-                  <div style={{ fontSize: 9, color: "var(--tx3)", marginBottom: 2 }}>{m.label}</div>
-                  <div style={{ fontFamily: "var(--mono)", fontSize: 16, fontWeight: 600, color: m.color }}>{m.value}</div>
-                </div>
-              ))}
-            </div>
-            <ul style={{ margin: 0, paddingLeft: 14, fontSize: 11, color: "var(--tx2)", lineHeight: 1.7 }}>
-              {verdict.reasons.map((r, i) => <li key={i}>{r}</li>)}
-            </ul>
-            {verdict.conditions && (
-              <div style={{ marginTop: 8, padding: "6px 10px", background: "rgba(234,176,32,.06)", borderRadius: 6, borderLeft: "2px solid var(--amb)" }}>
-                <div style={{ fontSize: 9, fontWeight: 600, color: "var(--amb)", marginBottom: 4 }}>CONDITIONS</div>
-                <ul style={{ margin: 0, paddingLeft: 14, fontSize: 11, color: "var(--tx2)", lineHeight: 1.6 }}>
-                  {verdict.conditions.map((c, i) => <li key={i}>{c}</li>)}
-                </ul>
-              </div>
-            )}
-          </div>
-          <DealScore score={verdict.dealScore} label="Deal score" sublabel={verdict.verdict} />
-        </div>
-      </div>
-
-      <div className={`${s.grid2} ${s.anim} ${s.a1}`}>
-        <div className={s.card}>
-          <div className={s.cardTitle}>Property details</div>
-          <Row l="Address" v={deal.address} />
-          <Row l="Asset type" v={deal.assetType || "—"} />
-          <Row l="Size" v={prop.size ? `${prop.size.toLocaleString()} sqft` : "—"} />
-          <Row l="Year built" v={prop.builtYear ? String(prop.builtYear) : "—"} />
-          <Row l="EPC rating" v={deal.epcRating || "—"} />
-          <Row l="Tenure" v={deal.tenure || "—"} />
-          {deal.occupancyPct != null && <Row l="Occupancy" v={`${Math.round(deal.occupancyPct * 100)}%`} />}
-          {deal.brokerName && <Row l="Agent" v={deal.brokerName} />}
-        </div>
-        <div className={s.card}>
-          <div className={s.cardTitle}>Pricing</div>
-          <Row l="Asking price" v={fmtCcy(deal.askingPrice)} mono />
-          {prop.size && deal.askingPrice && <Row l="Price / sqft" v={`£${Math.round(deal.askingPrice / prop.size)}`} mono />}
-          {typeof ds.passingRent === "number" && <Row l="Passing rent" v={fmtCcy(ds.passingRent)} mono color="green" />}
-          {typeof ds.erv === "number" && <Row l="ERV" v={fmtCcy(ds.erv as number)} mono />}
-          <div className={s.sep} />
-          <div className={s.cardTitle}>CAPEX assessment</div>
-          <Row l="Estimated CAPEX" v={fmtCcy(capexResult.capex)} mono />
-          <div style={{ fontSize: 10, color: "var(--tx3)", marginTop: 4, lineHeight: 1.4 }}>{capexResult.reason}</div>
-        </div>
-      </div>
-
-      {(ds.listingDescription || ds.aiSummary) && (
-        <div className={`${s.card} ${s.anim} ${s.a2}`} style={{ background: "linear-gradient(135deg,rgba(124,106,240,.06),rgba(45,212,168,.04))", borderColor: "rgba(124,106,240,.12)" }}>
-          <div style={{ fontSize: 9, fontWeight: 600, color: "#a899ff", textTransform: "uppercase" as const, letterSpacing: 1, marginBottom: 6 }}>AI analysis</div>
-          <div style={{ fontSize: 13, color: "var(--tx)", lineHeight: 1.7 }}>{(ds.aiSummary as string) || (ds.listingDescription as string)}</div>
-        </div>
-      )}
-    </>
-  );
-}
-
-function ComparablesTab({ deal }: { deal: RawDeal }) {
-  const ds = (deal.dataSources ?? {}) as Record<string, unknown>;
-  const rawComps = ((ds.comps ?? ds.comparables ?? (ds.ricsAnalysis as Record<string, unknown> | undefined)?.valuations) as unknown[]) ?? [];
-  const comps: Comparable[] = (Array.isArray(rawComps) ? rawComps : []).map((c: unknown) => {
-    const comp = c as Record<string, unknown>;
-    return {
-      address: (comp.address ?? comp.name ?? "—") as string,
-      type: (comp.assetType ?? comp.type ?? deal.assetType) as string | undefined,
-      sqft: (comp.sqft ?? comp.size) as number | undefined,
-      price: (comp.price ?? comp.salePrice) as number | undefined,
-      pricePsf: (comp.psf ?? comp.pricePsf ?? (comp.price != null && comp.sqft != null ? Math.round((comp.price as number) / (comp.sqft as number)) : undefined)) as number | undefined,
-      date: (comp.date ?? comp.saleDate) as string | undefined,
-      distance: comp.distance as string | undefined,
-    };
-  });
-
-  const scRaw = ds.serviceCharge;
-  const serviceItems: ServiceChargeItem[] = [];
-  if (scRaw && typeof scRaw === "object" && !Array.isArray(scRaw)) {
-    for (const [k, v] of Object.entries(scRaw as Record<string, unknown>)) {
-      if (typeof v === "number") serviceItems.push({ label: k, annualCost: v });
-    }
-  }
-
-  return (
-    <>
-      <div className={`${s.card} ${s.anim}`}>
-        <div className={s.cardTitle}>Comparable transactions</div>
-        <ComparablesTable comps={comps} title="" />
-      </div>
-
-      {(ds.marketRentPsf || ds.marketCapRate) && (
-        <div className={`${s.card} ${s.anim} ${s.a1}`}>
-          <div className={s.cardTitle}>Market context</div>
-          {typeof ds.marketRentPsf === "number" && <Row l="Market rent (£/sqft)" v={`£${ds.marketRentPsf}`} mono />}
-          {typeof ds.marketCapRate === "number" && <Row l="Market cap rate" v={`${ds.marketCapRate}%`} mono />}
-        </div>
-      )}
-
-      {serviceItems.length > 0 && (
-        <div className={`${s.card} ${s.anim} ${s.a2}`}>
-          <div className={s.cardTitle}>Service charges breakdown</div>
-          <ServiceCharges items={serviceItems} />
-        </div>
-      )}
-
-      <div className={`${s.card} ${s.anim} ${s.a3}`}>
-        <div className={s.cardTitle}>Subject property sales history</div>
-        <SalesHistoryTable sales={(() => {
-          const raw = (ds.salesHistory as Record<string, unknown>[] | undefined) ?? [];
-          return (Array.isArray(raw) ? raw : []).map((r: Record<string, unknown>): SaleRecord => ({
-            date: (r.date ?? r.transferDate ?? r.dateSold ?? "") as string,
-            price: (r.price ?? r.pricePaid ?? 0) as number,
-            type: (r.type ?? r.propertyType) as string | undefined,
-            tenure: (r.tenure) as string | undefined,
-            newBuild: (r.newBuild ?? r.isNew) as boolean | undefined,
-          }));
-        })()} title="" />
-      </div>
-    </>
-  );
-}
-
-function DueDiligenceTab({ deal }: { deal: RawDeal }) {
-  const ds = (deal.dataSources ?? {}) as Record<string, unknown>;
-  const ddItems = [
-    { label: "Title search",                 done: true },
-    { label: "Planning history reviewed",    done: !!(ds.planningApplications) },
-    { label: "Environmental survey",         done: !!(ds.environmentalData) },
-    { label: "Structural survey",            done: false },
-    { label: "EPC confirmed",               done: !!deal.epcRating },
-    { label: "MEES compliance checked",     done: !!deal.epcRating },
-    { label: "Lease documents reviewed",    done: !!(ds.passingRent) },
-    { label: "Owner identity verified",     done: !!deal.ownerName },
-    { label: "Charges register reviewed",   done: false },
-    { label: "Insurance arranged",          done: false },
-  ];
-  const complete = ddItems.filter(d => d.done).length;
-  return (
-    <>
-      <div className={`${s.card} ${s.anim}`}>
-        <div className={s.cardTitle}>Due diligence checklist — {complete}/{ddItems.length} complete</div>
-        <div style={{ height: 4, background: "var(--s3)", borderRadius: 2, marginBottom: 12 }}>
-          <div style={{ width: `${(complete / ddItems.length) * 100}%`, height: "100%", background: "var(--grn)", borderRadius: 2 }} />
-        </div>
-        {ddItems.map((item, i) => (
-          <div key={i} style={{ display: "flex", gap: 8, padding: "5px 0", alignItems: "center" }}>
-            <div style={{ width: 16, height: 16, borderRadius: 3, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, background: item.done ? "var(--grn)" : "transparent", border: item.done ? "none" : "1.5px solid var(--s3)", color: "#000" }}>
-              {item.done && "✓"}
-            </div>
-            <span style={{ fontSize: 12, color: item.done ? "var(--tx2)" : "var(--tx3)" }}>{item.label}</span>
-          </div>
-        ))}
-      </div>
-
-      <div className={`${s.card} ${s.anim} ${s.a1}`}>
-        <div className={s.cardTitle}>Risk flags</div>
-        <RiskFlags signals={deal.signals} hasLisPendens={deal.hasLisPendens} hasInsolvency={deal.hasInsolvency} hasPlanningApplication={deal.hasPlanningApplication} inFloodZone={deal.inFloodZone} />
-        {!deal.signals?.length && !deal.hasInsolvency && !deal.hasLisPendens && !deal.hasPlanningApplication && !deal.inFloodZone && (
-          <p style={{ fontSize: 11, color: "var(--tx3)", margin: 0 }}>No risk flags identified.</p>
-        )}
-      </div>
-
-      {deal.ownerName && (
-        <div className={`${s.card} ${s.anim} ${s.a2}`}>
-          <div className={s.cardTitle}>Ownership</div>
-          <Row l="Owner" v={deal.ownerName} />
-        </div>
-      )}
-
-      {(() => {
-        const envData = ds.environmentalRisks as Record<string, number> | undefined;
-        if (!envData) return null;
-        const envRisks = Object.entries(envData).map(([label, pct]) => ({ label, pct: Math.round(pct * 100) })) as EnvironmentalRisk[];
-        return (
-          <div className={`${s.card} ${s.anim} ${s.a2}`}>
-            <div className={s.cardTitle}>Environmental risk profile</div>
-            <EnvironmentalRiskBars risks={envRisks} />
-          </div>
-        );
-      })()}
-
-      <div className={`${s.card} ${s.anim} ${s.a3}`}>
-        <div className={s.cardTitle}>Documents</div>
-        <DocumentList items={(() => {
-          const uploadedDocs = (ds.documents as DocumentItem[] | undefined) ?? [];
-          const generated: DocumentItem[] = [
-            { type: "pdf", name: "IC Memo (HTML)", description: "Investment Committee memorandum", action: "generate", onAction: async () => { const res = await fetch(`/api/dealscope/properties/${deal.id}/export/pdf`); if (!res.ok) return; const blob = await res.blob(); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = `ic-memo-${deal.id}.html`; a.click(); URL.revokeObjectURL(url); } },
-            { type: "xlsx", name: "Financial model", description: "IRR, cash flows, scenarios", action: "generate", onAction: () => { const a = document.createElement("a"); a.href = `/api/dealscope/properties/${deal.id}/export/excel`; a.download = ""; a.click(); } },
-          ];
-          return [...uploadedDocs, ...generated];
-        })()} />
-      </div>
-    </>
-  );
 }
 
 function DossierSidebar({ deal, prop }: { deal: RawDeal; prop: Property }) {
@@ -437,7 +202,7 @@ export default function PropertyDossierPage() {
   const [deal, setDeal] = useState<RawDeal | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<Tab>("Overview");
+  const [activeTab, setActiveTab] = useState<Tab>("Property");
   const [exporting, setExporting] = useState<string | null>(null);
   const [showPipelineMenu, setShowPipelineMenu] = useState(false);
   const [showWatchModal, setShowWatchModal] = useState(false);
@@ -599,7 +364,7 @@ export default function PropertyDossierPage() {
           watched={watched}
           onBack={() => router.back()}
           onExportMemo={handleExportPdf}
-          onContact={() => setActiveTab("Overview")}
+          onContact={() => setActiveTab("Approach")}
           onAddToPipeline={() => setShowPipelineMenu((v) => !v)}
           onWatch={() => setShowWatchModal(true)}
         />
@@ -621,17 +386,13 @@ export default function PropertyDossierPage() {
           <div className={s.dossierLayout}>
             <div className={s.dossierMain}>
               <div className={s.tabContent} style={{ paddingBottom: 40 }}>
-                {activeTab === "Overview"       && <OverviewTab      deal={deal} prop={prop} />}
                 {activeTab === "Property"       && <PropertyTab      deal={deal} />}
                 {activeTab === "Planning"       && <PlanningTab      deal={deal} />}
                 {activeTab === "Title & Legal"  && <TitleTab />}
                 {activeTab === "Environmental"  && <EnvironmentalTab />}
                 {activeTab === "Ownership"      && <OwnershipTab />}
                 {activeTab === "Financials"     && <FinancialsTabV2  deal={deal} prop={prop} />}
-                {activeTab === "Comparables"    && <ComparablesTab   deal={deal} />}
-                {activeTab === "Market"         && <MarketTab />}
                 {activeTab === "Approach"       && <ApproachTab />}
-                {activeTab === "Due Diligence"  && <DueDiligenceTab  deal={deal} />}
               </div>
             </div>
             <div className={s.dossierSide}>
