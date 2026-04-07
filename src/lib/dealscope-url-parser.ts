@@ -9,6 +9,10 @@ export interface ParsedPropertyData {
   sqft: number | null
   /** Annual passing rent / income, if labelled in the listing. */
   passingRent: number | null
+  /** Net Initial Yield as a percentage if explicitly quoted in the listing. */
+  niy: number | null
+  /** Capital value per sqft NIA if explicitly quoted (used for sqft derivation). */
+  psfNia: number | null
   description: string | null
   source: 'rightmove' | 'zoopla' | 'loopnet' | 'savills' | 'generic' | 'unknown'
   source_url: string
@@ -201,20 +205,35 @@ export async function parsePropertyUrl(url: string): Promise<ParsedPropertyData>
     const postcodeMatch = (address || '').match(/([A-Z]{1,2}\d{1,2}[A-Z]?\s?\d[A-Z]{2}|\d{5})/i)
     const postcode = postcodeMatch ? postcodeMatch[1] : null
 
-    // Extract price — prefer guide/asking/reserve price patterns over random £ amounts
+    // Extract price — prefer guide/asking/reserve price patterns over random £ amounts.
+    // Patterns are listed most-specific-first; the loop short-circuits on the first
+    // match that produces a value ≥ £50k. The "millions" suffix is handled inline so
+    // copy like "Offers invited in excess of £7,000,000 (Seven Million Pounds)" and
+    // "guide price £2.4m" both yield 7,000,000 / 2,400,000.
     let price: number | null = null
-    const pricePatterns = [
-      /(?:guide|asking|reserve|sale)\s*(?:price)?[:\s]*£\s*([\d,]+(?:\.\d{2})?)/i,
-      /£\s*([\d,]+(?:\.\d{2})?)\s*(?:guide|freehold|leasehold)/i,
-      /(?:price|value|offers?\s+(?:in\s+)?(?:excess|region))[:\s]*£\s*([\d,]+(?:\.\d{2})?)/i,
-      /data-price="(\d+)"/i,
-      /price["\s:]+(\d[\d,]+)/i,
+    const pricePatterns: { re: RegExp; mIdx?: number }[] = [
+      // "Offers (invited) in excess of £7,000,000" / "OIEO £7m" / "Offers in region of £X"
+      { re: /offers?\s+(?:invited\s+)?(?:in\s+)?(?:excess|region)\s+of\s*£\s*([\d,]+(?:\.\d{1,2})?)\s*(m|million|k)?/i, mIdx: 2 },
+      { re: /\boieo\s*£\s*([\d,]+(?:\.\d{1,2})?)\s*(m|million|k)?/i, mIdx: 2 },
+      // "guide price £2.4m" / "asking £1,800,000" / "reserve price: £600,000"
+      { re: /(?:guide|asking|reserve|sale)\s*(?:price)?[:\s]*£\s*([\d,]+(?:\.\d{1,2})?)\s*(m|million|k)?/i, mIdx: 2 },
+      // "£600,000 guide" / "£1.2m freehold"
+      { re: /£\s*([\d,]+(?:\.\d{1,2})?)\s*(m|million|k)?\s*(?:guide|freehold|leasehold)/i, mIdx: 2 },
+      // Generic "price ... £X" / "value ... £X"
+      { re: /(?:price|value)[:\s]*£\s*([\d,]+(?:\.\d{1,2})?)\s*(m|million|k)?/i, mIdx: 2 },
+      { re: /data-price="(\d+)"/i },
+      { re: /price["\s:]+(\d[\d,]+)/i },
     ]
-    for (const pattern of pricePatterns) {
-      const m = html.match(pattern)
+    for (const { re, mIdx } of pricePatterns) {
+      const m = html.match(re)
       if (m) {
-        const parsed = parseFloat(m[1].replace(/,/g, ''))
-        if (!isNaN(parsed) && parsed >= 50000) { price = parsed; break }
+        let parsed = parseFloat(m[1].replace(/,/g, ''))
+        if (!isNaN(parsed)) {
+          const suffix = (mIdx && m[mIdx]) ? m[mIdx].toLowerCase() : ''
+          if (suffix === 'm' || suffix === 'million') parsed *= 1_000_000
+          else if (suffix === 'k') parsed *= 1_000
+          if (parsed >= 50000) { price = parsed; break }
+        }
       }
     }
     // Try JSON-LD structured data for price
@@ -279,6 +298,22 @@ export async function parsePropertyUrl(url: string): Promise<ParsedPropertyData>
         .filter(v => !isNaN(v) && v >= 10 && v <= 50000)
       if (sqmMatches.length > 0) {
         sqft = Math.round(sqmMatches.sort((a, b) => b - a)[0] * 10.764)
+      }
+    }
+
+    // ── Yield + £/sqft NIA derivation (RIB-style listings) ──
+    // Listings like RIB / Acuitus / Allsop often quote "Net Initial Yield 8.96%"
+    // and "£182 per sq ft NIA" without the floor area being explicitly labelled.
+    // When we have a price + per-sqft figure, derive sqft = price / psf so the
+    // valuation engine downstream has a real building size to work with.
+    const niyMatch = html.match(/net\s+initial\s+yield(?:\s+of)?\s*[:\-]?\s*([\d]+(?:\.\d+)?)\s*%/i)
+    const psfNiaMatch = html.match(/£\s*([\d,]+(?:\.\d+)?)\s*per\s*sq\.?\s*ft\s*(?:NIA|net\s+internal|GIA|gross\s+internal|overall)?/i)
+    const psfNia = psfNiaMatch ? parseFloat(psfNiaMatch[1].replace(/,/g, '')) : null
+    const niy = niyMatch ? parseFloat(niyMatch[1]) : null
+    if (!sqft && price && psfNia && psfNia > 0) {
+      const derived = Math.round(price / psfNia)
+      if (derived >= 100 && derived <= 1_000_000) {
+        sqft = derived
       }
     }
 
@@ -466,6 +501,8 @@ export async function parsePropertyUrl(url: string): Promise<ParsedPropertyData>
       price_per_sqft,
       sqft,
       passingRent: mdIncome,
+      niy,
+      psfNia,
       description: cleanDesc,
       source,
       source_url: url,

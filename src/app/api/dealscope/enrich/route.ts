@@ -203,6 +203,7 @@ async function buildAssumptions(
   listingDescription: string | null,
   scrapedSqft?: number,
   address?: string | null,
+  scrapedNiy?: number,
 ): Promise<{
   sqft: number; sqftSource: string;
   erv: number; ervSource: string;
@@ -253,6 +254,24 @@ async function buildAssumptions(
     ervSource = `AI market analysis — £${aiERV.ervPsf.toFixed(2)}/sqft (${aiERV.confidence} confidence): ${aiERV.reasoning}`;
   }
 
+  // ── Basement adjustment ──
+  // Multi-floor buildings whose accommodation includes a basement command lower
+  // rent on that level (typically 30-50% of upper-floor rate). Without floor-by-
+  // floor sqft we can't apportion exactly, so we apply a flat 10% haircut to the
+  // ERV when the listing or accommodation explicitly mentions a basement. This
+  // matches a "5-floor building, one floor at half-rent" rule of thumb (~10% off
+  // total). Source label makes the adjustment visible in the dossier.
+  const accomText = [
+    listingDescription || "",
+    Array.isArray(aiData?.accommodation)
+      ? aiData!.accommodation!.map((a: any) => [a.unit, a.tenant].filter(Boolean).join(" ")).join(" ")
+      : "",
+  ].join(" ").toLowerCase();
+  if (/\bbasement\b|\blower\s+ground\b/.test(accomText)) {
+    erv = Math.round(erv * 0.9);
+    ervSource = `${ervSource} · −10% basement adjustment`;
+  }
+
   // ── Year built — never blank ──
   let yearBuilt = aiData?.yearBuilt || null;
   let yearBuiltSource = yearBuilt ? "listing" : "";
@@ -289,8 +308,14 @@ async function buildAssumptions(
   const voidEst = estimateVoidPeriod(assetType, locationGrade, sqft);
 
   // ── Cap rate — never blank ──
-  const capRate = mktCapRate;
-  const capRateSource = `market benchmark for ${region} ${assetType} (${(mktCapRate * 100).toFixed(1)}%)`;
+  // Listing-stated NIY (RIB / Acuitus / Allsop quote this verbatim) wins over
+  // the market benchmark when present and within a sane range.
+  let capRate = mktCapRate;
+  let capRateSource = `market benchmark for ${region} ${assetType} (${(mktCapRate * 100).toFixed(1)}%)`;
+  if (scrapedNiy && scrapedNiy >= 1 && scrapedNiy <= 20) {
+    capRate = scrapedNiy / 100;
+    capRateSource = `listing (Net Initial Yield ${scrapedNiy.toFixed(2)}%)`;
+  }
 
   // ── NOI — always computed from ERV (ERV is always available) ──
   const noi = erv * 0.85;
@@ -495,6 +520,7 @@ export async function POST(req: NextRequest) {
     let scrapedSqft: number | undefined;
     let scrapedPropertyType: string | undefined;
     let scrapedPassingRent: number | undefined;
+    let scrapedNiy: number | undefined;
     if (url) {
       try {
         const parsed = await parsePropertyUrl(url);
@@ -502,6 +528,7 @@ export async function POST(req: NextRequest) {
         rawListingText = parsed.description || listingData?.description || null;
         if (parsed.property_type) scrapedPropertyType = parsed.property_type;
         if (parsed.passingRent) scrapedPassingRent = parsed.passingRent;
+        if (parsed.niy && parsed.niy > 0 && parsed.niy < 25) scrapedNiy = parsed.niy;
 
         // If scrape got a better address than what we have (or we have nothing), use it
         if (parsed.address && parsed.address !== "Unknown Address" && parsed.address.length >= 5) {
@@ -670,7 +697,7 @@ export async function POST(req: NextRequest) {
 
     // ── BUILD ASSUMPTIONS (never returns blank fields) ──
     const askingPrice = guidePrice || price;
-    const assumptions = await buildAssumptions(aiData, epcData, askingPrice, normAsset, normRegion, rawListingText, scrapedSqft, address);
+    const assumptions = await buildAssumptions(aiData, epcData, askingPrice, normAsset, normRegion, rawListingText, scrapedSqft, address, scrapedNiy);
 
     // ── PROVENANCE FILTER ──
     // Top-level ScoutDeal columns must only hold values that come from real
