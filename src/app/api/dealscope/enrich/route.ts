@@ -194,6 +194,56 @@ async function fetchFloodRisk(lat: number, lng: number): Promise<any> {
 }
 
 // ── Build assumptions when data is missing ──
+// ── Wave F: condition detection + dual-scenario ERV ──
+// A market-benchmark ERV alone over-values unrefurbished period stock and
+// under-values prime Cat-A space. We anchor the ERV against the listing's own
+// description of the building's condition, then surface both an "as-is" and a
+// "post-refurb" scenario so the recommendation can consider both.
+type Condition = "unrefurbished" | "average" | "refurbished";
+const CONDITION_MULTIPLIER: Record<Condition, number> = {
+  unrefurbished: 0.6,  // bottom of the regional band
+  average: 0.85,        // mid-band default
+  refurbished: 1.0,     // top of the regional band (Cat-A / Grade-A)
+};
+const REFURB_TARGET_MULTIPLIER = 1.0; // all roads lead to top of band post-refurb
+const DEFAULT_CAPEX_PSF = 125;
+
+function detectCondition(text: string | null): { condition: Condition; signals: string[] } {
+  if (!text) return { condition: "average", signals: [] };
+  const t = text.toLowerCase();
+  const refurbHits = [
+    /\bcat\s*a\b/, /\bgrade\s*a\b/, /\bnewly\s+(refurb|fitted|completed)/,
+    /\brecently\s+refurbished\b/, /\bfully\s+refurbished\b/, /\bexcellent\s+specification\b/,
+    /\brefurbishment\s+completed\b/, /\bcompleted\s+in\s+20[12]\d\b/,
+  ].filter((re) => re.test(t)).map((re) => re.source);
+  const unrefurbHits = [
+    /\bunrefurbished\b/, /\brequires?\s+modernisation\b/, /\brequires?\s+refurbishment\b/,
+    /\bin\s+need\s+of\b/, /\boriginal\s+condition\b/, /\btired\b/, /\bdated\b/,
+    /\bperiod\s+(?:building|property)\b/, /\brefurbishment\s+opportunity\b/,
+    /\basset\s+management\s+opportunit/, /\brepositioning\b/,
+  ].filter((re) => re.test(t)).map((re) => re.source);
+  if (refurbHits.length > unrefurbHits.length) return { condition: "refurbished", signals: refurbHits };
+  if (unrefurbHits.length > 0) return { condition: "unrefurbished", signals: unrefurbHits };
+  return { condition: "average", signals: [] };
+}
+
+function detectListingCapexPsf(text: string | null): number | null {
+  if (!text) return null;
+  // Match "£140 per sq ft of capex", "£140 psf capex", "£5.3m of capex (£140 psf)"
+  const m1 = text.match(/£\s*([\d,]+(?:\.\d+)?)\s*(?:per\s*sq\.?\s*ft|psf|\/\s*sq\.?\s*ft)\s*(?:of\s+)?(?:capex|capital\s+expenditure|capital\s+investment|refurbishment)/i);
+  if (m1) {
+    const v = parseFloat(m1[1].replace(/,/g, ""));
+    if (v >= 20 && v <= 1000) return v;
+  }
+  // Match "£140 psf" appearing in same sentence as capex/refurb keyword
+  const m2 = text.match(/(?:capex|capital\s+expenditure|refurbish[a-z]*|invested)[^.£]{0,80}£\s*([\d,]+(?:\.\d+)?)\s*(?:per\s*sq\.?\s*ft|psf)/i);
+  if (m2) {
+    const v = parseFloat(m2[1].replace(/,/g, ""));
+    if (v >= 20 && v <= 1000) return v;
+  }
+  return null;
+}
+
 async function buildAssumptions(
   aiData: AIExtractedData | null,
   epcData: any,
@@ -207,6 +257,9 @@ async function buildAssumptions(
 ): Promise<{
   sqft: number; sqftSource: string;
   erv: number; ervSource: string;
+  ervAsIs: number; ervRefurb: number;
+  condition: Condition; conditionSignals: string[];
+  capexPsf: number; capexPsfSource: string; capexTotal: number;
   yearBuilt: number; yearBuiltSource: string;
   capRate: number; capRateSource: string;
   noi: number; noiSource: string;
@@ -272,6 +325,37 @@ async function buildAssumptions(
     ervSource = `${ervSource} · −10% basement adjustment`;
   }
 
+  // ── Wave F: condition-anchored as-is and post-refurb scenarios ──
+  // The market-benchmark ERV is treated as the *top* of the regional band.
+  // We then anchor as-is against the listing's condition signals (period
+  // building → 0.6 of top-band, average → 0.85, Cat-A → 1.0) and treat the
+  // refurb scenario as repositioned to top-band.
+  const conditionInput = [listingDescription || "", aiData?.condition || ""].join(" ");
+  const conditionDetect = detectCondition(conditionInput);
+  const condition = conditionDetect.condition;
+  const conditionSignals = conditionDetect.signals;
+  // If we already used aiData.passingRent (real income), don't fight it: as-is
+  // = passing rent, refurb still re-anchored to top-band.
+  const baseTopBand = aiData?.passingRent
+    ? erv / Math.max(CONDITION_MULTIPLIER[condition], 0.5)  // back-derive top-band
+    : erv / CONDITION_MULTIPLIER.refurbished;                // erv already at top
+  const ervAsIs = aiData?.passingRent ? erv : Math.round(baseTopBand * CONDITION_MULTIPLIER[condition]);
+  const ervRefurb = Math.round(baseTopBand * REFURB_TARGET_MULTIPLIER);
+  // Use the condition-anchored as-is figure as the canonical ERV going forward
+  // so downstream NOI/IRR/RICS calculations stop over-pricing period stock.
+  if (!aiData?.passingRent) {
+    erv = ervAsIs;
+    ervSource = `${ervSource} · ${condition} anchor (×${CONDITION_MULTIPLIER[condition]})`;
+  }
+
+  // ── Capex (post-refurb scenario only) ──
+  const listingCapexPsf = detectListingCapexPsf(listingDescription);
+  const capexPsf = listingCapexPsf ?? DEFAULT_CAPEX_PSF;
+  const capexPsfSource = listingCapexPsf
+    ? `listing-stated (£${listingCapexPsf}/sqft)`
+    : `default office reposition (£${DEFAULT_CAPEX_PSF}/sqft)`;
+  const capexTotal = Math.round(capexPsf * (sqft || 0));
+
   // ── Year built — never blank ──
   let yearBuilt = aiData?.yearBuilt || null;
   let yearBuiltSource = yearBuilt ? "listing" : "";
@@ -326,7 +410,11 @@ async function buildAssumptions(
   const passingRentSource = occupancyPct === 0 ? "vacant (£0 current income)" : (aiData?.passingRent ? "listing" : "estimated (= ERV)");
 
   return {
-    sqft, sqftSource, erv, ervSource, yearBuilt: yearBuilt!, yearBuiltSource,
+    sqft, sqftSource, erv, ervSource,
+    ervAsIs, ervRefurb,
+    condition, conditionSignals,
+    capexPsf, capexPsfSource, capexTotal,
+    yearBuilt: yearBuilt!, yearBuiltSource,
     capRate, capRateSource, noi, noiSource, passingRent, passingRentSource,
     epcRating, epcRatingSource, occupancyPct, occupancySource,
     voidMonths: voidEst.months, voidReasoning: voidEst.reasoning,
@@ -746,6 +834,47 @@ export async function POST(req: NextRequest) {
       );
 
       const b = blended as any;
+
+      // ── Wave F: dual-scenario valuation + £/psf comp band check ──
+      // Capitalise as-is and refurbished ERVs at the same yield. Refurb deducts
+      // capex. The recommendation considers whichever scenario clears asking,
+      // not just the headline blended figure.
+      const noiAsIs = assumptions.ervAsIs * 0.85;
+      const noiRefurb = assumptions.ervRefurb * 0.85;
+      const valueAsIs = noiAsIs / assumptions.capRate;
+      const valueRefurbGross = noiRefurb / assumptions.capRate;
+      const valueRefurbNet = valueRefurbGross - assumptions.capexTotal;
+
+      const askingPsf = assumptions.sqft > 0 ? Math.round(effectivePrice / assumptions.sqft) : null;
+      const compPsfBand = psfValue ? {
+        low: psfValue.low ? Math.round(psfValue.low) : null,
+        mid: psfValue.mid ? Math.round(psfValue.mid) : null,
+        high: psfValue.high ? Math.round(psfValue.high) : null,
+        sampleSize: comparableSales.length,
+      } : null;
+
+      // Recommendation logic — replaces the old "discount %" gate.
+      // BUY when either as-is or refurb-net clears asking, OR asking £/psf is
+      // visibly below the comp band low. REVIEW when within 10%. PASS otherwise.
+      const bestScenarioValue = Math.max(valueAsIs, valueRefurbNet);
+      const psfClearlyCheap =
+        askingPsf !== null && compPsfBand?.low !== null && compPsfBand?.low !== undefined &&
+        askingPsf < compPsfBand.low * 0.9;
+      let recommendation: "BUY" | "REVIEW" | "PASS";
+      const reasons: string[] = [];
+      if (bestScenarioValue >= effectivePrice || psfClearlyCheap) {
+        recommendation = "BUY";
+        if (valueAsIs >= effectivePrice) reasons.push(`As-is value £${Math.round(valueAsIs).toLocaleString()} clears asking`);
+        if (valueRefurbNet >= effectivePrice) reasons.push(`Refurb-net value £${Math.round(valueRefurbNet).toLocaleString()} clears asking`);
+        if (psfClearlyCheap) reasons.push(`Asking £${askingPsf}/sqft is below comp band low £${compPsfBand!.low}/sqft`);
+      } else if (bestScenarioValue >= effectivePrice * 0.9) {
+        recommendation = "REVIEW";
+        reasons.push(`Best scenario £${Math.round(bestScenarioValue).toLocaleString()} within 10% of asking £${effectivePrice.toLocaleString()}`);
+      } else {
+        recommendation = "PASS";
+        reasons.push(`Best scenario £${Math.round(bestScenarioValue).toLocaleString()} more than 10% below asking £${effectivePrice.toLocaleString()}`);
+      }
+
       valuations = {
         incomeCap: { value: Math.round(incomeCapValue), method: "Income capitalisation", capRate: marketCapRate, noi: Math.round(assumptions.noi) },
         psf: psfValue ? { value: Math.round(psfValue.mid * assumptions.sqft), method: "Price per sqft", low: psfValue.low ? Math.round(psfValue.low * assumptions.sqft) : null, high: psfValue.high ? Math.round(psfValue.high * assumptions.sqft) : null } : null,
@@ -754,6 +883,33 @@ export async function POST(req: NextRequest) {
           : { value: b.value ? Math.round(b.value) : null, method: b.method || "blended" },
         askingPrice: effectivePrice,
         discount: incomeCapValue > effectivePrice ? Math.round(((incomeCapValue - effectivePrice) / incomeCapValue) * 100) : null,
+        // Wave F additions
+        scenarios: {
+          asIs: {
+            erv: Math.round(assumptions.ervAsIs),
+            ervPsf: assumptions.sqft > 0 ? parseFloat((assumptions.ervAsIs / assumptions.sqft).toFixed(2)) : null,
+            noi: Math.round(noiAsIs),
+            value: Math.round(valueAsIs),
+            clearsAsking: valueAsIs >= effectivePrice,
+          },
+          refurb: {
+            erv: Math.round(assumptions.ervRefurb),
+            ervPsf: assumptions.sqft > 0 ? parseFloat((assumptions.ervRefurb / assumptions.sqft).toFixed(2)) : null,
+            noi: Math.round(noiRefurb),
+            capexPsf: assumptions.capexPsf,
+            capexTotal: assumptions.capexTotal,
+            capexSource: assumptions.capexPsfSource,
+            grossValue: Math.round(valueRefurbGross),
+            value: Math.round(valueRefurbNet),
+            clearsAsking: valueRefurbNet >= effectivePrice,
+          },
+        },
+        condition: assumptions.condition,
+        conditionSignals: assumptions.conditionSignals,
+        askingPsf,
+        compPsfBand,
+        recommendation,
+        recommendationReasons: reasons,
       };
     }
 
