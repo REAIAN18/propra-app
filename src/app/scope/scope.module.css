@@ -503,3 +503,64 @@
   .mandateGrid { grid-template-columns: 1fr; }
   .content { padding: 8px 16px 32px; }
 }
+
+/* ── EMPTY STATE PANELS (design 01 home-empty) ── */
+.emptyPanel {
+  background: var(--s1);
+  border: 1.5px dashed var(--s3);
+  border-radius: 14px;
+  padding: 32px;
+  text-align: center;
+}
+.emptyIcon { font-size: 32px; opacity: .15; margin-bottom: 8px; }
+.emptyTitle { font-size: 14px; font-weight: 500; color: var(--tx); margin-bottom: 6px; }
+.emptyMsg {
+  font-size: 12px;
+  color: var(--tx3);
+  max-width: 360px;
+  margin: 0 auto 16px;
+  line-height: 1.5;
+}
+.btnP {
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: 1px solid var(--acc);
+  background: var(--acc);
+  color: #fff;
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter .2s;
+}
+.btnP:hover { filter: brightness(1.1); }
+
+.emptyAlerts {
+  padding: 24px;
+  text-align: center;
+  color: var(--tx3);
+  font-size: 12px;
+  background: var(--s1);
+  border: 1px solid var(--s2);
+  border-radius: 12px;
+}
+
+.startSteps {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+}
+.startStep {
+  background: var(--s1);
+  border: 1px solid var(--s2);
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+}
+.startNum { font-size: 24px; margin-bottom: 8px; opacity: .4; color: var(--tx); }
+.startTitle { font-size: 13px; font-weight: 500; color: var(--tx); margin-bottom: 4px; }
+.startDesc { font-size: 11px; color: var(--tx3); line-height: 1.5; }
+
+@media (max-width: 768px) {
+  .startSteps { grid-template-columns: 1fr; }
+}

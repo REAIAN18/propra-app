@@ -295,8 +295,20 @@ export default function ScopePage() {
           <section className={`${styles.section} ${styles.anim} ${styles.a5}`}>
             <div className={styles.sectionHeader}>
               <h2 className={styles.sectionTitle}>Your Mandates</h2>
-              <button className={styles.sectionLink} onClick={() => setShowCreateMandate(true)}>+ New mandate</button>
+              {mandates.length > 0 && (
+                <button className={styles.sectionLink} onClick={() => setShowCreateMandate(true)}>+ New mandate</button>
+              )}
             </div>
+            {mandates.length === 0 ? (
+              <div className={styles.emptyPanel}>
+                <div className={styles.emptyIcon}>◎</div>
+                <div className={styles.emptyTitle}>No mandates yet</div>
+                <div className={styles.emptyMsg}>
+                  A mandate is a saved search with alerts. Set your criteria once — DealScope monitors the market and notifies you when something matches.
+                </div>
+                <button className={styles.btnP} onClick={() => setShowCreateMandate(true)}>Create your first mandate</button>
+              </div>
+            ) : (
             <div className={styles.mandateGrid}>
               {mandates.map((m) => (
                 <Link
@@ -331,6 +343,7 @@ export default function ScopePage() {
               ))}
               <button className={styles.mandateCreate} onClick={() => setShowCreateMandate(true)}>+ Create mandate</button>
             </div>
+            )}
           </section>
 
           {/* WATCHLIST */}
@@ -360,10 +373,17 @@ export default function ScopePage() {
           <section className={`${styles.section} ${styles.anim} ${styles.a6}`}>
             <div className={styles.sectionHeader}>
               <h2 className={styles.sectionTitle}>Latest Alerts</h2>
-              <Link href="/scope/alerts" className={styles.sectionLink}>
-                View all →
-              </Link>
+              {alerts.length > 0 && (
+                <Link href="/scope/alerts" className={styles.sectionLink}>
+                  View all →
+                </Link>
+              )}
             </div>
+            {alerts.length === 0 && (
+              <div className={styles.emptyAlerts}>
+                No alerts yet. Create a mandate or analyse a property to start receiving alerts.
+              </div>
+            )}
             {alerts.map((a) => (
               <div
                 key={a.id}
@@ -398,6 +418,32 @@ export default function ScopePage() {
               </div>
             ))}
           </section>
+
+          {/* GET STARTED — only when no mandates and no alerts */}
+          {mandates.length === 0 && alerts.length === 0 && (
+            <section className={`${styles.section} ${styles.anim} ${styles.a6}`}>
+              <div className={styles.sectionHeader}>
+                <h2 className={styles.sectionTitle}>Get started</h2>
+              </div>
+              <div className={styles.startSteps}>
+                <div className={styles.startStep}>
+                  <div className={styles.startNum}>1</div>
+                  <div className={styles.startTitle}>Search or paste</div>
+                  <div className={styles.startDesc}>Enter any UK address, postcode, company name, or listing URL above.</div>
+                </div>
+                <div className={styles.startStep}>
+                  <div className={styles.startNum}>2</div>
+                  <div className={styles.startTitle}>Review the dossier</div>
+                  <div className={styles.startDesc}>Get full intelligence in seconds — planning, ownership, financials, risk, and more.</div>
+                </div>
+                <div className={styles.startStep}>
+                  <div className={styles.startNum}>3</div>
+                  <div className={styles.startTitle}>Act on opportunities</div>
+                  <div className={styles.startDesc}>Approach owners, track deals in your pipeline, and export investment memos.</div>
+                </div>
+              </div>
+            </section>
+          )}
         </div>
 
         {/* CREATE MANDATE MODAL */}
