@@ -8,7 +8,10 @@ import { PropertyTab } from "./tabs/PropertyTab";
 import { PlanningTab } from "./tabs/PlanningTab";
 import { FinancialsTab as FinancialsTabV2 } from "./tabs/FinancialsTab";
 import { MarketTab } from "./tabs/MarketTab";
-import { TitleTab, EnvironmentalTab, OwnershipTab, ApproachTab } from "./dossier-tabs";
+import { TitleTab } from "./tabs/TitleTab";
+import { EnvironmentalTab } from "./tabs/EnvironmentalTab";
+import { OwnershipTab } from "./tabs/OwnershipTab";
+import { ApproachTab } from "./tabs/ApproachTab";
 import { calculateIRR } from "@/lib/dealscope/calculations/irr";
 import { calculateEquityMultiple } from "@/lib/dealscope/calculations/equity";
 import { calculateVerdict } from "@/lib/dealscope/calculations/verdict";
@@ -101,7 +104,8 @@ function toProperty(d: RawDeal): Property {
 
 function DossierSidebar({ deal, prop }: { deal: RawDeal; prop: Property }) {
   const ds = (deal.dataSources ?? {}) as Record<string, unknown>;
-  const ai = ds.aiAnalysis as Record<string, unknown> | undefined;
+  // enrich pipeline saves under `ai`; older/demo path uses `aiAnalysis`
+  const ai = (ds.ai ?? ds.aiAnalysis) as Record<string, unknown> | undefined;
   const mandateTag = (ds.mandate as string | undefined) ?? (ai?.mandateTag as string | undefined);
   const mandateMatch = (ai?.mandateMatch as string | undefined) ?? (ai?.mandateMatchReason as string | undefined);
 
@@ -115,26 +119,34 @@ function DossierSidebar({ deal, prop }: { deal: RawDeal; prop: Property }) {
     : null;
   const hasAcquisitionData = prop.askingPrice && prop.askingPrice > 0;
 
-  const DATA_SOURCE_KEYS = [
-    { key: "epcData",           label: "EPC" },
-    { key: "landRegistry",      label: "Land Registry" },
-    { key: "companiesHouse",    label: "Companies House" },
-    { key: "gazette",           label: "London Gazette" },
-    { key: "planning",          label: "Planning data" },
-    { key: "historicEngland",   label: "Historic England" },
-    { key: "environmentalData", label: "Environment Agency" },
-    { key: "images",            label: "Property images" },
-    { key: "listing",           label: "Listing data" },
-    { key: "aiAnalysis",        label: "AI analysis" },
-  ] as const;
-  const presentSources = DATA_SOURCE_KEYS.filter(({ key }) => {
-    const v = ds[key];
-    if (v == null) return false;
-    if (Array.isArray(v)) return (v as unknown[]).length > 0;
-    return true;
-  });
+  // Keys saved by /api/dealscope/enrich → ScoutDeal.dataSources
+  const DATA_SOURCE_KEYS: ReadonlyArray<{ keys: string[]; label: string }> = [
+    { keys: ["epc", "epcData"],                       label: "EPC register" },
+    { keys: ["companyOwner", "companiesHouse"],       label: "Companies House (owner)" },
+    { keys: ["ownerPortfolio"],                       label: "Land Registry (CCOD)" },
+    { keys: ["planning"],                             label: "planning.data.gov.uk" },
+    { keys: ["flood"],                                label: "Environment Agency (flood)" },
+    { keys: ["images"],                               label: "Property images" },
+    { keys: ["listing"],                              label: "Listing data" },
+    { keys: ["comps", "comparables"],                 label: "Comparable sales" },
+    { keys: ["valuations"],                           label: "AVM valuations" },
+    { keys: ["returns", "scenarios"],                 label: "Returns model" },
+    { keys: ["ricsAnalysis", "dealAnalysis", "ai", "aiAnalysis"], label: "AI / RICS analysis" },
+    { keys: ["covenant"],                             label: "Tenant covenant" },
+    { keys: ["devPotential"],                         label: "Development potential" },
+  ];
+  const presentSources = DATA_SOURCE_KEYS.filter(({ keys }) =>
+    keys.some((k) => {
+      const v = ds[k];
+      if (v == null) return false;
+      if (Array.isArray(v)) return (v as unknown[]).length > 0;
+      return true;
+    })
+  );
 
-  const relatedRaw = (ds.relatedProperties as Record<string, unknown>[] | undefined)
+  // Related properties — enrich saves to `ownerPortfolio`
+  const relatedRaw = (ds.ownerPortfolio as Record<string, unknown>[] | undefined)
+    ?? (ds.relatedProperties as Record<string, unknown>[] | undefined)
     ?? (ds.nearby as Record<string, unknown>[] | undefined)
     ?? [];
   const related = (Array.isArray(relatedRaw) ? relatedRaw : []).slice(0, 5);
@@ -390,12 +402,12 @@ export default function PropertyDossierPage() {
               <div className={s.tabContent} style={{ paddingBottom: 40 }}>
                 {activeTab === "Property"       && <PropertyTab      deal={deal} />}
                 {activeTab === "Planning"       && <PlanningTab      deal={deal} />}
-                {activeTab === "Title & Legal"  && <TitleTab />}
-                {activeTab === "Environmental"  && <EnvironmentalTab />}
-                {activeTab === "Ownership"      && <OwnershipTab />}
+                {activeTab === "Title & Legal"  && <TitleTab         deal={deal} />}
+                {activeTab === "Environmental"  && <EnvironmentalTab deal={deal} />}
+                {activeTab === "Ownership"      && <OwnershipTab     deal={deal} />}
                 {activeTab === "Financials"     && <FinancialsTabV2  deal={deal} prop={prop} />}
                 {activeTab === "Market"         && <MarketTab        propertyId={deal.id} />}
-                {activeTab === "Approach"       && <ApproachTab />}
+                {activeTab === "Approach"       && <ApproachTab      deal={deal} />}
               </div>
             </div>
             <div className={s.dossierSide}>

@@ -31,9 +31,15 @@ function Row({
 
 export function PropertyTab({ deal }: Props) {
   const ds = (deal.dataSources ?? {}) as Record<string, unknown>;
-  const ai = ds.aiAnalysis as Record<string, unknown> | undefined;
+  // enrich pipeline saves under `ai` / `epc`; older/demo seeds may use `aiAnalysis` / `epcData`
+  const ai = (ds.ai ?? ds.aiAnalysis) as Record<string, unknown> | undefined;
   const listing = ds.listing as Record<string, unknown> | undefined;
-  const epcData = ds.epcData as Record<string, unknown> | undefined;
+  const epcData = (ds.epc ?? ds.epcData) as Record<string, unknown> | undefined;
+  // RICS analysis (richer narrative produced by enrich pipeline)
+  const rics = ds.ricsAnalysis as Record<string, unknown> | undefined;
+  const ricsVerdict = rics?.verdict as Record<string, unknown> | undefined;
+  const ricsSummary = ricsVerdict?.summary as string | undefined;
+  const ricsPlay = ricsVerdict?.play as string | undefined;
   const rawImages = (ds.images as string[] | undefined) ?? [];
   const galleryItems: GalleryItem[] = rawImages.map((url, i) => ({
     label: `View ${i + 1}`,
@@ -67,11 +73,11 @@ export function PropertyTab({ deal }: Props) {
 
   return (
     <>
-      {/* T20 — AI Summary */}
-      {ai?.summary && (
+      {/* T20 — AI Summary (RICS narrative preferred, falls back to legacy ai.summary) */}
+      {(ricsSummary || ai?.summary) && (
         <AISummary
-          summary={ai.summary as string}
-          play={(ai.play as string | undefined) ?? undefined}
+          summary={(ricsSummary ?? ai?.summary) as string}
+          play={(ricsPlay ?? (ai?.play as string | undefined)) ?? undefined}
         />
       )}
 
