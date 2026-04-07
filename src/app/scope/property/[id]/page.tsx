@@ -95,33 +95,64 @@ function toProperty(d: RawDeal): Property {
 /* ── OVERVIEW TAB ── */
 function OverviewTab({ deal, prop }: { deal: RawDeal; prop: Property }) {
   const ds = (deal.dataSources ?? {}) as Record<string, unknown>;
-  const images = (ds.images as string[] | undefined) ?? [];
+  const listingImages = (ds.images as string[] | undefined) ?? [];
+  const satellite = deal.satelliteImageUrl ?? null;
   const occupancyPct = deal.occupancyPct != null ? Math.round(deal.occupancyPct * 100) : null;
+
+  // Build 5-cell grid: aerial (satellite) first, then up to 4 listing photos.
+  // Per design: Aerial View, Front Exterior, Street View, Building Detail, Interior.
+  const SLOT_LABELS = ["Aerial View", "Front Exterior", "Street View", "Building Detail", "Interior"];
+  const slotUrls: (string | null)[] = [
+    satellite ?? listingImages[0] ?? null,
+    listingImages[satellite ? 0 : 1] ?? null,
+    listingImages[satellite ? 1 : 2] ?? null,
+    listingImages[satellite ? 2 : 3] ?? null,
+    listingImages[satellite ? 3 : 4] ?? null,
+  ];
+  const hasAnyImage = slotUrls.some((u) => u != null);
 
   return (
     <>
       {/* Property images grid */}
-      <div className={s.imagesGrid}>
-        {[0, 1, 2, 3, 4].map((i) => (
-          <div
-            key={i}
-            className={`${s.propertyImage} ${i === 0 ? s.imageMain : ""}`}
-          >
-            {images[i] ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={images[i]} alt={`Property image ${i + 1}`} className={s.imgFill} />
-            ) : (
-              <div className={s.imgPlaceholder} />
-            )}
-          </div>
-        ))}
-      </div>
+      {hasAnyImage && (
+        <div className={s.imagesGrid}>
+          {slotUrls.map((url, i) => (
+            <div
+              key={i}
+              className={`${s.propertyImage} ${i === 0 ? s.imageMain : ""}`}
+            >
+              {url ? (
+                <>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={url}
+                    alt={SLOT_LABELS[i]}
+                    className={s.imgFill}
+                    onError={(e) => {
+                      const img = e.currentTarget;
+                      img.style.display = "none";
+                      const label = img.nextElementSibling as HTMLElement | null;
+                      if (label) label.style.display = "none";
+                    }}
+                  />
+                  <div className={s.imageLabel}>{SLOT_LABELS[i]}</div>
+                </>
+              ) : (
+                <div className={s.imgPlaceholder} />
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
-      {/* Location map placeholder */}
+      {/* Location map */}
       <div className={s.section}>
         <h3 className={s.sectionTitle}>📍 Location</h3>
-        <div className={s.mapContainer}>
-          <div className={s.mapIcon}>🗺️</div>
+        <div
+          className={s.mapContainer}
+          style={satellite ? { backgroundImage: `url(${satellite})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
+        >
+          {!satellite && <div className={s.mapIcon}>🗺️</div>}
           <div className={s.mapText}>
             <strong>{deal.address}</strong>
           </div>
