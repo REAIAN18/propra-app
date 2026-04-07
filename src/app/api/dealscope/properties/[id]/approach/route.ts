@@ -1,4 +1,47 @@
 import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+
+// GET — return existing approach letters + vendor approaches for this deal so
+// the Approach tab can render history without having to POST first.
+// Previously this endpoint was POST-only, which made the Approach tab return
+// 405 Method Not Allowed on initial load.
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const [letters, approaches, deal] = await Promise.all([
+      prisma.approachLetter.findMany({
+        where: { dealId: id },
+        orderBy: { createdAt: "desc" },
+        take: 20,
+      }),
+      prisma.vendorApproach.findMany({
+        where: { dealId: id },
+        orderBy: { createdAt: "desc" },
+        take: 20,
+      }),
+      prisma.scoutDeal.findUnique({
+        where: { id },
+        select: { id: true, address: true, ownerName: true, brokerName: true, sourceUrl: true },
+      }),
+    ]);
+
+    return NextResponse.json({
+      deal,
+      letters,
+      approaches,
+      counts: {
+        letters: letters.length,
+        approaches: approaches.length,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching approach data:", error);
+    return NextResponse.json({ error: "Failed to fetch approach data" }, { status: 500 });
+  }
+}
 
 export async function POST(
   req: NextRequest,

@@ -351,8 +351,15 @@ export async function parsePropertyUrl(url: string): Promise<ParsedPropertyData>
       }
     }
 
+    // Final entity decode pass on user-visible string fields. Belt-and-braces:
+    // even if individual extractors missed it, we strip HTML entities here so
+    // nothing like "&amp;" or "&gt;" survives into the dossier UI.
+    const cleanAddr = address ? decodeHtmlEntities(address).trim() : 'Unknown Address'
+    const cleanDesc = description ? decodeHtmlEntities(description) : description
+    if (listing && listing.description) listing.description = decodeHtmlEntities(listing.description)
+
     return {
-      address: address || 'Unknown Address',
+      address: cleanAddr,
       postcode: finalPostcode,
       property_type: mdPropertyType,
       bedrooms,
@@ -361,7 +368,7 @@ export async function parsePropertyUrl(url: string): Promise<ParsedPropertyData>
       price_per_sqft,
       sqft,
       passingRent: mdIncome,
-      description,
+      description: cleanDesc,
       source,
       source_url: url,
       property_url: url,
@@ -372,8 +379,30 @@ export async function parsePropertyUrl(url: string): Promise<ParsedPropertyData>
   }
 }
 
+function decodeHtmlEntities(s: string): string {
+  return s
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&apos;/gi, "'")
+    .replace(/&#39;/gi, "'")
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&ndash;/gi, '\u2013')
+    .replace(/&mdash;/gi, '\u2014')
+    // Numeric entities (decimal and hex)
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(parseInt(n, 10)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCharCode(parseInt(n, 16)))
+}
+
 function cleanAddress(raw: string): string {
-  let clean = raw
+  // Decode HTML entities FIRST so subsequent regexes see real characters
+  // (e.g. "&amp;" → "&", "&gt;" → ">"). Without this, page-title separators
+  // like "&gt;" survive into addresses and broker names downstream.
+  let clean = decodeHtmlEntities(raw)
+    // Strip page-title pollution: anything after a `>` separator that ends in
+    // a brand/agent name (e.g. "Address > Prideview Group", "Address > Savills")
+    .replace(/\s*[>\u203a]\s*[\w&'\- ]+(Group|Estates?|Properties|Ltd|LLP|LLC|\.com|\.co\.uk).*$/i, '')
     // Remove everything after pipe/dash separators (site names)
     .replace(/\s*[|\u2013\u2014]\s*(Savills|Rightmove|Zoopla|LoopNet|Allsop|Strettons|EIG|Acuitus|RIB|Commercial|Property).*$/i, '')
     .replace(/\|.*$/, '')

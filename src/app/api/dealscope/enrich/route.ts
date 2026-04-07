@@ -816,6 +816,25 @@ export async function POST(req: NextRequest) {
     }
 
     // ── SAVE (update existing or create new) ──
+    // Sanitize broker name — reject obvious garbage like "Use class" (UK planning)
+    // or other non-name strings that shouldn't be displayed as a broker.
+    const rawBroker = auctionHouse || aiData?.agentName || listingData?.agentContact?.name || undefined;
+    const brokerName = (() => {
+      if (!rawBroker || typeof rawBroker !== "string") return undefined;
+      const trimmed = rawBroker.trim();
+      if (trimmed.length < 2 || trimmed.length > 80) return undefined;
+      // Reject planning use class, lot numbers, prices, common non-name patterns
+      if (/^(use\s*class|lot\s*\d|guide\s*price|£|\$|http|www\.|tbc|tba|n\/a|none|null|unknown)/i.test(trimmed)) return undefined;
+      // Must contain at least one letter
+      if (!/[a-z]/i.test(trimmed)) return undefined;
+      return trimmed;
+    })();
+
+    // Hoist real owner name from CCOD lookup (when populated) so OwnershipTab/TitleTab show it.
+    const realOwnerName = (companyOwner && typeof companyOwner === "object")
+      ? ((companyOwner as { companyName?: string }).companyName || undefined)
+      : undefined;
+
     const dealData = {
         address: address!,
         assetType: normAsset,
@@ -825,13 +844,18 @@ export async function POST(req: NextRequest) {
         askingPrice: askingPrice || undefined,
         guidePrice: guidePrice || undefined,
         capRate: mktCapRate * 100,
-        brokerName: auctionHouse || aiData?.agentName || listingData?.agentContact?.name || undefined,
+        brokerName,
+        ownerName: realOwnerName,
         satelliteImageUrl: satelliteUrl || undefined,
         // Top-level columns are facts only — estimated values live in
         // dataSources.assumptions and are surfaced with provenance in the UI.
         epcRating: realEpc ?? undefined,
         yearBuilt: realYearBuilt ?? undefined,
-        buildingSizeSqft: realSqft ?? undefined,
+        // Write both `buildingSizeSqft` (canonical) and `sqft` (legacy alias) so
+        // any frontend code reading either field gets the value. Use realSqft
+        // when available, else the scraped value (which we treat as listing fact).
+        buildingSizeSqft: realSqft ?? scrapedSqft ?? undefined,
+        sqft: realSqft ?? scrapedSqft ?? undefined,
         tenure,
         currentRentPsf: realPassingRent && realSqft && realSqft > 0
           ? parseFloat((realPassingRent / realSqft).toFixed(2))
