@@ -42,6 +42,7 @@ export async function parsePropertyUrl(url: string): Promise<ParsedPropertyData>
     // throwing. Hard-throwing here used to crash the whole /parse-url route
     // any time an agent site rate-limited or geoblocked us.
     let html = ''
+    let rawDirectHtml = ''
     let renderedMarkdown: string | null = null
     let directFetchBlocked = false
 
@@ -55,6 +56,7 @@ export async function parsePropertyUrl(url: string): Promise<ParsedPropertyData>
       })
       if (response.ok) {
         html = await response.text()
+        rawDirectHtml = html
       } else {
         console.warn(`[parsePropertyUrl] Direct fetch returned ${response.status} for ${url}`)
         directFetchBlocked = true
@@ -321,12 +323,16 @@ export async function parsePropertyUrl(url: string): Promise<ParsedPropertyData>
     // Savills renders listings as an SPA so the server HTML only contains
     // a short og:description (~60 chars). The full description, sqft,
     // tenure and images are in a JSON-LD RealEstateListing / Product block.
+    // We scan BOTH the combined html (which may include Jina markdown) and
+    // the raw direct-fetch html (which still has the original <script> tags
+    // that Jina strips) so the ld+json blocks are always visible.
+    const ldSearchCorpus = [rawDirectHtml, html].filter(Boolean).join("\n")
     let savillsLdDescription: string | null = null
     let savillsLdSqft: number | null = null
     let savillsLdPrice: number | null = null
     let savillsLdImages: string[] = []
     if (source === 'savills') {
-      const ldBlocks = html.match(/<script[^>]+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi) || []
+      const ldBlocks = ldSearchCorpus.match(/<script[^>]+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi) || []
       for (const block of ldBlocks) {
         const raw = block.replace(/<script[^>]*>/i, '').replace(/<\/script>/i, '').trim()
         try {
