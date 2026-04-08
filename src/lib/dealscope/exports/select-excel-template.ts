@@ -48,15 +48,20 @@ export function selectExcelTemplate(input: SelectTemplateInput): SelectTemplateR
     };
   }
 
-  // 2. Development
-  const isDev = signals.some(s => s.includes("development") || s.includes("groundup") || s.includes("ground-up"))
+  // 2. Development — only when the deal is *explicitly* a ground-up or
+  //    development play. Missing NLA alone is not a development signal;
+  //    plenty of stabilised assets come through with an unknown sqft until
+  //    the brochure is parsed, and we must not misclassify those.
+  const isDev = signals.some(s => s.includes("development") || s.includes("groundup") || s.includes("ground-up") || s.includes("site"))
     || cond === "groundup"
     || cond === "development"
-    || (input.buildingSizeSqft == null && (input.refurbCapexTotal ?? 0) === 0);
+    || /development|site|land/i.test(asset);
   if (isDev) {
     return {
       template: "Development Deal",
-      reason: cond ? `Ground-up signal (${cond}) → Development appraisal.` : `No standing building / development signal → Development appraisal.`,
+      reason: cond
+        ? `Ground-up signal (${cond}) → Development appraisal.`
+        : `Development asset type → Development appraisal.`,
     };
   }
 

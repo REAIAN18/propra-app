@@ -18,8 +18,19 @@ describe("selectExcelTemplate", () => {
     expect(r.template).toBe("Development Deal");
   });
 
-  it("picks Development when no sqft and no refurb capex", () => {
-    const r = selectExcelTemplate({ assetType: "Office" });
+  it("does NOT treat unknown sqft as a development signal (stabilised asset)", () => {
+    // Regency House case: already refurbished, asking quoted, sqft pending
+    // brochure parse. Must route to Income Deal, not Development.
+    const r = selectExcelTemplate({
+      assetType: "Multi-Let Office",
+      buildingSizeSqft: null,
+      condition: "refurbished",
+    });
+    expect(r.template).toBe("Income Deal");
+  });
+
+  it("picks Development when asset type itself is a development/site", () => {
+    const r = selectExcelTemplate({ assetType: "Development Site" });
     expect(r.template).toBe("Development Deal");
   });
 

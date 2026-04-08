@@ -157,8 +157,16 @@ function populateIncomeDeal(
   if (voidRate != null)  setVal(ws, "B25", voidRate);
   if (occupancy != null) setVal(ws, "B28", occupancy);
 
-  // Passing rent — overwrite the broken =B17 reference
-  if (passingRent != null) setVal(ws, "B30", passingRent);
+  // Passing rent — the template ships B30 as the broken formula `=B17`
+  // (which resolves to the acquisition total). Always overwrite: use the
+  // real figure if we have it, otherwise clear the cell so the user sees
+  // an empty input rather than a nonsense auto-populated "rent".
+  if (passingRent != null) {
+    setVal(ws, "B30", passingRent);
+  } else {
+    ws.getCell("B30").value = null;
+    ws.getCell("B30").note = "DealScope: rent roll not yet enriched — enter annual passing rent";
+  }
 }
 
 function populateRefurbDeal(
