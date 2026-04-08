@@ -14,6 +14,13 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ["lucide-react"],
   },
+  // Wave T — bundle the appraisal xlsx templates into the Excel export
+  // serverless function so populate-excel.ts can read them at runtime.
+  outputFileTracingIncludes: {
+    "/api/dealscope/properties/[id]/export/excel": [
+      "./src/lib/dealscope/exports/templates/**/*",
+    ],
+  },
   images: {
     formats: ["image/avif", "image/webp"],
     minimumCacheTTL: 60,

@@ -3,7 +3,10 @@ const config = {
   preset: 'ts-jest',
   testEnvironment: 'node',
   // Only look for test files in the dealscope tests dir
-  roots: ['<rootDir>/src/lib/dealscope/__tests__'],
+  roots: [
+    '<rootDir>/src/lib/dealscope/__tests__',
+    '<rootDir>/src/lib/dealscope/exports/__tests__',
+  ],
   testMatch: ['**/*.test.ts'],
   // Don't walk into node_modules
   watchPathIgnorePatterns: ['<rootDir>/node_modules/'],

@@ -307,12 +307,28 @@ export default function PropertyDossierPage() {
     }
   };
 
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     if (!id) return;
-    const a = document.createElement("a");
-    a.href = `/api/dealscope/properties/${id}/export/excel`;
-    a.download = "";
-    a.click();
+    setExporting("excel");
+    try {
+      // Wave T — endpoint now returns the populated CRE_Professional_Appraisal
+      // template with the chosen deal sheet active. Header tells us which
+      // template was picked so we can surface the reason as a toast.
+      const res = await fetch(`/api/dealscope/properties/${id}/export/excel`);
+      if (!res.ok) throw new Error("Excel export failed");
+      const template = res.headers.get("X-DealScope-Template") ?? "Appraisal";
+      const reasonRaw = res.headers.get("X-DealScope-Template-Reason") ?? "";
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `dealscope-${template.replace(/\s+/g, "-").toLowerCase()}-${id}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+      try { showToast(`Exported ${template} — ${decodeURIComponent(reasonRaw)}`); } catch {}
+    } finally {
+      setExporting(null);
+    }
   };
 
   useEffect(() => {
