@@ -151,6 +151,40 @@ export function populateICMemo(
       ? prop.passingRent / prop.askingPrice
       : null;
 
+  // Wave F: pull dual-scenario valuation written by /api/dealscope/enrich.
+  // Memo can run on demo decks too — guard against missing valuations entirely.
+  const waveFRaw = ds.valuations as
+    | {
+        scenarios?: {
+          asIs?: { erv: number; ervPsf: number | null; noi: number; value: number; clearsAsking: boolean };
+          refurb?: {
+            erv: number; ervPsf: number | null; noi: number;
+            capexPsf: number; capexTotal: number; capexSource: string;
+            grossValue: number; value: number; clearsAsking: boolean;
+          };
+        };
+        condition?: "unrefurbished" | "average" | "refurbished";
+        conditionSignals?: string[];
+        recommendation?: "BUY" | "REVIEW" | "PASS";
+        recommendationReasons?: string[];
+        askingPsf?: number | null;
+        compPsfBand?: { low: number | null; mid: number | null; high: number | null; sampleSize: number } | null;
+      }
+    | undefined;
+
+  const waveF = waveFRaw
+    ? {
+        condition: waveFRaw.condition ?? null,
+        conditionSignals: waveFRaw.conditionSignals ?? [],
+        recommendation: waveFRaw.recommendation ?? null,
+        recommendationReasons: waveFRaw.recommendationReasons ?? [],
+        askingPsf: waveFRaw.askingPsf ?? null,
+        compPsfBand: waveFRaw.compPsfBand ?? null,
+        asIs: waveFRaw.scenarios?.asIs ?? null,
+        refurb: waveFRaw.scenarios?.refurb ?? null,
+      }
+    : null;
+
   return {
     // Executive summary
     headline: deal.address,
@@ -193,5 +227,7 @@ export function populateICMemo(
     keyOpportunities: deriveOpportunities(deal, prop),
     confidential: options.confidential ?? true,
     generatedAt: new Date().toISOString(),
+
+    waveF,
   };
 }

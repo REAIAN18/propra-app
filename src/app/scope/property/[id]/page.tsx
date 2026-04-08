@@ -109,6 +109,13 @@ function DossierSidebar({ deal, prop }: { deal: RawDeal; prop: Property }) {
   const mandateTag = (ds.mandate as string | undefined) ?? (ai?.mandateTag as string | undefined);
   const mandateMatch = (ai?.mandateMatch as string | undefined) ?? (ai?.mandateMatchReason as string | undefined);
 
+  // Wave F: BUY/REVIEW/PASS recommendation derived from dual scenarios
+  const waveF = ds.valuations as
+    | { recommendation?: "BUY" | "REVIEW" | "PASS"; recommendationReasons?: string[] }
+    | undefined;
+  const waveFReco = waveF?.recommendation;
+  const waveFReasons = waveF?.recommendationReasons ?? [];
+
   const irrResult = calculateIRR(prop);
   const equityResult = calculateEquityMultiple(prop);
   const verdict = calculateVerdict(prop);
@@ -151,8 +158,35 @@ function DossierSidebar({ deal, prop }: { deal: RawDeal; prop: Property }) {
     ?? [];
   const related = (Array.isArray(relatedRaw) ? relatedRaw : []).slice(0, 5);
 
+  const recoColor = waveFReco === "BUY" ? "var(--grn)" : waveFReco === "PASS" ? "var(--red)" : "var(--amb)";
+
   return (
     <>
+      {waveFReco && (
+        <div className={s.sideCard}>
+          <div className={s.cardTitle}>Recommendation</div>
+          <div
+            style={{
+              fontFamily: "var(--serif)",
+              fontSize: 22,
+              fontWeight: 600,
+              color: recoColor,
+              letterSpacing: ".5px",
+              padding: "4px 0 8px",
+            }}
+          >
+            {waveFReco}
+          </div>
+          {waveFReasons.length > 0 && (
+            <ul style={{ margin: 0, paddingLeft: 16, fontSize: 11, color: "var(--tx2)", lineHeight: 1.55 }}>
+              {waveFReasons.slice(0, 4).map((r, i) => (
+                <li key={i} style={{ marginBottom: 3 }}>{r}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
       {hasAcquisitionData && (
         <div className={s.sideCard}>
           <div className={s.cardTitle}>Acquisition metrics</div>

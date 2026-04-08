@@ -51,6 +51,25 @@ export interface ICMemoProps {
   keyOpportunities: string[];
   confidential: boolean;
   generatedAt: string;
+
+  // Wave F: condition-anchored dual-scenario valuation (optional — only present
+  // when /api/dealscope/enrich has run and stored dataSources.valuations).
+  waveF?: {
+    condition?: "unrefurbished" | "average" | "refurbished" | null;
+    conditionSignals?: string[];
+    recommendation?: "BUY" | "REVIEW" | "PASS" | null;
+    recommendationReasons?: string[];
+    askingPsf?: number | null;
+    compPsfBand?: { low: number | null; mid: number | null; high: number | null; sampleSize: number } | null;
+    asIs?: {
+      erv: number; ervPsf: number | null; noi: number; value: number; clearsAsking: boolean;
+    } | null;
+    refurb?: {
+      erv: number; ervPsf: number | null; noi: number;
+      capexPsf: number; capexTotal: number; capexSource: string;
+      grossValue: number; value: number; clearsAsking: boolean;
+    } | null;
+  } | null;
 }
 
 // ── Formatters ────────────────────────────────────────────────────────────────
@@ -179,6 +198,7 @@ export function ICMemoTemplate(props: ICMemoProps): React.ReactElement {
     passingRent, erv, capRate, noi, exitValue, cashFlows,
     signals, hasInsolvency, hasLisPendens, inFloodZone, epcMeesRisk, riskSummary,
     investmentThesis, keyRisks, keyOpportunities, confidential, generatedAt,
+    waveF,
   } = props;
 
   const sym = currency === "GBP" ? "£" : "$";
@@ -508,6 +528,128 @@ export function ICMemoTemplate(props: ICMemoProps): React.ReactElement {
                   )}
                 </tbody>
               </table>
+            </>
+          )}
+
+          {waveF?.asIs && waveF?.refurb && (
+            <>
+              <h3>As-is vs. Post-refurb Valuation</h3>
+              {waveF.condition && (
+                <p style={{ fontSize: "8.5pt", color: "#a1a1aa", marginBottom: "6pt" }}>
+                  Building condition detected as <strong>{waveF.condition}</strong>
+                  {waveF.conditionSignals && waveF.conditionSignals.length > 0
+                    ? ` (signals: ${waveF.conditionSignals.slice(0, 3).join(", ")})`
+                    : ""}
+                  . As-is values reflect current condition; refurb scenario assumes repositioning to top-of-band.
+                </p>
+              )}
+              <table>
+                <thead>
+                  <tr>
+                    <th>Metric</th>
+                    <th className="tr">As-is</th>
+                    <th className="tr">Post-refurb</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>ERV (p.a.)</strong></td>
+                    <td className="tr tn">{fmtFull(waveF.asIs.erv, sym)}</td>
+                    <td className="tr tn">{fmtFull(waveF.refurb.erv, sym)}</td>
+                  </tr>
+                  {(waveF.asIs.ervPsf != null || waveF.refurb.ervPsf != null) && (
+                    <tr>
+                      <td><strong>ERV / sq ft</strong></td>
+                      <td className="tr tn">{waveF.asIs.ervPsf != null ? `${sym}${waveF.asIs.ervPsf.toFixed(2)}` : "—"}</td>
+                      <td className="tr tn">{waveF.refurb.ervPsf != null ? `${sym}${waveF.refurb.ervPsf.toFixed(2)}` : "—"}</td>
+                    </tr>
+                  )}
+                  <tr>
+                    <td><strong>NOI (p.a.)</strong></td>
+                    <td className="tr tn">{fmtFull(waveF.asIs.noi, sym)}</td>
+                    <td className="tr tn">{fmtFull(waveF.refurb.noi, sym)}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Capitalised value</strong></td>
+                    <td className="tr tn">{fmtFull(waveF.asIs.value, sym)}</td>
+                    <td className="tr tn">{fmtFull(waveF.refurb.grossValue, sym)}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Capex deduction</strong></td>
+                    <td className="tr tn" style={{ color: "#71717a" }}>—</td>
+                    <td className="tr tn" style={{ color: "#ef4444" }}>−{fmtFull(waveF.refurb.capexTotal, sym)}</td>
+                  </tr>
+                  <tr className="hl">
+                    <td><strong>Net value to investor</strong></td>
+                    <td className="tr tn" style={{ color: waveF.asIs.clearsAsking ? "#22c55e" : "#ef4444" }}>
+                      <strong>{fmtFull(waveF.asIs.value, sym)}</strong>
+                    </td>
+                    <td className="tr tn" style={{ color: waveF.refurb.clearsAsking ? "#22c55e" : "#ef4444" }}>
+                      <strong>{fmtFull(waveF.refurb.value, sym)}</strong>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <p style={{ fontSize: "7.5pt", color: "#71717a", marginTop: "-4pt" }}>
+                Capex assumption: {sym}{waveF.refurb.capexPsf}/sq ft ({waveF.refurb.capexSource}).
+                {" "}As-is {waveF.asIs.clearsAsking ? "clears" : "does not clear"} asking;
+                {" "}refurb-net {waveF.refurb.clearsAsking ? "clears" : "does not clear"} asking.
+              </p>
+
+              {(waveF.askingPsf != null || waveF.compPsfBand) && (
+                <>
+                  <h4>Price-per-sq-ft Sanity Check</h4>
+                  <table>
+                    <tbody>
+                      {waveF.askingPsf != null && (
+                        <tr>
+                          <td style={{ width: "50%" }}><strong>Asking £/sq ft</strong></td>
+                          <td className="tn">{sym}{waveF.askingPsf.toLocaleString()}</td>
+                        </tr>
+                      )}
+                      {waveF.compPsfBand && (waveF.compPsfBand.low != null || waveF.compPsfBand.high != null) && (
+                        <tr>
+                          <td>
+                            <strong>
+                              Comp band £/sq ft
+                              {waveF.compPsfBand.sampleSize ? ` (n=${waveF.compPsfBand.sampleSize})` : ""}
+                            </strong>
+                          </td>
+                          <td className="tn">
+                            {sym}{waveF.compPsfBand.low ?? "—"} – {sym}{waveF.compPsfBand.high ?? "—"}
+                          </td>
+                        </tr>
+                      )}
+                      {waveF.askingPsf != null &&
+                        waveF.compPsfBand?.low != null &&
+                        waveF.askingPsf < waveF.compPsfBand.low * 0.9 && (
+                          <tr className="hl">
+                            <td><strong>Verdict</strong></td>
+                            <td style={{ color: "#22c55e" }}>
+                              <strong>Below comp band low — clearly cheap on £/sq ft</strong>
+                            </td>
+                          </tr>
+                        )}
+                    </tbody>
+                  </table>
+                </>
+              )}
+
+              {waveF.recommendation && (
+                <div className={`callout ${waveF.recommendation === "BUY" ? "cs" : waveF.recommendation === "PASS" ? "cd" : "cw"} nb`}>
+                  <h4>SCENARIO-BASED RECOMMENDATION</h4>
+                  <p>
+                    <strong style={{ color: waveF.recommendation === "BUY" ? "#16a34a" : waveF.recommendation === "PASS" ? "#dc2626" : "#d97706" }}>
+                      {waveF.recommendation}
+                    </strong>
+                  </p>
+                  {waveF.recommendationReasons && waveF.recommendationReasons.length > 0 && (
+                    <ul style={{ margin: "4pt 0 0 16pt" }}>
+                      {waveF.recommendationReasons.map((r, i) => <li key={i}>{r}</li>)}
+                    </ul>
+                  )}
+                </div>
+              )}
             </>
           )}
 

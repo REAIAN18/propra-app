@@ -29,8 +29,15 @@ function Row({
   );
 }
 
+// Wave F: condition detected from listing description in /api/dealscope/enrich
+type WaveFCondition = {
+  condition?: "unrefurbished" | "average" | "refurbished";
+  conditionSignals?: string[];
+};
+
 export function PropertyTab({ deal }: Props) {
   const ds = (deal.dataSources ?? {}) as Record<string, unknown>;
+  const waveFCondition = (ds.valuations as WaveFCondition | undefined) ?? undefined;
   // enrich pipeline saves under `ai` / `epc`; older/demo seeds may use `aiAnalysis` / `epcData`
   const ai = (ds.ai ?? ds.aiAnalysis) as Record<string, unknown> | undefined;
   const listing = ds.listing as Record<string, unknown> | undefined;
@@ -145,6 +152,26 @@ export function PropertyTab({ deal }: Props) {
           {occ != null && <Row l={`Occupancy${occIsEstimate ? " (est.)" : ""}`} v={`${Math.round(occ * 100)}%`} />}
           {occIsEstimate && occSource && (
             <div style={{ fontSize: 9, color: "var(--tx3)", marginTop: -4, marginBottom: 6 }}>↳ {occSource}</div>
+          )}
+          {waveFCondition?.condition && (
+            <>
+              <Row
+                l="Condition (detected)"
+                v={waveFCondition.condition.charAt(0).toUpperCase() + waveFCondition.condition.slice(1)}
+                color={
+                  waveFCondition.condition === "refurbished"
+                    ? "green"
+                    : waveFCondition.condition === "unrefurbished"
+                    ? "amber"
+                    : undefined
+                }
+              />
+              {waveFCondition.conditionSignals && waveFCondition.conditionSignals.length > 0 && (
+                <div style={{ fontSize: 9, color: "var(--tx3)", marginTop: -4, marginBottom: 6 }}>
+                  ↳ {waveFCondition.conditionSignals.slice(0, 3).join(", ")}
+                </div>
+              )}
+            </>
           )}
           {deal.brokerName && <Row l="Agent" v={deal.brokerName} />}
           {deal.daysOnMarket != null && <Row l="Days on market" v={String(deal.daysOnMarket)} mono />}

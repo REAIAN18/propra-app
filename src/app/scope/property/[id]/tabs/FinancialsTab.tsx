@@ -24,6 +24,24 @@ interface Props {
   prop: Property;
 }
 
+// Wave F shape — written by /api/dealscope/enrich into dataSources.valuations
+type WaveFValuations = {
+  scenarios?: {
+    asIs?: { erv: number; ervPsf: number | null; noi: number; value: number; clearsAsking: boolean };
+    refurb?: {
+      erv: number; ervPsf: number | null; noi: number;
+      capexPsf: number; capexTotal: number; capexSource: string;
+      grossValue: number; value: number; clearsAsking: boolean;
+    };
+  };
+  condition?: "unrefurbished" | "average" | "refurbished";
+  conditionSignals?: string[];
+  recommendation?: "BUY" | "REVIEW" | "PASS";
+  recommendationReasons?: string[];
+  askingPsf?: number | null;
+  compPsfBand?: { low: number | null; mid: number | null; high: number | null; sampleSize: number } | null;
+};
+
 function fmtCcy(n: number | undefined | null): string {
   if (n == null) return "—";
   if (n >= 1_000_000) return `£${(n / 1_000_000).toFixed(1)}m`;
@@ -94,6 +112,7 @@ function buildLettingScenarios(prop: Property, irrResult: ReturnType<typeof calc
 
 export function FinancialsTab({ deal, prop }: Props) {
   const ds = (deal.dataSources ?? {}) as Record<string, unknown>;
+  const waveF = (ds.valuations as WaveFValuations | undefined) ?? undefined;
   const irrResult = calculateIRR(prop);
   const equityResult = calculateEquityMultiple(prop);
   const verdict = calculateVerdict(prop);
@@ -188,6 +207,92 @@ export function FinancialsTab({ deal, prop }: Props) {
           </tbody>
         </table>
       </div>
+
+      {/* Wave F: As-is vs. post-refurb dual-scenario valuation */}
+      {waveF?.scenarios?.asIs && waveF?.scenarios?.refurb && (
+        <div className={`${s.card} ${s.a2}`}>
+          <div className={s.cardTitle}>As-is vs. post-refurb (condition-anchored)</div>
+          <Row
+            l="Building condition"
+            v={
+              waveF.condition
+                ? waveF.condition.charAt(0).toUpperCase() + waveF.condition.slice(1)
+                : "—"
+            }
+            color={
+              waveF.condition === "refurbished"
+                ? "green"
+                : waveF.condition === "unrefurbished"
+                ? "amber"
+                : undefined
+            }
+          />
+          {waveF.conditionSignals && waveF.conditionSignals.length > 0 && (
+            <div style={{ fontSize: 9, color: "var(--tx3)", marginTop: -4, marginBottom: 8 }}>
+              ↳ signals: {waveF.conditionSignals.slice(0, 3).join(", ")}
+            </div>
+          )}
+          <div className={s.sep} />
+          <Row l="As-is ERV (p.a.)"          v={fmtCcy(waveF.scenarios.asIs.erv)} mono />
+          {waveF.scenarios.asIs.ervPsf != null && (
+            <Row l="As-is ERV / sqft"        v={`£${waveF.scenarios.asIs.ervPsf.toFixed(2)}`} mono />
+          )}
+          <Row l="As-is NOI"                 v={fmtCcy(waveF.scenarios.asIs.noi)} mono />
+          <Row
+            l="As-is value (capitalised)"
+            v={fmtCcy(waveF.scenarios.asIs.value)}
+            mono
+            color={waveF.scenarios.asIs.clearsAsking ? "green" : "red"}
+          />
+          <div className={s.sep} />
+          <Row l="Refurb ERV (p.a.)"         v={fmtCcy(waveF.scenarios.refurb.erv)} mono />
+          {waveF.scenarios.refurb.ervPsf != null && (
+            <Row l="Refurb ERV / sqft"       v={`£${waveF.scenarios.refurb.ervPsf.toFixed(2)}`} mono />
+          )}
+          <Row l="Refurb NOI"                v={fmtCcy(waveF.scenarios.refurb.noi)} mono />
+          <Row l="Refurb gross value"        v={fmtCcy(waveF.scenarios.refurb.grossValue)} mono />
+          <Row
+            l={`Capex (£${waveF.scenarios.refurb.capexPsf}/sqft)`}
+            v={`−${fmtCcy(waveF.scenarios.refurb.capexTotal)}`}
+            mono
+            color="red"
+          />
+          <div style={{ fontSize: 9, color: "var(--tx3)", marginTop: -4, marginBottom: 6 }}>
+            ↳ {waveF.scenarios.refurb.capexSource}
+          </div>
+          <Row
+            l="Refurb-net value"
+            v={fmtCcy(waveF.scenarios.refurb.value)}
+            mono
+            color={waveF.scenarios.refurb.clearsAsking ? "green" : "red"}
+          />
+          {/* G4: £/psf sanity check */}
+          {(waveF.askingPsf != null || waveF.compPsfBand) && (
+            <>
+              <div className={s.sep} />
+              {waveF.askingPsf != null && (
+                <Row l="Asking £/sqft" v={`£${waveF.askingPsf.toLocaleString()}`} mono />
+              )}
+              {waveF.compPsfBand && (waveF.compPsfBand.low != null || waveF.compPsfBand.high != null) && (
+                <Row
+                  l={`Comp band £/sqft${waveF.compPsfBand.sampleSize ? ` (n=${waveF.compPsfBand.sampleSize})` : ""}`}
+                  v={`£${waveF.compPsfBand.low ?? "—"} – £${waveF.compPsfBand.high ?? "—"}`}
+                  mono
+                />
+              )}
+              {waveF.askingPsf != null &&
+                waveF.compPsfBand?.low != null &&
+                waveF.askingPsf < waveF.compPsfBand.low * 0.9 && (
+                  <Row
+                    l="£/sqft check"
+                    v="Below comp band low — clearly cheap"
+                    color="green"
+                  />
+                )}
+            </>
+          )}
+        </div>
+      )}
 
       {/* Exit value scenarios */}
       <div className={`${s.card} ${s.a2}`}>
