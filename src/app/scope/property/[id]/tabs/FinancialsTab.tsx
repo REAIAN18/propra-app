@@ -9,6 +9,8 @@ import { MultipleValuations, ComparablesTable, MetricCard } from "@/lib/dealscop
 import { ServiceChargesBreakdown } from "@/components/dealscope/ServiceChargesBreakdown";
 import type { ServiceChargeLineItem } from "@/components/dealscope/ServiceChargesBreakdown";
 import { LettingScenariosTable } from "@/components/dealscope/LettingScenariosTable";
+import { CapRateSensitivity } from "@/components/dealscope/CapRateSensitivity";
+import { AssumptionEditor } from "@/components/dealscope/AssumptionEditor";
 import type { LettingScenario } from "@/components/dealscope/LettingScenariosTable";
 import type { ValuationScenario } from "@/components/dealscope/MultipleValuations";
 import type { Comparable } from "@/components/dealscope/ComparablesTable";
@@ -113,6 +115,26 @@ function buildLettingScenarios(prop: Property, irrResult: ReturnType<typeof calc
 export function FinancialsTab({ deal, prop }: Props) {
   const ds = (deal.dataSources ?? {}) as Record<string, unknown>;
   const waveF = (ds.valuations as WaveFValuations | undefined) ?? undefined;
+  // Wave I: surface enrich-time `returns` block (5yr IRR, CoC, equity needed, DSCR)
+  const returnsRaw = ds.returns as
+    | { capRate?: number | null; noi?: number | null; irr5yr?: number | null; cashOnCash?: number | null; equityMultiple?: number | null; equityNeeded?: number | null; dscr?: number | null }
+    | undefined;
+  // Wave P: senior debt structure
+  const debt = ds.debt as
+    | {
+        ltvPct: number;
+        loanAmount: number;
+        equityRequired: number;
+        baseRate: number | null;
+        spreadBps: number;
+        allInRate: number;
+        termYears: number;
+        amortising: boolean;
+        annualDebtService: number;
+        dscr: number | null;
+        rateSource: "live_boe" | "scout_default";
+      }
+    | undefined;
   const irrResult = calculateIRR(prop);
   const equityResult = calculateEquityMultiple(prop);
   const verdict = calculateVerdict(prop);
@@ -179,6 +201,24 @@ export function FinancialsTab({ deal, prop }: Props) {
           <MetricCard label="Equity multiple (unlevered)" value={fmtX(equityResult.equityMultiple)}    subtitle="No debt assumed"                       color={emColor} />
           <MetricCard label="Deal score"      value={String(verdict.dealScore)}             subtitle={verdict.verdict} />
           <MetricCard label="Total cost in"   value={fmtCcy(equityResult.totalCostIn)}      subtitle="Inc. SDLT + fees" />        </div>
+
+        {/* Wave I1 — full returns sub-grid from enrich pipeline */}
+        {returnsRaw && (
+          <div className={s.statRow} style={{ marginTop: 8 }}>
+            {returnsRaw.irr5yr != null && (
+              <MetricCard label="IRR (5yr)" value={fmtPct(returnsRaw.irr5yr)} subtitle="Short-hold scenario" />
+            )}
+            {returnsRaw.cashOnCash != null && (
+              <MetricCard label="Cash-on-cash (yr1)" value={fmtPct(returnsRaw.cashOnCash)} subtitle="Pre-stabilisation" />
+            )}
+            {returnsRaw.equityNeeded != null && (
+              <MetricCard label="Equity needed" value={fmtCcy(returnsRaw.equityNeeded)} subtitle="60% LTV assumed" />
+            )}
+            {returnsRaw.dscr != null && (
+              <MetricCard label="DSCR" value={returnsRaw.dscr.toFixed(2)} subtitle="Debt service coverage" />
+            )}
+          </div>
+        )}
       </div>
 
       {/* Cash flow breakdown */}
@@ -292,6 +332,143 @@ export function FinancialsTab({ deal, prop }: Props) {
             </>
           )}
         </div>
+      )}
+
+      {/* Wave P — Senior debt structure */}
+      {debt && (
+        <div className={`${s.card} ${s.a3}`}>
+          <div className={s.cardTitle}>Financing structure (senior debt)</div>
+          <Row l="LTV"                    v={`${(debt.ltvPct * 100).toFixed(0)}%`} mono />
+          <Row l="Loan amount"            v={fmtCcy(debt.loanAmount)} mono />
+          <Row l="Equity required"        v={fmtCcy(debt.equityRequired)} mono color="amber" />
+          <div className={s.sep} />
+          <Row
+            l="Base rate (BoE)"
+            v={debt.baseRate != null ? `${(debt.baseRate * 100).toFixed(2)}%` : "—"}
+            mono
+          />
+          <Row l="Spread"                 v={`${debt.spreadBps} bps`} mono />
+          <Row l="All-in rate"            v={`${(debt.allInRate * 100).toFixed(2)}%`} mono />
+          <Row l={`Term (${debt.amortising ? "amortising" : "IO"})`} v={`${debt.termYears} yr`} mono />
+          <Row l="Annual debt service"    v={fmtCcy(debt.annualDebtService)} mono color="red" />
+          <div className={s.sep} />
+          <Row
+            l="DSCR (NOI ÷ debt service)"
+            v={debt.dscr != null ? debt.dscr.toFixed(2) : "—"}
+            mono
+            color={debt.dscr != null ? (debt.dscr >= 1.4 ? "green" : debt.dscr >= 1.2 ? "amber" : "red") : undefined}
+          />
+          <div style={{ fontSize: 9, color: "var(--tx3)", marginTop: 6 }}>
+            Rate basis: {debt.rateSource === "live_boe" ? "Live BoE base + 175 bps" : "Scout default 5.50% (no live BoE rate)"} · 65% LTV constant
+          </div>
+        </div>
+      )}
+
+      {/* Wave N — RICS reconciled valuation + sensitivity */}
+      {(() => {
+        const rics = ds.ricsAnalysis as Record<string, unknown> | undefined;
+        if (!rics) return null;
+        const valuations = rics.valuations as Record<string, unknown> | undefined;
+        const reconciled = valuations?.reconciled as { low: number; mid: number; high: number; primary: string; variance: number; opinion: string } | undefined;
+        const returnsR = rics.returns as Record<string, unknown> | undefined;
+        const dcf = rics.dcf as { irr: number; npv: number; equityMultiple: number; discountRate: number } | undefined;
+        const sens = rics.sensitivity as Array<{ scenario: string; voidMonths: string; rent: string; capex: string; irr: string; verdict: string }> | undefined;
+        const loc = rics.locationGrade as { grade?: string; reasoning?: string } | undefined;
+        return (
+          <>
+            {reconciled && (
+              <div className={`${s.card} ${s.a2}`}>
+                <div className={s.cardTitle}>RICS reconciled valuation</div>
+                <Row l="Low"        v={fmtCcy(reconciled.low)} mono color="amber" />
+                <Row l="Mid"        v={fmtCcy(reconciled.mid)} mono color="green" />
+                <Row l="High"       v={fmtCcy(reconciled.high)} mono />
+                <Row l="Primary method" v={reconciled.primary ?? "—"} />
+                <Row l="Method variance" v={`${reconciled.variance.toFixed(1)}%`} mono />
+                {reconciled.opinion && (
+                  <div style={{ fontSize: 11, color: "var(--tx2)", marginTop: 6, lineHeight: 1.5 }}>
+                    {reconciled.opinion}
+                  </div>
+                )}
+                {dcf && (
+                  <>
+                    <div className={s.sep} />
+                    <Row l="DCF IRR (10yr levered)" v={fmtPct(dcf.irr)} mono />
+                    <Row l="DCF NPV"               v={fmtCcy(dcf.npv)} mono />
+                    <Row l="DCF EM"                v={fmtX(dcf.equityMultiple)} mono />
+                    <Row l="Discount rate"         v={fmtPct(dcf.discountRate)} mono />
+                  </>
+                )}
+                {returnsR && (
+                  <>
+                    <div className={s.sep} />
+                    {typeof returnsR.netInitialYield === "number" && (
+                      <Row l="Net initial yield" v={fmtPct(returnsR.netInitialYield as number)} mono />
+                    )}
+                    {typeof returnsR.stabilisedYield === "number" && (
+                      <Row l="Stabilised yield" v={fmtPct(returnsR.stabilisedYield as number)} mono />
+                    )}
+                    {typeof returnsR.debtYield === "number" && (
+                      <Row l="Debt yield" v={fmtPct(returnsR.debtYield as number)} mono />
+                    )}
+                    {typeof returnsR.paybackMonths === "number" && (
+                      <Row l="Payback (months)" v={String(returnsR.paybackMonths)} mono />
+                    )}
+                  </>
+                )}
+                {loc?.grade && (
+                  <>
+                    <div className={s.sep} />
+                    <Row l="Location grade" v={loc.grade} />
+                    {loc.reasoning && (
+                      <div style={{ fontSize: 10, color: "var(--tx3)", marginTop: -4 }}>{loc.reasoning}</div>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+            {sens && sens.length > 0 && (
+              <div className={`${s.card} ${s.a3}`}>
+                <div className={s.cardTitle}>Sensitivity grid</div>
+                <table className={s.tbl}>
+                  <thead><tr><th>Scenario</th><th>Void</th><th>Rent</th><th>Capex</th><th>IRR</th><th>Verdict</th></tr></thead>
+                  <tbody>
+                    {sens.map((row, i) => (
+                      <tr key={i}>
+                        <td>{row.scenario}</td>
+                        <td className={s.mono}>{row.voidMonths}</td>
+                        <td className={s.mono}>{row.rent}</td>
+                        <td className={s.mono}>{row.capex}</td>
+                        <td className={s.mono}>{row.irr}</td>
+                        <td>{row.verdict}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </>
+        );
+      })()}
+
+      {/* Wave M — inline assumption editor */}
+      <AssumptionEditor
+        propertyId={deal.id}
+        initial={{
+          capRate: returnsRaw?.capRate ?? null,
+          erv: prop.erv ?? null,
+          passingRent: prop.passingRent ?? null,
+        }}
+      />
+
+      {/* Wave I3 — cap-rate sensitivity slider */}
+      {waveF?.scenarios?.asIs && waveF?.scenarios?.refurb && returnsRaw?.capRate != null && prop.askingPrice != null && (
+        <CapRateSensitivity
+          baseCapRate={returnsRaw.capRate}
+          asIsNoi={waveF.scenarios.asIs.noi}
+          refurbNoi={waveF.scenarios.refurb.noi}
+          refurbCapex={waveF.scenarios.refurb.capexTotal}
+          askingPrice={prop.askingPrice}
+        />
       )}
 
       {/* Exit value scenarios */}

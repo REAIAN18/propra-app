@@ -136,7 +136,16 @@ function deriveOpportunities(deal: DealSourceData, prop: Property): string[] {
  */
 export function populateICMemo(
   deal: DealSourceData,
-  options: { confidential?: boolean } = {}
+  options: {
+    confidential?: boolean;
+    macroSnapshot?: {
+      sofr: number | null;
+      boeBase: number | null;
+      cpi: number | null;
+      gdp: number | null;
+      asOf: string | null;
+    } | null;
+  } = {}
 ): ICMemoProps {
   const prop = toProperty(deal);
   const irrResult = calculateIRR(prop);
@@ -145,6 +154,20 @@ export function populateICMemo(
 
   const ds = (deal.dataSources ?? {}) as Record<string, unknown>;
   const epcData = ds.epcData as Record<string, unknown> | undefined;
+
+  // Wave H4: surface tenant covenant snapshot from enrich pipeline
+  const covenantRaw = ds.covenant as
+    | { tenantName?: string | null; strength?: string | null; creditScore?: number | null; revenue?: number | null; summary?: string | null }
+    | undefined;
+  const covenant = covenantRaw
+    ? {
+        tenantName: covenantRaw.tenantName ?? null,
+        strength: (covenantRaw.strength as "strong" | "satisfactory" | "weak" | null) ?? null,
+        creditScore: covenantRaw.creditScore ?? null,
+        revenue: covenantRaw.revenue ?? null,
+        summary: covenantRaw.summary ?? null,
+      }
+    : null;
 
   const capRate =
     prop.passingRent && prop.askingPrice
@@ -229,5 +252,61 @@ export function populateICMemo(
     generatedAt: new Date().toISOString(),
 
     waveF,
+    covenant,
+    returnsDetail: (() => {
+      const r = ds.returns as
+        | { irr5yr?: number | null; cashOnCash?: number | null; equityNeeded?: number | null; dscr?: number | null }
+        | undefined;
+      if (!r) return null;
+      return {
+        irr5yr: r.irr5yr ?? null,
+        cashOnCash: r.cashOnCash ?? null,
+        equityNeeded: r.equityNeeded ?? null,
+        dscr: r.dscr ?? null,
+      };
+    })(),
+    macroSnapshot: options.macroSnapshot ?? null,
+    // Wave R: senior debt structure passthrough
+    debt: (() => {
+      const d = ds.debt as Record<string, unknown> | undefined;
+      if (!d) return null;
+      return {
+        ltvPct: d.ltvPct as number,
+        loanAmount: d.loanAmount as number,
+        equityRequired: d.equityRequired as number,
+        baseRate: (d.baseRate as number | null) ?? null,
+        spreadBps: d.spreadBps as number,
+        allInRate: d.allInRate as number,
+        termYears: d.termYears as number,
+        annualDebtService: d.annualDebtService as number,
+        dscr: (d.dscr as number | null) ?? null,
+        rateSource: (d.rateSource as "live_boe" | "scout_default") ?? "scout_default",
+      };
+    })(),
+    // Wave R: environmental snapshot passthrough
+    environmental: (() => {
+      const e = ds.environmental as Record<string, unknown> | undefined;
+      if (!e) return null;
+      const flood = (e.flood ?? {}) as Record<string, unknown>;
+      const epcSnap = (e.epc ?? {}) as Record<string, unknown>;
+      const contam = (e.contamination ?? {}) as Record<string, unknown>;
+      const rad = (e.radon ?? {}) as Record<string, unknown>;
+      const min = (e.mining ?? {}) as Record<string, unknown>;
+      return {
+        flood: {
+          status: (flood.status as string) ?? "missing",
+          inFloodZone: (flood.inFloodZone as boolean | null) ?? null,
+          floodZone: (flood.floodZone as string | null) ?? null,
+        },
+        epc: {
+          status: (epcSnap.status as string) ?? "missing",
+          rating: (epcSnap.rating as string | null) ?? null,
+          meesNote: (epcSnap.meesNote as string | null) ?? null,
+        },
+        contamination: { status: (contam.status as string) ?? "uncommissioned" },
+        radon: { status: (rad.status as string) ?? "uncommissioned" },
+        mining: { status: (min.status as string) ?? "uncommissioned" },
+      };
+    })(),
   };
 }

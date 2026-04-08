@@ -67,6 +67,9 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
       impliedYield, // computed at regional ERV — labelled in UI
       date: (c.date ?? c.saleDate ?? c.transferDate ?? null) as string | null,
       source: (c.source ?? "Land Registry PPD") as string,
+      // Wave Q: pass through score + provenance stamped at enrich time
+      score: (c.score as number | undefined) ?? null,
+      provenance: (c.provenance as { source: string; dataset: string; retrievedAt: string } | undefined) ?? null,
     };
   });
 
@@ -107,12 +110,13 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
     count: rentalComps.length,
   };
 
-  // Latest SOFR (only macro series we currently track)
-  const sofr = await prisma.macroRate.findFirst({
-    where: { series: "SOFR" },
-    orderBy: { date: "desc" },
-    select: { value: true, date: true },
-  });
+  // Wave J5: latest snapshot for each macro series we track.
+  const [sofr, boe, cpi, gdp] = await Promise.all([
+    prisma.macroRate.findFirst({ where: { series: "SOFR" }, orderBy: { date: "desc" }, select: { value: true, date: true } }),
+    prisma.macroRate.findFirst({ where: { series: "BOE_BASE" }, orderBy: { date: "desc" }, select: { value: true, date: true } }),
+    prisma.macroRate.findFirst({ where: { series: "CPI" }, orderBy: { date: "desc" }, select: { value: true, date: true } }),
+    prisma.macroRate.findFirst({ where: { series: "GDP_QOQ" }, orderBy: { date: "desc" }, select: { value: true, date: true } }),
+  ]);
 
   return NextResponse.json({
     property: {
@@ -136,9 +140,12 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
     macro: {
       sofr: sofr?.value ?? null,
       sofrDate: sofr?.date ?? null,
-      basRate: null,
-      cpi: null,
-      gdp: null,
+      basRate: boe?.value ?? null,
+      basRateDate: boe?.date ?? null,
+      cpi: cpi?.value ?? null,
+      cpiDate: cpi?.date ?? null,
+      gdp: gdp?.value ?? null,
+      gdpDate: gdp?.date ?? null,
     },
     salesComps,
     salesStats,

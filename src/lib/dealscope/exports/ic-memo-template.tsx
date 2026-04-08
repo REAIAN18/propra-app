@@ -46,6 +46,55 @@ export interface ICMemoProps {
   epcMeesRisk: string | null;
   riskSummary: string | null;
 
+  // Wave H4: tenant covenant snapshot from Companies House
+  covenant?: {
+    tenantName: string | null;
+    strength: "strong" | "satisfactory" | "weak" | null;
+    creditScore: number | null;
+    revenue: number | null;
+    summary: string | null;
+  } | null;
+
+  // Wave I2: full returns block from enrich pipeline
+  returnsDetail?: {
+    irr5yr: number | null;
+    cashOnCash: number | null;
+    equityNeeded: number | null;
+    dscr: number | null;
+  } | null;
+
+  // Wave J6: macro context snapshot at the moment the memo was generated
+  macroSnapshot?: {
+    sofr: number | null;
+    boeBase: number | null;
+    cpi: number | null;
+    gdp: number | null;
+    asOf: string | null;
+  } | null;
+
+  // Wave R: senior debt structure (mirrors dataSources.debt)
+  debt?: {
+    ltvPct: number;
+    loanAmount: number;
+    equityRequired: number;
+    baseRate: number | null;
+    spreadBps: number;
+    allInRate: number;
+    termYears: number;
+    annualDebtService: number;
+    dscr: number | null;
+    rateSource: "live_boe" | "scout_default";
+  } | null;
+
+  // Wave R: environmental snapshot
+  environmental?: {
+    flood: { status: string; inFloodZone: boolean | null; floodZone: string | null };
+    epc: { status: string; rating: string | null; meesNote: string | null };
+    contamination: { status: string };
+    radon: { status: string };
+    mining: { status: string };
+  } | null;
+
   investmentThesis: string;
   keyRisks: string[];
   keyOpportunities: string[];
@@ -198,7 +247,7 @@ export function ICMemoTemplate(props: ICMemoProps): React.ReactElement {
     passingRent, erv, capRate, noi, exitValue, cashFlows,
     signals, hasInsolvency, hasLisPendens, inFloodZone, epcMeesRisk, riskSummary,
     investmentThesis, keyRisks, keyOpportunities, confidential, generatedAt,
-    waveF,
+    waveF, covenant, returnsDetail, macroSnapshot, debt, environmental,
   } = props;
 
   const sym = currency === "GBP" ? "£" : "$";
@@ -653,6 +702,54 @@ export function ICMemoTemplate(props: ICMemoProps): React.ReactElement {
             </>
           )}
 
+          {/* Wave I2 — full returns block */}
+          {returnsDetail && (returnsDetail.irr5yr != null || returnsDetail.cashOnCash != null || returnsDetail.equityNeeded != null || returnsDetail.dscr != null) && (
+            <>
+              <h3>Returns Detail</h3>
+              <table>
+                <tbody>
+                  {returnsDetail.irr5yr != null && (
+                    <tr><td style={{ width: "50%" }}><strong>IRR (5yr hold)</strong></td><td className="tn">{pct(returnsDetail.irr5yr)}</td></tr>
+                  )}
+                  {returnsDetail.cashOnCash != null && (
+                    <tr><td><strong>Cash-on-cash (yr1)</strong></td><td className="tn">{pct(returnsDetail.cashOnCash)}</td></tr>
+                  )}
+                  {returnsDetail.equityNeeded != null && (
+                    <tr><td><strong>Equity needed</strong></td><td className="tn">{fmtFull(returnsDetail.equityNeeded, sym)}</td></tr>
+                  )}
+                  {returnsDetail.dscr != null && (
+                    <tr><td><strong>DSCR</strong></td><td className="tn">{returnsDetail.dscr.toFixed(2)}</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </>
+          )}
+
+          {/* Wave R — senior debt structure */}
+          {debt && (
+            <>
+              <h3>Financing Structure</h3>
+              <table>
+                <tbody>
+                  <tr><td style={{ width: "50%" }}><strong>LTV</strong></td><td className="tn">{(debt.ltvPct * 100).toFixed(0)}%</td></tr>
+                  <tr><td><strong>Loan amount</strong></td><td className="tn">{fmtFull(debt.loanAmount, sym)}</td></tr>
+                  <tr><td><strong>Equity required</strong></td><td className="tn">{fmtFull(debt.equityRequired, sym)}</td></tr>
+                  <tr><td><strong>Base rate (BoE)</strong></td><td className="tn">{debt.baseRate != null ? `${(debt.baseRate * 100).toFixed(2)}%` : "—"}</td></tr>
+                  <tr><td><strong>Spread</strong></td><td className="tn">{debt.spreadBps} bps</td></tr>
+                  <tr><td><strong>All-in rate</strong></td><td className="tn">{(debt.allInRate * 100).toFixed(2)}%</td></tr>
+                  <tr><td><strong>Term</strong></td><td className="tn">{debt.termYears} yr</td></tr>
+                  <tr><td><strong>Annual debt service</strong></td><td className="tn">{fmtFull(debt.annualDebtService, sym)}</td></tr>
+                  {debt.dscr != null && (
+                    <tr><td><strong>DSCR</strong></td><td className="tn">{debt.dscr.toFixed(2)}</td></tr>
+                  )}
+                </tbody>
+              </table>
+              <p style={{ fontSize: "7pt", color: "#71717a", marginTop: "4pt" }}>
+                Rate basis: {debt.rateSource === "live_boe" ? "Live BoE base + 175 bps spread" : "Scout default 5.50% (no live BoE rate)"} · 65% LTV constant.
+              </p>
+            </>
+          )}
+
           {cashFlows.length > 0 && (
             <>
               <h3>Cash Flow Summary</h3>
@@ -681,6 +778,44 @@ export function ICMemoTemplate(props: ICMemoProps): React.ReactElement {
           <h2>Risk Assessment</h2>
 
           {riskSummary && <p className="lead">{riskSummary}</p>}
+
+          {/* Wave H4 — tenant covenant snapshot */}
+          {covenant?.tenantName && (
+            <>
+              <h3>Tenant Covenant</h3>
+              <table>
+                <tbody>
+                  <tr>
+                    <td style={{ width: "40%" }}><strong>Tenant</strong></td>
+                    <td>{covenant.tenantName}</td>
+                  </tr>
+                  {covenant.strength && (
+                    <tr>
+                      <td><strong>Covenant strength</strong></td>
+                      <td><span className={`badge ${covenant.strength === "strong" ? "bg" : covenant.strength === "satisfactory" ? "ba" : "br"}`}>{covenant.strength.toUpperCase()}</span></td>
+                    </tr>
+                  )}
+                  {covenant.creditScore != null && (
+                    <tr>
+                      <td><strong>Credit score</strong></td>
+                      <td>{covenant.creditScore} / 100</td>
+                    </tr>
+                  )}
+                  {covenant.revenue != null && (
+                    <tr>
+                      <td><strong>Annual revenue</strong></td>
+                      <td>{fmtFull(covenant.revenue, sym)}</td>
+                    </tr>
+                  )}
+                  {covenant.summary && (
+                    <tr>
+                      <td colSpan={2} style={{ fontSize: "8pt", color: "#a1a1aa" }}>{covenant.summary}</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </>
+          )}
 
           <h3>Risk Flags</h3>
           {allRisks.length > 0 ? (
@@ -720,6 +855,37 @@ export function ICMemoTemplate(props: ICMemoProps): React.ReactElement {
                   <tr>
                     <td><strong>Flood Risk</strong></td>
                     <td>{inFloodZone ? "⚠ Flood zone — review insurance and lender requirements" : "Zone 1 (low probability, <0.1% annual)"}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </>
+          )}
+
+          {/* Wave R — environmental snapshot with provenance */}
+          {environmental && (
+            <>
+              <h3>Environmental Provenance</h3>
+              <table>
+                <tbody>
+                  <tr>
+                    <td style={{ width: "40%" }}><strong>Flood (EA live API)</strong></td>
+                    <td>{environmental.flood.status.toUpperCase()} · {environmental.flood.inFloodZone ? "In flood zone" : "Outside flood zone"}{environmental.flood.floodZone ? ` · ${environmental.flood.floodZone}` : ""}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>EPC (opendatacommunities)</strong></td>
+                    <td>{environmental.epc.status.toUpperCase()}{environmental.epc.rating ? ` · ${environmental.epc.rating}` : ""}{environmental.epc.meesNote ? ` — ${environmental.epc.meesNote}` : ""}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Contaminated land</strong></td>
+                    <td>{environmental.contamination.status === "uncommissioned" ? "Phase 1 ESA not commissioned" : environmental.contamination.status.toUpperCase()}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Radon</strong></td>
+                    <td>{environmental.radon.status === "uncommissioned" ? "UKradon address report not commissioned" : environmental.radon.status.toUpperCase()}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Mining hazard</strong></td>
+                    <td>{environmental.mining.status === "uncommissioned" ? "CON29M Coal Authority search not commissioned" : environmental.mining.status.toUpperCase()}</td>
                   </tr>
                 </tbody>
               </table>
@@ -776,6 +942,33 @@ export function ICMemoTemplate(props: ICMemoProps): React.ReactElement {
 
           <h3>Investment Thesis</h3>
           <p>{investmentThesis}</p>
+
+          {macroSnapshot && (macroSnapshot.sofr != null || macroSnapshot.boeBase != null || macroSnapshot.cpi != null || macroSnapshot.gdp != null) && (
+            <>
+              <h3>Market Context Snapshot</h3>
+              <table>
+                <tbody>
+                  {macroSnapshot.boeBase != null && (
+                    <tr><td style={{ width: "50%" }}><strong>BoE base rate</strong></td><td className="tn">{macroSnapshot.boeBase.toFixed(2)}%</td></tr>
+                  )}
+                  {macroSnapshot.sofr != null && (
+                    <tr><td><strong>SOFR</strong></td><td className="tn">{macroSnapshot.sofr.toFixed(2)}%</td></tr>
+                  )}
+                  {macroSnapshot.cpi != null && (
+                    <tr><td><strong>CPI (CPIH 12m)</strong></td><td className="tn">{macroSnapshot.cpi.toFixed(1)}%</td></tr>
+                  )}
+                  {macroSnapshot.gdp != null && (
+                    <tr><td><strong>GDP growth (qoq)</strong></td><td className="tn">{macroSnapshot.gdp.toFixed(1)}%</td></tr>
+                  )}
+                </tbody>
+              </table>
+              {macroSnapshot.asOf && (
+                <p style={{ fontSize: "7pt", color: "#71717a", marginTop: "4pt" }}>
+                  Sources: FRED (SOFR) · Bank of England statistical DB · ONS (CPIH, GDP). Snapshot as of {macroSnapshot.asOf}.
+                </p>
+              )}
+            </>
+          )}
 
           {keyOpportunities.length > 0 && (
             <>

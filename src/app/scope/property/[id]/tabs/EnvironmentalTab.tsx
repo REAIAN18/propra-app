@@ -22,9 +22,31 @@ function Row({ l, v, color }: { l: string; v: string; color?: "green" | "amber" 
   );
 }
 
+type EnvSnapshot = {
+  flood: { status: string; inFloodZone: boolean | null; riverSeaRisk: string | null; surfaceWaterRisk: string | null; reservoirRisk: string | null; floodZone: string | null; summary: string | null; source: string };
+  epc: { status: string; rating: string | null; expiry: string | null; meesRisk: boolean | null; meesNote: string | null; source: string };
+  contamination: { status: string; note: string };
+  radon: { status: string; note: string };
+  mining: { status: string; note: string };
+};
+
+function StatusBadge({ status }: { status: string }) {
+  const color = status === "live" ? "var(--grn)" : status === "uncommissioned" ? "var(--amb)" : "var(--red)";
+  const label = status === "live" ? "LIVE" : status === "uncommissioned" ? "NOT COMMISSIONED" : "MISSING";
+  return (
+    <span style={{
+      fontSize: 8, fontWeight: 600, letterSpacing: 0.5, color,
+      border: `1px solid ${color}`, padding: "1px 5px", borderRadius: 3,
+      marginLeft: 6, verticalAlign: "middle",
+    }}>{label}</span>
+  );
+}
+
 export function EnvironmentalTab({ deal }: Props) {
   const ds = (deal.dataSources ?? {}) as Record<string, unknown>;
   const flood = ds.flood as Record<string, unknown> | undefined;
+  // Wave L: structured environmental snapshot (preferred when present)
+  const env = ds.environmental as EnvSnapshot | undefined;
 
   // Flood data shape (from enrich → fetchFloodRisk):
   //   { inFloodZone, riverFloodRisk, surfaceFloodRisk, floodZone, ... }
@@ -48,7 +70,7 @@ export function EnvironmentalTab({ deal }: Props) {
     <>
       <div className={s.grid2}>
         <div className={s.card}>
-          <div className={s.cardTitle}>Flood risk</div>
+          <div className={s.cardTitle}>Flood risk{env && <StatusBadge status={env.flood.status} />}</div>
           {flood ? (
             <>
               <Row
@@ -77,22 +99,30 @@ export function EnvironmentalTab({ deal }: Props) {
         </div>
 
         <div className={s.card}>
-          <div className={s.cardTitle}>Ground & contamination</div>
+          <div className={s.cardTitle}>
+            Ground & contamination
+            {env && <StatusBadge status={env.contamination.status} />}
+          </div>
           <Row l="Contaminated land" v="—" />
           <Row l="Made ground" v="—" />
           <Row l="Landfill proximity" v="—" />
           <Row l="Radon" v="—" />
           <Row l="Subsidence" v="—" />
           <Row l="Mining records" v="—" />
-          <div style={{ fontSize: 9, color: "var(--tx3)", marginTop: 8 }}>
-            Ground / contamination feeds (BGS, UKradon, Coal Authority) not yet wired.
-            Commission a Phase 1 environmental search to populate.
+          <div style={{ fontSize: 9, color: "var(--tx3)", marginTop: 8, lineHeight: 1.5 }}>
+            {env?.contamination.note ?? "Ground / contamination feeds (BGS, UKradon, Coal Authority) not yet wired."}
+            {env?.radon.note && <><br />{env.radon.note}</>}
+            {env?.mining.note && <><br />{env.mining.note}</>}
           </div>
         </div>
       </div>
 
       <div className={s.card}>
-        <div className={s.cardTitle}>EPC & energy</div>
+        <div className={s.cardTitle}>EPC & energy{env && <StatusBadge status={env.epc.status} />}</div>
+        {env?.epc.meesNote && (
+          <div style={{ fontSize: 11, color: "var(--tx2)", marginBottom: 6 }}>{env.epc.meesNote}</div>
+        )}
+        {env?.epc.expiry && <Row l="EPC expiry" v={env.epc.expiry} />}
         {deal.epcRating ? (
           <Row l="EPC rating" v={deal.epcRating} color={["F", "G"].includes(deal.epcRating) ? "red" : ["E"].includes(deal.epcRating) ? "amber" : "green"} />
         ) : (

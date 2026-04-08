@@ -24,7 +24,12 @@ type MarketIntel = {
     ervMin: number | null;
     ervMax: number | null;
   };
-  macro: { sofr: number | null; sofrDate: string | null; basRate: number | null; cpi: number | null; gdp: number | null };
+  macro: {
+    sofr: number | null; sofrDate: string | null;
+    basRate: number | null; basRateDate?: string | null;
+    cpi: number | null; cpiDate?: string | null;
+    gdp: number | null; gdpDate?: string | null;
+  };
   salesComps: Array<{
     address: string;
     type: string;
@@ -34,6 +39,8 @@ type MarketIntel = {
     impliedYield: number | null;
     date: string | null;
     source: string;
+    score?: number | null;
+    provenance?: { source: string; dataset: string; retrievedAt: string } | null;
   }>;
   salesStats: {
     avgPsf: number | null;
@@ -141,6 +148,8 @@ export function MarketTab({ propertyId }: Props) {
                   <th>£/sqft</th>
                   <th>Implied yield</th>
                   <th>Date</th>
+                  <th>Quality</th>
+                  <th>Source</th>
                 </tr>
               </thead>
               <tbody>
@@ -153,6 +162,12 @@ export function MarketTab({ propertyId }: Props) {
                     <td className={s.mono}>{c.pricePerSqft != null ? `£${c.pricePerSqft.toLocaleString()}` : "—"}</td>
                     <td className={s.mono}>{fmtPct(c.impliedYield)}</td>
                     <td className={s.mono}>{c.date ?? "—"}</td>
+                    <td className={s.mono} style={{ color: (c.score ?? 0) >= 70 ? "var(--grn)" : (c.score ?? 0) >= 40 ? "var(--amb)" : "var(--tx3)" }}>
+                      {c.score != null ? `${c.score}/100` : "—"}
+                    </td>
+                    <td style={{ fontSize: 9, color: "var(--tx3)" }} title={c.provenance?.dataset ?? ""}>
+                      {c.provenance?.source ?? c.source}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -244,11 +259,14 @@ export function MarketTab({ propertyId }: Props) {
         <div className={s.cardTitle}>Financing environment</div>
         <Row l="SOFR (latest)" v={macro.sofr != null ? `${macro.sofr.toFixed(2)}%` : "—"} />
         <Row l="SOFR as of" v={macro.sofrDate ?? "—"} />
-        <Row l="BoE base rate" v={fmtPct(macro.basRate)} />
-        <Row l="CPI inflation" v={fmtPct(macro.cpi)} />
-        <Row l="GDP growth" v={fmtPct(macro.gdp)} />
+        <Row l="BoE base rate" v={macro.basRate != null ? `${macro.basRate.toFixed(2)}%` : "—"} />
+        {macro.basRateDate && <Row l="BoE as of" v={macro.basRateDate} />}
+        <Row l="CPI inflation" v={macro.cpi != null ? `${macro.cpi.toFixed(1)}%` : "—"} />
+        {macro.cpiDate && <Row l="CPI as of" v={macro.cpiDate} />}
+        <Row l="GDP growth (qoq)" v={macro.gdp != null ? `${macro.gdp.toFixed(1)}%` : "—"} />
+        {macro.gdpDate && <Row l="GDP as of" v={macro.gdpDate} />}
         <div style={{ fontSize: 9, color: "var(--tx3)", marginTop: 8 }}>
-          Source: MacroRate model (FRED daily). BoE/CPI/GDP feeds not yet wired — values shown as &quot;—&quot;.
+          Sources: SOFR via FRED · BoE Bank Rate via Bank of England statistical DB · CPIH + GDP via ONS API
         </div>
       </div>
     </div>

@@ -28,6 +28,25 @@ export async function GET(
     const ds = (deal.dataSources as Record<string, unknown>) || {};
     const ai = (ds.ai as Record<string, unknown>) || {};
 
+    // Wave J6: snapshot current macro rates for the IC memo context
+    const [sofr, boe, cpi, gdp] = await Promise.all([
+      prisma.macroRate.findFirst({ where: { series: "SOFR" }, orderBy: { date: "desc" }, select: { value: true, date: true } }),
+      prisma.macroRate.findFirst({ where: { series: "BOE_BASE" }, orderBy: { date: "desc" }, select: { value: true, date: true } }),
+      prisma.macroRate.findFirst({ where: { series: "CPI" }, orderBy: { date: "desc" }, select: { value: true, date: true } }),
+      prisma.macroRate.findFirst({ where: { series: "GDP_QOQ" }, orderBy: { date: "desc" }, select: { value: true, date: true } }),
+    ]);
+    const macroDates = [sofr?.date, boe?.date, cpi?.date, gdp?.date].filter(Boolean) as (string | Date)[];
+    const macroAsOf = macroDates.length > 0
+      ? macroDates.map((d) => (typeof d === "string" ? d : d.toISOString().split("T")[0])).sort().slice(-1)[0]
+      : null;
+    const macroSnapshot = {
+      sofr: sofr?.value ?? null,
+      boeBase: boe?.value ?? null,
+      cpi: cpi?.value ?? null,
+      gdp: gdp?.value ?? null,
+      asOf: macroAsOf,
+    };
+
     const memoProps = populateICMemo({
       id: deal.id,
       address: deal.address,
@@ -49,7 +68,7 @@ export async function GET(
       // PSF rates for deriving annual rent figures when full ERV not in dataSources
       currentRentPsf: deal.currentRentPsf ?? undefined,
       marketRentPsf: deal.marketRentPsf ?? undefined,
-    }, { confidential: true });
+    }, { confidential: true, macroSnapshot });
 
     // Dynamic import avoids Next.js static analysis rejecting react-dom/server in route handlers
     const { renderToStaticMarkup } = await import("react-dom/server");

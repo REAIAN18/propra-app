@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { findComps, scoreCompsConfidence } from "@/lib/dealscope-comps";
+import { findLettingsComps } from "@/lib/dealscope/lettings-comps";
+import { computeDebtLayer } from "@/lib/dealscope/debt";
+import { buildEnvironmentalSnapshot } from "@/lib/dealscope/environmental";
+import { scoreAndStampComps } from "@/lib/dealscope/comp-scoring";
 import { lookupEPCByAddress } from "@/lib/dealscope-epc";
 import { fetchUKPlanningApplications } from "@/lib/planning-feed";
 import { prisma } from "@/lib/prisma";
@@ -211,19 +215,43 @@ const DEFAULT_CAPEX_PSF = 125;
 function detectCondition(text: string | null): { condition: Condition; signals: string[] } {
   if (!text) return { condition: "average", signals: [] };
   const t = text.toLowerCase();
+
+  // Wave H1/H2: marketing copy uses "to Cat A standard" and "Grade A specification"
+  // when describing the refurb *target*, not the current state. Require a positive
+  // prefix (newly/recently/fully/finished/delivered/completed) before Cat A / Grade A
+  // so target-condition language doesn't get scored as as-is condition.
   const refurbHits = [
-    /\bcat\s*a\b/, /\bgrade\s*a\b/, /\bnewly\s+(refurb|fitted|completed)/,
+    /\b(?:newly|recently|fully|just|finished|delivered)\s+(?:refurb\w*|fitted|completed|to\s+cat\s*a|to\s+grade\s*a)/,
+    /\b(?:newly|recently|fully)\s+cat\s*a\b/,
+    /\b(?:newly|recently|fully)\s+grade\s*a\b/,
     /\brecently\s+refurbished\b/, /\bfully\s+refurbished\b/, /\bexcellent\s+specification\b/,
     /\brefurbishment\s+completed\b/, /\bcompleted\s+in\s+20[12]\d\b/,
   ].filter((re) => re.test(t)).map((re) => re.source);
+
   const unrefurbHits = [
     /\bunrefurbished\b/, /\brequires?\s+modernisation\b/, /\brequires?\s+refurbishment\b/,
     /\bin\s+need\s+of\b/, /\boriginal\s+condition\b/, /\btired\b/, /\bdated\b/,
     /\bperiod\s+(?:building|property)\b/, /\brefurbishment\s+opportunity\b/,
     /\basset\s+management\s+opportunit/, /\brepositioning\b/,
+    // Wave H1: "to bring to Cat A" / "to Grade A standard" — refurb *target* signals
+    /\bto\s+(?:bring\s+to\s+)?(?:cat\s*a|grade\s*a)\b/,
+    /\b(?:cat\s*a|grade\s*a)\s+standard\b/,
+    /\bcapex\s+required\b/, /\bcurrently\s+dated\b/,
   ].filter((re) => re.test(t)).map((re) => re.source);
-  if (refurbHits.length > unrefurbHits.length) return { condition: "refurbished", signals: refurbHits };
-  if (unrefurbHits.length > 0) return { condition: "unrefurbished", signals: unrefurbHits };
+
+  // Wave H2: if capex/refurb language co-occurs, treat ambiguous Cat A / Grade A
+  // hits as refurb-target rather than refurb-current.
+  const refurbContextNearby = /\b(?:capex|capital\s+expenditure|refurbish[a-z]*|invest(?:ed|ment)?)\b/.test(t);
+  const adjustedRefurbHits = refurbContextNearby
+    ? refurbHits.filter((src) => !/cat\s*a|grade\s*a/.test(src))
+    : refurbHits;
+
+  if (adjustedRefurbHits.length > unrefurbHits.length) {
+    return { condition: "refurbished", signals: adjustedRefurbHits };
+  }
+  if (unrefurbHits.length > 0) {
+    return { condition: "unrefurbished", signals: unrefurbHits };
+  }
   return { condition: "average", signals: [] };
 }
 
@@ -582,6 +610,9 @@ export async function POST(req: NextRequest) {
       url = body.url as string | undefined;
       price = body.price as number | undefined;
       existingDealId = (body.dealId ?? body.id ?? body.propertyId) as string | undefined;
+      // Wave G test hook: skip the DB write and return the computed enrichment payload.
+      // Lets us validate Wave F scenarios against real listings without a DB round-trip.
+      if (body.dryRun === true) (req as unknown as { __dryRun?: boolean }).__dryRun = true;
     }
 
     // ── STAGE 2: If dealId provided, load existing quick-assessed deal ──
@@ -717,6 +748,8 @@ export async function POST(req: NextRequest) {
       geo ? fetchFloodRisk(geo.lat, geo.lng) : Promise.resolve(null),
       postcode ? getCompanyOwner(address!, postcode) : Promise.resolve(null),
       primaryTenant ? checkCovenantUK(primaryTenant, "UK") : Promise.resolve(null),
+      // Wave O: real lettings comps from internal Letting records
+      findLettingsComps(postcode, aiData?.propertyType ?? null, 24),
     ]);
 
     const epcData = results[0].status === "fulfilled" ? results[0].value : null;
@@ -725,12 +758,36 @@ export async function POST(req: NextRequest) {
     const floodData = results[3].status === "fulfilled" ? results[3].value : null;
     const companyOwner = results[4].status === "fulfilled" ? results[4].value : null;
     const covenantResult = results[5].status === "fulfilled" ? results[5].value : null;
+    const lettingsComps = results[6].status === "fulfilled" ? results[6].value : [];
 
     // ── SECONDARY: Owner portfolio + Dev potential (need primary results) ──
     let ownerPortfolio: any[] = [];
     if (companyOwner?.companyNumber) {
       try { ownerPortfolio = await findPropertiesByCompany(companyOwner.companyNumber, postcode?.slice(0, 4)); }
       catch (e) { console.warn("[enrich] Portfolio lookup failed:", e); }
+    }
+
+    // Wave K: Companies House charges register for the registered owner.
+    // Honest mode — only populated when we have a real owner companyNumber.
+    let chargesRecord: { totalCount: number; charges: Array<Record<string, unknown>> } | null = null;
+    if (companyOwner?.companyNumber) {
+      try {
+        const { getCompanyCharges } = await import("@/lib/dealscope-companies-house");
+        const ch = await getCompanyCharges(companyOwner.companyNumber);
+        if (ch) {
+          chargesRecord = {
+            totalCount: ch.totalCount,
+            charges: ch.charges.map((c) => ({
+              priority: c.chargeNumber ?? null,
+              chargeCode: c.chargeCode ?? null,
+              lender: c.description ?? c.classOfCharge ?? null,
+              status: c.status ?? null,
+              date: c.dateOfCreation ?? c.dateCreated ?? null,
+              classOfCharge: c.classOfCharge ?? null,
+            })),
+          };
+        }
+      } catch (e) { console.warn("[enrich] Charges fetch failed:", e); }
     }
 
     let devPotential: any = null;
@@ -749,8 +806,12 @@ export async function POST(req: NextRequest) {
     // reclassify to the term we actually saw. This kills the Rightmove
     // false-positive where prime-London office ERV got applied to a retail
     // unit and produced a phantom 38% IRR.
+    // Wave H3: count matches per type instead of first-match-wins so a single
+    // stray "store" (e.g. "store room") in an office description doesn't
+    // mis-classify the whole asset as retail. Office is now first-class.
     const ASSET_KEYWORDS: { type: string; re: RegExp }[] = [
-      { type: "retail",     re: /\b(jeweller|jewellers|shop\b|retail|boutique|showroom|store\b|high\s+street|cafe|caf\u00e9|restaurant|takeaway|bar\b|pub\b|salon|barbers?|tea\s*room|beauty\s+salon)\b/i },
+      { type: "office",     re: /\b(office\s+(?:building|accommodation|stock|space|investment)|cat\s*a\s+office|grade\s*a\s+office|hq\s+building|business\s+park\s+office)\b/i },
+      { type: "retail",     re: /\b(jeweller|jewellers|shop\b|retail\s+unit|retail\s+investment|boutique|showroom|store\s+(?:premises|investment|unit)|high\s+street|cafe|caf\u00e9|restaurant|takeaway|bar\b|pub\b|salon|barbers?|tea\s*room|beauty\s+salon)\b/i },
       { type: "industrial", re: /\b(warehouse|industrial|factory|workshop|distribution|logistics|trade\s+counter)\b/i },
       { type: "leisure",    re: /\b(gym\b|leisure|nightclub|cinema|hotel\s+leisure)\b/i },
       { type: "hotel",      re: /\b(hotel|guest\s*house|b&b\b|bed\s*and\s*breakfast|inn\b)\b/i },
@@ -764,14 +825,21 @@ export async function POST(req: NextRequest) {
     ].join(" ").toLowerCase();
     const initialType = scrapedPropertyType || aiData?.propertyType || "Mixed";
     let crossCheckedType = initialType;
-    for (const { type, re } of ASSET_KEYWORDS) {
-      if (re.test(haystack)) {
-        // Only override if the initial type disagrees with the keyword hit.
-        if (!new RegExp(`\\b${type}\\b`, "i").test(initialType)) {
-          console.log(`[enrich] Asset-type cross-check: "${initialType}" → "${type}" (keyword match)`);
-          crossCheckedType = type;
-        }
-        break;
+    // Score each candidate by number of keyword matches; winner needs ≥2 hits
+    // OR a unique single hit when initialType is "Mixed".
+    const scores: { type: string; hits: number }[] = ASSET_KEYWORDS.map(({ type, re }) => {
+      const matches = haystack.match(new RegExp(re.source, "gi"));
+      return { type, hits: matches ? matches.length : 0 };
+    }).filter((s) => s.hits > 0).sort((a, b) => b.hits - a.hits);
+
+    if (scores.length > 0) {
+      const winner = scores[0];
+      const isMixed = /^mixed$/i.test(initialType);
+      const strong = winner.hits >= 2 || (isMixed && scores.length === 1);
+      const alreadyMatchesInitial = new RegExp(`\\b${winner.type}\\b`, "i").test(initialType);
+      if (strong && !alreadyMatchesInitial) {
+        console.log(`[enrich] Asset-type cross-check: "${initialType}" → "${winner.type}" (${winner.hits} keyword hits)`);
+        crossCheckedType = winner.type;
       }
     }
     const assetType = crossCheckedType;
@@ -786,6 +854,35 @@ export async function POST(req: NextRequest) {
     // ── BUILD ASSUMPTIONS (never returns blank fields) ──
     const askingPrice = guidePrice || price;
     const assumptions = await buildAssumptions(aiData, epcData, askingPrice, normAsset, normRegion, rawListingText, scrapedSqft, address, scrapedNiy);
+
+    // Wave M: re-apply user overrides from prior PATCH calls so they survive
+    // a re-enrich. Each override is { value, source: "user", updatedAt }.
+    let preservedUserOverrides: Record<string, { value: unknown; source: string; updatedAt: string }> = {};
+    if (existingDealId) {
+      try {
+        const existing = await prisma.scoutDeal.findUnique({
+          where: { id: existingDealId },
+          select: { dataSources: true },
+        });
+        const ds = (existing?.dataSources ?? {}) as Record<string, unknown>;
+        preservedUserOverrides = (ds.userOverrides as typeof preservedUserOverrides) ?? {};
+        const apply = (key: keyof typeof assumptions, source: string) => {
+          const ov = preservedUserOverrides[key as string];
+          if (ov && typeof ov.value === "number") {
+            (assumptions as Record<string, unknown>)[key as string] = ov.value;
+            (assumptions as Record<string, unknown>)[source] = "user override";
+          }
+        };
+        apply("sqft", "sqftSource");
+        apply("erv", "ervSource");
+        apply("passingRent", "passingRentSource");
+        apply("capRate", "capRateSource");
+        apply("noi", "noiSource");
+        apply("voidMonths", "voidReasoning");
+      } catch (e) {
+        console.warn("[enrich] Failed to load userOverrides:", e);
+      }
+    }
 
     // ── PROVENANCE FILTER ──
     // Top-level ScoutDeal columns must only hold values that come from real
@@ -926,6 +1023,21 @@ export async function POST(req: NextRequest) {
         currency: "GBP",
       });
     }
+
+    // ── DEBT LAYER (Wave P) ──
+    // Pin all-in rate to live BoE base rate when we have one in MacroRate.
+    let liveBoeBaseRate: number | null = null;
+    try {
+      const boe = await prisma.macroRate.findFirst({
+        where: { series: "BOE_BASE" },
+        orderBy: { date: "desc" },
+        select: { value: true },
+      });
+      liveBoeBaseRate = boe?.value ?? null;
+    } catch {
+      liveBoeBaseRate = null;
+    }
+    const debtLayer = computeDebtLayer(effectivePrice || null, assumptions.noi || null, liveBoeBaseRate);
 
     // ── HOLD-SELL SCENARIOS ──
     let scenarios: any = null;
@@ -1134,7 +1246,10 @@ export async function POST(req: NextRequest) {
         marketRentPsf: undefined, // benchmark only — read from assumptions
         occupancyPct: realOccupancyPct ?? undefined,
         leaseLengthYears: aiData?.leaseExpiry ? Math.max(0, (new Date(aiData.leaseExpiry).getFullYear() - new Date().getFullYear())) : undefined,
-        tenantCovenantStrength: undefined,
+        // Wave H2: persist covenant grade so OwnershipTab + IC memo survive reloads
+        tenantCovenantStrength: covenantResult?.grade && covenantResult.grade !== "unknown"
+          ? covenantResult.grade
+          : undefined,
         auctionDate,
         hasInsolvency: false,
         hasLisPendens: false,
@@ -1146,7 +1261,17 @@ export async function POST(req: NextRequest) {
         inputMethod: url ? "api" : documentId ? "upload" : "manual",
         dataSources: {
           epc: epcData || null,
-          comps: comparableSales.slice(0, 10),
+          // Wave Q: stamp every comp with quality score + provenance before persisting
+          comps: scoreAndStampComps(comparableSales.slice(0, 10) as any, assumptions.sqft),
+          // Wave O: lettings evidence (only real Letting records — never fabricated)
+          rentalComps: scoreAndStampComps(lettingsComps.slice(0, 20) as any, assumptions.sqft),
+          // Wave K: Companies House charges register for the registered owner
+          charges: chargesRecord?.charges ?? [],
+          chargesTotalCount: chargesRecord?.totalCount ?? 0,
+          // Wave K: subject-address sales history (filter PPD comps to exact address match)
+          salesHistory: comparableSales
+            .filter((c) => address && c.address && c.address.toLowerCase().includes(address.toLowerCase().split(",")[0].trim()))
+            .slice(0, 10),
           planning: planningApps.slice(0, 10),
           images: allImages,
           geocode: geo || null,
@@ -1203,7 +1328,14 @@ export async function POST(req: NextRequest) {
             cashOnCash: returns.cashOnCash,
             equityMultiple: returns.equityMultiple,
             equityNeeded: returns.equityNeeded ? Math.round(returns.equityNeeded) : null,
+            dscr: debtLayer?.dscr ?? null,
           } : null,
+          // Wave P: senior debt structure
+          debt: debtLayer,
+          // Wave L: structured environmental snapshot (live + uncommissioned)
+          environmental: buildEnvironmentalSnapshot(floodData as any, epcData as any),
+          // Wave M: preserve user overrides across re-enrichment
+          userOverrides: preservedUserOverrides,
           scenarios,
           rentGap,
           market: marketBenchmarks,
@@ -1220,7 +1352,19 @@ export async function POST(req: NextRequest) {
           },
           dealAnalysis: dealAnalysis || null,
           ricsAnalysis: ricsAnalysis || null,
-          covenant: covenantResult || null,
+          // Wave H1/H3: shape covenant payload to match what OwnershipTab + IC memo read
+          covenant: covenantResult && covenantResult.grade !== "unknown"
+            ? {
+                tenantName: covenantResult.companyName ?? primaryTenant,
+                strength: covenantResult.grade,
+                creditScore: covenantResult.score,
+                companyNo: covenantResult.companyNo,
+                companyStatus: covenantResult.companyStatus,
+                lastAccountsDate: covenantResult.lastAccountsDate,
+                revenue: null,
+                summary: `${covenantResult.companyName ?? primaryTenant} · ${covenantResult.grade} (CR ${covenantResult.score})${covenantResult.companyStatus ? ` · ${covenantResult.companyStatus}` : ""}`,
+              }
+            : null,
           companyOwner: companyOwner || null,
           ownerPortfolio: ownerPortfolio.length > 0 ? ownerPortfolio : null,
           devPotential: devPotential || null,
@@ -1228,6 +1372,18 @@ export async function POST(req: NextRequest) {
         currency: "GBP",
         status: "enriched",
     };
+
+    // Wave G test hook — return assembled payload without touching the DB.
+    if ((req as unknown as { __dryRun?: boolean }).__dryRun) {
+      return NextResponse.json({
+        dryRun: true,
+        address,
+        assetType: dealData.assetType,
+        valuations,
+        scenarios,
+        condition: aiData?.condition ?? null,
+      });
+    }
 
     let deal;
     if (existingDealId) {
