@@ -161,8 +161,16 @@ function populateIncomeDeal(
   // (which resolves to the acquisition total). Always overwrite: use the
   // real figure if we have it, otherwise clear the cell so the user sees
   // an empty input rather than a nonsense auto-populated "rent".
+  //
+  // When rent + sqft are both known we attach a cell note showing the
+  // derived psf so the user can sanity-check against the comps tab.
   if (passingRent != null) {
     setVal(ws, "B30", passingRent);
+    const sqftForPsf = deal.buildingSizeSqft ?? null;
+    if (sqftForPsf && sqftForPsf > 0) {
+      const psf = passingRent / sqftForPsf;
+      ws.getCell("B30").note = `DealScope: listing passing rent £${passingRent.toLocaleString()} over ${sqftForPsf.toLocaleString()} sqft → £${psf.toFixed(2)}/sqft`;
+    }
   } else {
     ws.getCell("B30").value = null;
     ws.getCell("B30").note = "DealScope: rent roll not yet enriched — enter annual passing rent";
@@ -328,6 +336,16 @@ function appendProvenanceSheet(
   cb: CostBasisLookup,
   liveBoeBaseRate: number | null | undefined,
 ) {
+  const ds = (deal.dataSources ?? {}) as Record<string, unknown>;
+  const assumptions = (ds.assumptions ?? {}) as Record<string, unknown>;
+  const passingRent = toNum(ds.passingRent) ?? toNum(assumptions.passingRent);
+  const sqftForPsf = deal.buildingSizeSqft ?? null;
+  const rentPsfDerived = passingRent != null && sqftForPsf && sqftForPsf > 0
+    ? passingRent / sqftForPsf
+    : null;
+  const rentalMeta = ds.rentalCompsMeta as
+    | { matchStage?: string; searched?: { sector?: string; outcode?: string; area?: string }; note?: string }
+    | undefined;
   const ws = wb.addWorksheet("DealScope Provenance");
   ws.columns = [
     { header: "Field",  key: "k", width: 28 },
@@ -348,6 +366,11 @@ function appendProvenanceSheet(
     ["Refurb £/sqft",     cb.refurbPsf != null ? String(cb.refurbPsf) : "—"],
     ["Financing row",     cb.financing.key],
     ["Live BoE base",     liveBoeBaseRate != null ? `${(liveBoeBaseRate * 100).toFixed(2)}%` : "n/a (using cost-library default)"],
+    ["Passing rent",      passingRent != null ? `£${passingRent.toLocaleString()}` : "unknown (not published)"],
+    ["NLA (sqft)",        sqftForPsf != null ? sqftForPsf.toLocaleString() : "unknown"],
+    ["Rent psf (derived)", rentPsfDerived != null ? `£${rentPsfDerived.toFixed(2)}/sqft` : "—"],
+    ["Lettings comp match", rentalMeta?.matchStage ?? "n/a"],
+    ["Lettings comp note",  rentalMeta?.note ?? "n/a"],
     ["Provenance line",   cb.provenance],
     ["Generated",         new Date().toISOString()],
   ];

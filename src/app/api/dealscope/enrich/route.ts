@@ -291,7 +291,10 @@ async function buildAssumptions(
   yearBuilt: number; yearBuiltSource: string;
   capRate: number; capRateSource: string;
   noi: number; noiSource: string;
-  passingRent: number; passingRentSource: string;
+  // Wave T honest-mode: passingRent is null when the listing doesn't publish
+  // it — callers MUST handle null rather than relying on an ERV fallback.
+  passingRent: number | null; passingRentSource: string;
+  passingRentPsf: number | null;
   epcRating: string; epcRatingSource: string;
   occupancyPct: number; occupancySource: string;
   voidMonths: number; voidReasoning: string;
@@ -433,9 +436,22 @@ async function buildAssumptions(
   const noi = erv * 0.85;
   const noiSource = "estimated (ERV × 85% after opex)";
 
-  // ── Passing rent ──
-  const passingRent = occupancyPct === 0 ? 0 : (aiData?.passingRent || erv);
-  const passingRentSource = occupancyPct === 0 ? "vacant (£0 current income)" : (aiData?.passingRent ? "listing" : "estimated (= ERV)");
+  // ── Passing rent — honest mode ──
+  // If the AI extractor found a rent in the listing we use it verbatim
+  // (rib.co.uk, Acuitus, Allsop and most agent decks publish the rent roll
+  // so this is the normal case). If it didn't, we LEAVE IT NULL rather
+  // than fall back to ERV — the old `aiData?.passingRent || erv` fallback
+  // was a hallucination that masqueraded as real current income.
+  const passingRent = occupancyPct === 0
+    ? 0
+    : (aiData?.passingRent ?? null);
+  const passingRentSource = occupancyPct === 0
+    ? "vacant (£0 current income)"
+    : (aiData?.passingRent != null ? "listing" : "unknown (not published in brochure)");
+  // Derived psf — only when both rent and sqft are known.
+  const passingRentPsf = passingRent != null && passingRent > 0 && sqft > 0
+    ? passingRent / sqft
+    : null;
 
   return {
     sqft, sqftSource, erv, ervSource,
@@ -443,7 +459,8 @@ async function buildAssumptions(
     condition, conditionSignals,
     capexPsf, capexPsfSource, capexTotal,
     yearBuilt: yearBuilt!, yearBuiltSource,
-    capRate, capRateSource, noi, noiSource, passingRent, passingRentSource,
+    capRate, capRateSource, noi, noiSource,
+    passingRent, passingRentSource, passingRentPsf,
     epcRating, epcRatingSource, occupancyPct, occupancySource,
     voidMonths: voidEst.months, voidReasoning: voidEst.reasoning,
   };
@@ -758,7 +775,11 @@ export async function POST(req: NextRequest) {
     const floodData = results[3].status === "fulfilled" ? results[3].value : null;
     const companyOwner = results[4].status === "fulfilled" ? results[4].value : null;
     const covenantResult = results[5].status === "fulfilled" ? results[5].value : null;
-    const lettingsComps = results[6].status === "fulfilled" ? results[6].value : [];
+    // Wave O widening fallback — result is now { comps, matchStage, searched, note }
+    const lettingsResult = results[6].status === "fulfilled"
+      ? results[6].value
+      : { comps: [], matchStage: "none" as const, searched: { sector: "", outcode: "", area: "" }, note: "lettings search failed" };
+    const lettingsComps = lettingsResult.comps;
 
     // ── SECONDARY: Owner portfolio + Dev potential (need primary results) ──
     let ownerPortfolio: any[] = [];
@@ -894,7 +915,7 @@ export async function POST(req: NextRequest) {
     const realSqft = isRealSource(assumptions.sqftSource) ? assumptions.sqft : null;
     const realYearBuilt = isRealSource(assumptions.yearBuiltSource) ? assumptions.yearBuilt : null;
     const realEpc = isRealSource(assumptions.epcRatingSource) ? assumptions.epcRating : null;
-    const realPassingRent = isRealSource(assumptions.passingRentSource) && assumptions.passingRent > 0
+    const realPassingRent = isRealSource(assumptions.passingRentSource) && (assumptions.passingRent ?? 0) > 0
       ? assumptions.passingRent : null;
     // Occupancy is only "real" if explicitly stated in the listing/AI vacancy field
     const occupancyIsReal = /listing|stated|tenant|let|vacant/i.test(assumptions.occupancySource);
@@ -1046,7 +1067,11 @@ export async function POST(req: NextRequest) {
       const mktERV = assumptions.erv;
 
       try {
-        const baseInputs = defaultHoldInputs(effectivePrice, assumptions.passingRent, mktERV, normAsset, "uk");
+        // Wave T honest-mode: if passingRent is unknown, fall back to ERV
+        // ONLY for this internal scenario runner (which needs a non-null
+        // number). The dataSources persistence layer keeps it null.
+        const rentForScenario = assumptions.passingRent ?? mktERV;
+        const baseInputs = defaultHoldInputs(effectivePrice, rentForScenario, mktERV, normAsset, "uk");
 
         // Scenario 1: Base case
         const base = calculateHoldScenario(baseInputs);
@@ -1107,7 +1132,10 @@ export async function POST(req: NextRequest) {
         askingPrice: effectivePrice,
         sqft: assumptions.sqft,
         sqftSource: assumptions.sqftSource,
-        passingRent: assumptions.passingRent,
+        // Wave T honest-mode: unknown passing rent → 0 for the analyser
+        // (which treats 0 as vacant). Real null is preserved in
+        // dataSources below.
+        passingRent: assumptions.passingRent ?? 0,
         passingRentSource: assumptions.passingRentSource,
         erv: assumptions.erv,
         ervSource: assumptions.ervSource,
@@ -1144,7 +1172,7 @@ export async function POST(req: NextRequest) {
         askingPrice: effectivePrice,
         sqft: assumptions.sqft,
         sqftSource: assumptions.sqftSource,
-        passingRent: assumptions.passingRent,
+        passingRent: assumptions.passingRent ?? 0,
         passingRentSource: assumptions.passingRentSource,
         erv: assumptions.erv,
         ervSource: assumptions.ervSource,
@@ -1265,6 +1293,12 @@ export async function POST(req: NextRequest) {
           comps: scoreAndStampComps(comparableSales.slice(0, 10) as any, assumptions.sqft),
           // Wave O: lettings evidence (only real Letting records — never fabricated)
           rentalComps: scoreAndStampComps(lettingsComps.slice(0, 20) as any, assumptions.sqft),
+          // Wave O widening fallback metadata — UI surfaces note + matchStage
+          rentalCompsMeta: {
+            matchStage: lettingsResult.matchStage,
+            searched: lettingsResult.searched,
+            note: lettingsResult.note,
+          },
           // Wave K: Companies House charges register for the registered owner
           charges: chargesRecord?.charges ?? [],
           chargesTotalCount: chargesRecord?.totalCount ?? 0,
@@ -1345,7 +1379,7 @@ export async function POST(req: NextRequest) {
             yearBuilt: { value: assumptions.yearBuilt, source: assumptions.yearBuiltSource },
             capRate: { value: assumptions.capRate, source: assumptions.capRateSource },
             noi: { value: Math.round(assumptions.noi), source: assumptions.noiSource },
-            passingRent: { value: Math.round(assumptions.passingRent), source: assumptions.passingRentSource },
+            passingRent: { value: assumptions.passingRent != null ? Math.round(assumptions.passingRent) : null, source: assumptions.passingRentSource },
             epcRating: { value: assumptions.epcRating, source: assumptions.epcRatingSource },
             occupancy: { value: assumptions.occupancyPct, source: assumptions.occupancySource },
             voidPeriod: { value: assumptions.voidMonths, source: assumptions.voidReasoning },

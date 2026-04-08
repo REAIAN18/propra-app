@@ -138,6 +138,37 @@ describe("populateExcelExport", () => {
     expect(b30).toBeNull();
     // And a helper note must prompt the user to fill it in.
     expect(income!.getCell("B30").note).toBeDefined();
+  }, 30_000);
+
+  it("derives rent psf and writes it as a cell note when rent + sqft both known", async () => {
+    // Regency House with the rent roll filled in — £623k passing over
+    // 70,000 sqft → ~£8.90/sqft. The populator should write the rent into
+    // B30 AND attach a cell note with the derived psf so the user can
+    // sanity-check against the comps tab.
+    const enriched = {
+      ...REGENCY_HOUSE_DEAL,
+      buildingSizeSqft: 70_000,
+      dataSources: {
+        ...REGENCY_HOUSE_DEAL.dataSources,
+        passingRent: 623_000,
+      },
+    };
+    const result = await populateExcelExport(enriched, { liveBoeBaseRate: 0.0525 });
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.load(result.buffer as unknown as ArrayBuffer);
+    const income = wb.getWorksheet("Income Deal")!;
+    expect(income.getCell("B30").value).toBe(623_000);
+    const note = String(income.getCell("B30").note ?? "");
+    expect(note).toMatch(/£623,000/);
+    expect(note).toMatch(/70,000/);
+    expect(note).toMatch(/£8\.90\/sqft/);
+
+    // Provenance sheet should also carry the derived psf
+    const prov = wb.getWorksheet("DealScope Provenance")!;
+    const values: string[] = [];
+    prov.eachRow((r) => { r.eachCell((c) => values.push(String(c.value ?? ""))); });
+    expect(values.some(v => /Rent psf/.test(v))).toBe(true);
+    expect(values.some(v => /8\.90/.test(v))).toBe(true);
 
     // Provenance sheet appended
     expect(wb.getWorksheet("DealScope Provenance")).toBeDefined();
