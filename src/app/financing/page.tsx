@@ -524,6 +524,17 @@ export default function FinancingPage() {
   const covenantBreaches = loans.filter(
     l => l.icr < l.icrCovenant || l.currentLTV >= l.ltvCovenant
   ).length;
+  const covenantWarnings = loans.filter(l => {
+    const ltvBreach = l.currentLTV >= l.ltvCovenant;
+    const icrBreach = l.icr < l.icrCovenant;
+    if (ltvBreach || icrBreach) return false; // breach not warning
+    return l.currentLTV >= l.ltvCovenant - 5 || l.icr < l.icrCovenant + 0.1;
+  }).length;
+  const totalAnnualDebtService = loans.reduce((s, l) => s + l.annualDebtService, 0);
+  const portfolioDSCR = loans.reduce((s, l) => s + l.icr * l.outstandingBalance, 0) / (totalDebt || 1);
+  const sortedByMaturity = [...loans].sort((a, b) => a.daysToMaturity - b.daysToMaturity);
+  const nextMaturityLoan = sortedByMaturity[0] ?? null;
+  const nextMaturityMonths = nextMaturityLoan ? Math.round(nextMaturityLoan.daysToMaturity / 30) : null;
 
   // ── Real user: show indicative capacity or empty state ──────────────
   if (portfolioId === "user") {
@@ -563,18 +574,6 @@ export default function FinancingPage() {
     return scoreB - scoreA;
   });
 
-  // Maturity ladder — group by quarter (12 quarters = 3 years)
-  const quarters: { label: string; loans: AssetLoan[] }[] = Array.from({ length: 12 }, (_, i) => {
-    const startDay = i * 91;
-    const endDay = (i + 1) * 91;
-    const d = new Date(Date.now() + startDay * 86400000);
-    const label = `Q${Math.ceil((d.getMonth() + 1) / 3)}'${String(d.getFullYear()).slice(2)}`;
-    return {
-      label,
-      loans: loans.filter(l => l.daysToMaturity > startDay && l.daysToMaturity <= endDay),
-    };
-  });
-  const maxLoansInQuarter = Math.max(...quarters.map(q => q.loans.length), 1);
 
   return (
     <AppShell>
@@ -587,7 +586,7 @@ export default function FinancingPage() {
             {[0, 1, 2, 3].map(i => <MetricCardSkeleton key={i} />)}
           </div>
         ) : (
-          <div className="grid grid-cols-4 gap-px rounded-xl overflow-hidden border" style={{ background: "var(--bdr)", borderColor: "var(--bdr)" }}>
+          <div className="grid grid-cols-3 lg:grid-cols-6 gap-px rounded-xl overflow-hidden border" style={{ background: "var(--bdr)", borderColor: "var(--bdr)" }}>
             <div className="px-4 py-3.5" style={{ background: "var(--s1)" }}>
               <div className="text-[8px] font-medium uppercase tracking-wider mb-1.5" style={{ fontFamily: "var(--mono)", color: "var(--tx3)" }}>
                 Total Debt
@@ -623,15 +622,35 @@ export default function FinancingPage() {
             </div>
             <div className="px-4 py-3.5" style={{ background: "var(--s1)" }}>
               <div className="text-[8px] font-medium uppercase tracking-wider mb-1.5" style={{ fontFamily: "var(--mono)", color: "var(--tx3)" }}>
-                Actions Required
+                Annual Debt Service
               </div>
-              <div className="text-xl leading-none mb-1" style={{ fontFamily: "var(--serif)", color: urgentMaturities + covenantBreaches > 0 ? "var(--red)" : "var(--grn)" }}>
-                {urgentMaturities + covenantBreaches}
+              <div className="text-xl leading-none mb-1" style={{ fontFamily: "var(--serif)", color: "var(--tx)" }}>
+                {fmt(totalAnnualDebtService, sym)}
               </div>
               <div className="text-[10px] leading-snug" style={{ color: "var(--tx3)" }}>
-                {urgentMaturities + covenantBreaches > 0
-                  ? `${urgentMaturities} maturities <6m · ${covenantBreaches} covenant alert${covenantBreaches !== 1 ? "s" : ""}`
-                  : "All covenants clear"}
+                {fmt(Math.round(totalAnnualDebtService / 12), sym)}/mo total
+              </div>
+            </div>
+            <div className="px-4 py-3.5" style={{ background: "var(--s1)" }}>
+              <div className="text-[8px] font-medium uppercase tracking-wider mb-1.5" style={{ fontFamily: "var(--mono)", color: "var(--tx3)" }}>
+                Portfolio DSCR
+              </div>
+              <div className="text-xl leading-none mb-1" style={{ fontFamily: "var(--serif)", color: portfolioDSCR >= 1.25 ? "var(--grn)" : portfolioDSCR >= 1.1 ? "var(--amb)" : "var(--red)" }}>
+                {portfolioDSCR.toFixed(2)}×
+              </div>
+              <div className="text-[10px] leading-snug" style={{ color: portfolioDSCR >= 1.25 ? "var(--grn)" : "var(--amb)" }}>
+                {portfolioDSCR >= 1.25 ? "above 1.25× target" : "below 1.25× target"}
+              </div>
+            </div>
+            <div className="px-4 py-3.5" style={{ background: "var(--s1)" }}>
+              <div className="text-[8px] font-medium uppercase tracking-wider mb-1.5" style={{ fontFamily: "var(--mono)", color: "var(--tx3)" }}>
+                Next Maturity
+              </div>
+              <div className="text-xl leading-none mb-1" style={{ fontFamily: "var(--serif)", color: nextMaturityMonths !== null ? (nextMaturityMonths <= 6 ? "var(--red)" : nextMaturityMonths <= 18 ? "var(--amb)" : "var(--tx)") : "var(--tx3)" }}>
+                {nextMaturityMonths !== null ? `${nextMaturityMonths}` : "—"}<span style={{ fontFamily: "var(--sans)", fontSize: "10px", color: "var(--tx3)", fontWeight: 400 }}>mo</span>
+              </div>
+              <div className="text-[10px] leading-snug" style={{ color: "var(--tx3)" }}>
+                {nextMaturityLoan ? nextMaturityLoan.assetName.split(" ").slice(0, 2).join(" ") : "No loans"}
               </div>
             </div>
           </div>
@@ -739,6 +758,118 @@ export default function FinancingPage() {
             </div>
           );
         })()}
+
+        {/* Covenant Monitoring */}
+        {!loading && loans.length > 0 && (
+          <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}>
+            <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: "1px solid var(--bdr)" }}>
+              <div>
+                <div className="text-[9px] font-medium uppercase tracking-wider mb-1" style={{ fontFamily: "var(--mono)", color: "var(--tx3)", letterSpacing: "2px" }}>
+                  Loan Covenants
+                </div>
+                <div className="text-xs" style={{ color: "var(--tx3)" }}>
+                  LTV and DSCR status across all facilities
+                </div>
+              </div>
+              {(covenantBreaches > 0 || covenantWarnings > 0) && (
+                <span className="text-[9px] font-medium px-2 py-1 rounded-md" style={{ background: covenantBreaches > 0 ? "rgba(248,113,113,.1)" : "rgba(251,191,36,.1)", color: covenantBreaches > 0 ? "var(--red)" : "var(--amb)", border: `1px solid ${covenantBreaches > 0 ? "rgba(248,113,113,.3)" : "rgba(251,191,36,.3)"}` }}>
+                  {covenantBreaches > 0 ? `${covenantBreaches} breach${covenantBreaches !== 1 ? "es" : ""}` : `${covenantWarnings} warning${covenantWarnings !== 1 ? "s" : ""}`}
+                </span>
+              )}
+            </div>
+            <div className="divide-y" style={{ borderColor: "var(--bdr)" }}>
+              {sortedLoans.map(loan => {
+                const ltvBreach = loan.currentLTV >= loan.ltvCovenant;
+                const icrBreach = loan.icr < loan.icrCovenant;
+                const ltvWarn = !ltvBreach && loan.currentLTV >= loan.ltvCovenant - 5;
+                const icrWarn = !icrBreach && loan.icr < loan.icrCovenant + 0.1;
+                const isBreached = ltvBreach || icrBreach;
+                const isWarning = !isBreached && (ltvWarn || icrWarn);
+                const statusLabel = isBreached ? "BREACH" : isWarning ? "WARNING" : "COMPLIANT";
+                const statusStyle = isBreached
+                  ? { background: "rgba(248,113,113,.1)", color: "var(--red)", border: "1px solid rgba(248,113,113,.3)" }
+                  : isWarning
+                  ? { background: "rgba(251,191,36,.1)", color: "var(--amb)", border: "1px solid rgba(251,191,36,.3)" }
+                  : { background: "rgba(52,211,153,.1)", color: "var(--grn)", border: "1px solid rgba(52,211,153,.3)" };
+                const ltvColor2 = ltvBreach ? "var(--red)" : ltvWarn ? "var(--amb)" : "var(--grn)";
+                const icrColor2 = icrBreach ? "var(--red)" : icrWarn ? "var(--amb)" : "var(--grn)";
+                const ltvHeadroom = loan.ltvCovenant - loan.currentLTV;
+                const icrHeadroom = loan.icr - loan.icrCovenant;
+                return (
+                  <div
+                    key={loan.assetId}
+                    className="px-5 py-3.5 flex items-center gap-4 cursor-pointer transition-colors"
+                    style={{ borderLeft: isBreached ? "3px solid var(--red)" : isWarning ? "3px solid var(--amb)" : "3px solid transparent" }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "var(--s2)"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                    onClick={() => setSelectedLoan(loan)}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium mb-0.5" style={{ color: "var(--tx)" }}>{loan.assetName}</div>
+                      <div className="text-xs" style={{ color: "var(--tx3)" }}>
+                        {loan.lender} · {loan.rateType === "fixed" ? `${loan.interestRate}% fixed` : loan.rateReference} · matures {loan.maturityDate}
+                      </div>
+                    </div>
+                    {/* LTV */}
+                    <div className="text-right shrink-0">
+                      <div className="text-[8px] font-medium uppercase tracking-wider mb-0.5" style={{ fontFamily: "var(--mono)", color: "var(--tx3)" }}>LTV</div>
+                      <div className="text-sm font-semibold" style={{ fontFamily: "var(--mono)", color: ltvColor2 }}>
+                        {loan.currentLTV}% <span style={{ color: "var(--tx3)", fontWeight: 400 }}>(cov: {loan.ltvCovenant}%)</span>
+                      </div>
+                      <div className="text-[10px]" style={{ color: ltvHeadroom < 0 ? "var(--red)" : "var(--tx3)" }}>
+                        {ltvHeadroom >= 0 ? `${ltvHeadroom.toFixed(0)}% headroom` : "BREACH"}
+                      </div>
+                    </div>
+                    {/* ICR */}
+                    <div className="text-right shrink-0">
+                      <div className="text-[8px] font-medium uppercase tracking-wider mb-0.5" style={{ fontFamily: "var(--mono)", color: "var(--tx3)" }}>DSCR</div>
+                      <div className="text-sm font-semibold" style={{ fontFamily: "var(--mono)", color: icrColor2 }}>
+                        {loan.icr.toFixed(2)}× <span style={{ color: "var(--tx3)", fontWeight: 400 }}>(cov: {loan.icrCovenant}×)</span>
+                      </div>
+                      <div className="text-[10px]" style={{ color: icrHeadroom < 0 ? "var(--red)" : "var(--tx3)" }}>
+                        {icrHeadroom >= 0 ? `${icrHeadroom.toFixed(2)}× headroom` : "BREACH"}
+                      </div>
+                    </div>
+                    {/* Rate type */}
+                    <span className="text-[8px] font-medium px-2 py-1 rounded-full shrink-0" style={loan.rateType === "fixed" ? { background: "rgba(52,211,153,.1)", color: "var(--grn)", border: "1px solid rgba(52,211,153,.3)" } : { background: "rgba(251,191,36,.1)", color: "var(--amb)", border: "1px solid rgba(251,191,36,.3)" }}>
+                      {loan.rateType === "fixed" ? "FIXED" : "FLOATING"}
+                    </span>
+                    {/* Status */}
+                    <span className="text-[9px] font-medium px-2 py-1 rounded-md shrink-0" style={statusStyle}>
+                      {statusLabel}
+                    </span>
+                    <span style={{ color: "var(--tx3)", fontSize: "12px" }}>→</span>
+                  </div>
+                );
+              })}
+            </div>
+            {/* Covenant warnings callout */}
+            {(covenantBreaches > 0 || covenantWarnings > 0) && (() => {
+              const alertLoans = sortedLoans.filter(l => {
+                const ltvBreach = l.currentLTV >= l.ltvCovenant;
+                const icrBreach = l.icr < l.icrCovenant;
+                return ltvBreach || icrBreach || l.currentLTV >= l.ltvCovenant - 5 || l.icr < l.icrCovenant + 0.1;
+              });
+              return (
+                <div className="px-5 py-4" style={{ borderTop: "1px solid var(--bdr)", background: covenantBreaches > 0 ? "rgba(248,113,113,.04)" : "rgba(251,191,36,.04)" }}>
+                  {alertLoans.map(l => {
+                    const ltvH = l.ltvCovenant - l.currentLTV;
+                    const icrH = l.icr - l.icrCovenant;
+                    const isB = l.currentLTV >= l.ltvCovenant || l.icr < l.icrCovenant;
+                    return (
+                      <div key={l.assetId} className="text-xs leading-relaxed mb-1 last:mb-0" style={{ color: isB ? "var(--red)" : "var(--amb)" }}>
+                        <strong>{l.assetName}:</strong>{" "}
+                        {l.currentLTV >= l.ltvCovenant ? `LTV ${l.currentLTV}% exceeds ${l.ltvCovenant}% covenant.` : ltvH < 5 ? `LTV ${l.currentLTV}% — only ${ltvH.toFixed(0)}% from ${l.ltvCovenant}% covenant.` : ""}
+                        {" "}
+                        {l.icr < l.icrCovenant ? `DSCR ${l.icr.toFixed(2)}× below ${l.icrCovenant}× covenant.` : icrH < 0.1 ? `DSCR ${l.icr.toFixed(2)}× — ${icrH.toFixed(2)}× from ${l.icrCovenant}× covenant.` : ""}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+          </div>
+        )}
 
         {/* Issue context bar */}
         {!loading && annualOverpay > 0 && (
@@ -860,69 +991,80 @@ export default function FinancingPage() {
           );
         })()}
 
-        {/* Maturity Ladder */}
+        {/* Maturity Calendar */}
         {!loading && (
           <div
             className="rounded-xl overflow-hidden"
             style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}
           >
-            <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--bdr)" }}>
-              <div className="text-[9px] font-medium uppercase tracking-wider mb-1" style={{ fontFamily: "var(--mono)", color: "var(--tx3)", letterSpacing: "2px" }}>
-                Debt Maturity Ladder
+            <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: "1px solid var(--bdr)" }}>
+              <div>
+                <div className="text-[9px] font-medium uppercase tracking-wider mb-1" style={{ fontFamily: "var(--mono)", color: "var(--tx3)", letterSpacing: "2px" }}>
+                  Maturity Calendar
+                </div>
+                <div className="text-xs" style={{ color: "var(--tx3)" }}>
+                  {loans.length} loans · {nextMaturityLoan ? `${nextMaturityMonths} months to first maturity` : "no maturities"}
+                </div>
               </div>
-              <div className="text-xs" style={{ color: "var(--tx3)" }}>
-                Loan maturities over the next 3 years — by quarter
-              </div>
+              {nextMaturityLoan && nextMaturityMonths !== null && nextMaturityMonths <= 18 && (
+                <div className="text-xs" style={{ color: "var(--amb)" }}>
+                  {nextMaturityLoan.assetName.split(" ").slice(0, 2).join(" ")} — {nextMaturityMonths}mo. Start refi conversations now.
+                </div>
+              )}
             </div>
             <div className="p-5">
-              <div className="flex items-end gap-1.5 h-20">
-                {quarters.map((q, i) => {
-                  const count = q.loans.length;
-                  const debtInQ = q.loans.reduce((s, l) => s + l.outstandingBalance, 0);
-                  const heightPct = count === 0 ? 4 : Math.max(12, (count / maxLoansInQuarter) * 100);
-                  const color = i < 2 ? "var(--red)" : i < 6 ? "var(--amb)" : "var(--grn)";
+              {/* Timeline axis labels */}
+              <div className="flex justify-between mb-3" style={{ fontSize: "9px", fontFamily: "var(--mono)", color: "var(--tx3)" }}>
+                {(() => {
+                  const now = new Date();
+                  return [0, 1, 2, 3, 4].map(yr => {
+                    const d = new Date(now);
+                    d.setFullYear(d.getFullYear() + yr);
+                    return <span key={yr}>{yr === 0 ? "Now" : d.getFullYear()}</span>;
+                  });
+                })()}
+              </div>
+              {/* Per-loan timeline bars */}
+              <div className="space-y-3">
+                {sortedByMaturity.map(loan => {
+                  const horizonDays = 4 * 365; // 4-year horizon
+                  const barWidth = Math.min(100, Math.max(6, (loan.daysToMaturity / horizonDays) * 100));
+                  const matColor2 = loan.daysToMaturity <= 180
+                    ? "var(--red)"
+                    : loan.daysToMaturity <= 540
+                    ? "var(--amb)"
+                    : "var(--grn)";
+                  const barBg = loan.daysToMaturity <= 180
+                    ? "rgba(248,113,113,.12)"
+                    : loan.daysToMaturity <= 540
+                    ? "rgba(251,191,36,.12)"
+                    : "rgba(52,211,153,.12)";
+                  const barBorder = loan.daysToMaturity <= 180
+                    ? "rgba(248,113,113,.3)"
+                    : loan.daysToMaturity <= 540
+                    ? "rgba(251,191,36,.3)"
+                    : "rgba(52,211,153,.3)";
                   return (
-                    <div
-                      key={i}
-                      className="flex-1 flex flex-col items-center gap-1 group relative cursor-default"
-                      title={
-                        count > 0
-                          ? `${q.label}: ${count} loan${count > 1 ? "s" : ""} · ${fmt(debtInQ, sym)} — ${q.loans.map(l => l.assetName).join(", ")}`
-                          : `${q.label}: no maturities`
-                      }
-                    >
-                      {count > 0 && (
-                        <span
-                          className="text-xs font-semibold absolute -top-5"
-                          style={{ color, fontSize: "10px" }}
+                    <div key={loan.assetId}>
+                      <div className="text-[10px] mb-1.5" style={{ color: "var(--tx2)" }}>
+                        {loan.assetName} — {loan.lender}
+                      </div>
+                      <div className="relative h-8 rounded-md" style={{ background: "var(--s2)" }}>
+                        <div
+                          className="absolute top-0 left-0 h-full rounded-md flex items-center px-3"
+                          style={{ width: `${barWidth}%`, background: barBg, border: `1px solid ${barBorder}`, minWidth: "80px" }}
                         >
-                          {count}
-                        </span>
-                      )}
-                      <div
-                        className="w-full rounded-sm transition-all duration-200 group-hover:opacity-80"
-                        style={{
-                          height: `${heightPct}%`,
-                          backgroundColor: count === 0 ? "var(--bdr)" : color,
-                          minHeight: "3px",
-                        }}
-                      />
+                          <span className="text-[9px] font-medium whitespace-nowrap" style={{ fontFamily: "var(--mono)", color: matColor2 }}>
+                            {fmt(loan.outstandingBalance, sym)} · {loan.maturityDate}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   );
                 })}
               </div>
-              <div className="flex items-center gap-1.5 mt-2">
-                {quarters.map((q, i) => (
-                  <div
-                    key={i}
-                    className="flex-1 text-center"
-                    style={{ fontSize: "9px", color: i % 2 === 0 ? "var(--tx3)" : "transparent" }}
-                  >
-                    {q.label}
-                  </div>
-                ))}
-              </div>
-              <div className="flex items-center gap-4 mt-3 pt-3" style={{ borderTop: "1px solid var(--bdr)" }}>
+              {/* Legend + action */}
+              <div className="flex items-center gap-4 mt-4 pt-3" style={{ borderTop: "1px solid var(--bdr)" }}>
                 <div className="flex items-center gap-1.5 text-xs" style={{ color: "var(--tx3)" }}>
                   <span className="h-2 w-3 rounded-sm inline-block" style={{ backgroundColor: "var(--red)" }} />
                   &lt;6 months — Act now
