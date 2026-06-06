@@ -56,12 +56,12 @@ export async function GET(req: NextRequest) {
       { field: "", value: "", source: "" },
       { field: "Passing Rent (p.a.)", value: rentGap.passingRent || "", source: rentGap.passingRentSource || "" },
       { field: "Market ERV (p.a.)", value: rentGap.marketERV || "", source: rentGap.ervSource || "" },
-      { field: "Rent Gap %", value: rentGap.gapPct !== undefined ? `${rentGap.gapPct}%` : "", source: "" },
+      { field: "Rent Gap %", value: rentGap.gapPct != null ? `${Number(rentGap.gapPct).toFixed(1)}%` : "", source: "" },
       { field: "NOI", value: returns.noi || "", source: "" },
-      { field: "Cap Rate", value: returns.capRate ? `${returns.capRate}%` : "", source: "" },
-      { field: "Cash-on-Cash", value: returns.cashOnCash ? `${returns.cashOnCash}%` : "", source: "" },
-      { field: "IRR (5yr)", value: returns.irr5yr ? `${returns.irr5yr}%` : "", source: "" },
-      { field: "Equity Multiple", value: returns.equityMultiple ? `${returns.equityMultiple}x` : "", source: "" },
+      { field: "Cap Rate", value: returns.capRate != null ? `${Number(returns.capRate).toFixed(1)}%` : "", source: "" },
+      { field: "Cash-on-Cash", value: returns.cashOnCash != null ? `${Number(returns.cashOnCash).toFixed(1)}%` : "", source: "" },
+      { field: "IRR (5yr)", value: returns.irr5yr != null ? `${Number(returns.irr5yr).toFixed(1)}%` : "", source: "" },
+      { field: "Equity Multiple", value: returns.equityMultiple != null ? `${Number(returns.equityMultiple).toFixed(2)}×` : "", source: "" },
       { field: "Equity Needed", value: returns.equityNeeded || "", source: "" },
       { field: "", value: "", source: "" },
       { field: "Market Cap Rate", value: market.capRate ? `${(market.capRate * 100).toFixed(1)}%` : "", source: "" },
@@ -112,9 +112,9 @@ export async function GET(req: NextRequest) {
       scenarios.forEach((sc: any) => {
         scSheet.addRow({
           name: sc.name,
-          irr: sc.irr,
-          equityMultiple: sc.equityMultiple,
-          cashYield: sc.cashYield,
+          irr: sc.irr != null ? `${Number(sc.irr).toFixed(1)}%` : "—",
+          equityMultiple: sc.equityMultiple != null ? `${Number(sc.equityMultiple).toFixed(2)}×` : "—",
+          cashYield: sc.cashYield != null ? `${Number(sc.cashYield).toFixed(1)}%` : "—",
           npv: sc.npv,
         });
       });
