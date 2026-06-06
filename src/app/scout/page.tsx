@@ -14,6 +14,9 @@ import {
   formatMultiplier,
   classifyReturn,
 } from "@/lib/scout-returns";
+import { usePortfolio } from "@/hooks/usePortfolio";
+import { useNav } from "@/components/layout/NavContext";
+import { Portfolio } from "@/lib/data/types";
 
 // ── Types ─────────────────────────────────────────────────────────────
 type AcquisitionStrategy = {
@@ -130,6 +133,25 @@ function SourceBadge({ source }: { source: string }) {
   );
 }
 
+// ── Portfolio metrics derived from Portfolio type ─────────────────────
+function derivePortfolioMetrics(portfolio: Portfolio) {
+  const assets = portfolio.assets;
+  if (!assets.length) return null;
+  const isGBP = portfolio.currency === "GBP";
+  const totalVal = assets.reduce((s, a) => s + (isGBP ? (a.valuationGBP ?? 0) : (a.valuationUSD ?? 0)), 0);
+  const totalNI = assets.reduce((s, a) => s + a.netIncome, 0);
+  const totalSqft = assets.reduce((s, a) => s + a.sqft, 0);
+  const allLeases = assets.flatMap((a) => a.leases).filter((l) => l.daysToExpiry > 0);
+  return {
+    capRate: totalVal > 0 ? (totalNI / totalVal) * 100 : null,
+    costPerSqft: totalSqft > 0 ? totalVal / totalSqft : null,
+    wault: allLeases.length > 0 ? allLeases.reduce((s, l) => s + l.daysToExpiry, 0) / allLeases.length / 365 : null,
+    avgDealSize: assets.length > 0 ? totalVal / assets.length : null,
+    assetCount: assets.length,
+    currency: portfolio.currency,
+  };
+}
+
 // ── Main Page ─────────────────────────────────────────────────────────
 export default function ScoutPage() {
   const [data, setData] = useState<ApiResponse | null>(null);
@@ -141,6 +163,12 @@ export default function ScoutPage() {
   const [isDCFModalOpen, setIsDCFModalOpen] = useState(false);
   const [dcfModalDeal, setDCFModalDeal] = useState<ScoutDeal | null>(null);
   const [activeSource, setActiveSource] = useState<string | null>(null);
+  const [compareIds, setCompareIds] = useState<Set<string>>(new Set());
+  const [showCompareDrawer, setShowCompareDrawer] = useState(false);
+
+  const { portfolioId } = useNav();
+  const { portfolio } = usePortfolio(portfolioId);
+  const portfolioMetrics = derivePortfolioMetrics(portfolio);
 
   const fetchDeals = () => {
     setLoading(true);
@@ -171,15 +199,6 @@ export default function ScoutPage() {
   const avgCapRate = feedDeals.length > 0
     ? feedDeals.reduce((sum, d) => sum + (d.capRate ?? 0), 0) / feedDeals.filter((d) => d.capRate).length
     : 0;
-
-  // Portfolio comparison metrics (placeholder - should come from API)
-  const portfolioMetrics = {
-    capRate: 6.6,
-    irr: 9.8,
-    costPerSqft: 162,
-    wault: 4.2,
-    avgDealSize: 3400000,
-  };
 
   // Calculate deal averages for comparison
   const dealMetrics = feedDeals.length > 0 ? {
@@ -275,7 +294,9 @@ export default function ScoutPage() {
           <div className="bg-[var(--s1)] p-4 hover:bg-[var(--s2)] transition-all">
             <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Avg Cap Rate</div>
             <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-0.02em", lineHeight: 1 }}>{avgCapRate > 0 ? `${avgCapRate.toFixed(1)}%` : "—"}</div>
-            <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>vs your 6.6% portfolio</div>
+            <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
+              {portfolioMetrics?.capRate ? `vs your ${portfolioMetrics.capRate.toFixed(1)}% portfolio` : "your portfolio"}
+            </div>
           </div>
           <div className="bg-[var(--s1)] p-4 hover:bg-[var(--s2)] transition-all">
             <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Avg IRR (5yr)</div>
@@ -391,6 +412,15 @@ export default function ScoutPage() {
               <DealCard
                 key={deal.id}
                 deal={deal}
+                isCompared={compareIds.has(deal.id)}
+                onCompare={(d) => {
+                  setCompareIds((prev) => {
+                    const next = new Set(prev);
+                    if (next.has(d.id)) { next.delete(d.id); } else if (next.size < 4) { next.add(d.id); }
+                    return next;
+                  });
+                  setShowCompareDrawer(true);
+                }}
                 onExpressInterest={(d) => {
                   setSelectedDeal(d);
                   setIsExpressInterestOpen(true);
@@ -405,7 +435,7 @@ export default function ScoutPage() {
         </div>
 
         {/* Portfolio Fit Comparison */}
-        {activeTab === "feed" && dealMetrics && feedDeals.length > 0 && (
+        {activeTab === "feed" && dealMetrics && feedDeals.length > 0 && portfolioMetrics && (
           <div>
             <div className="text-[9px] font-medium font-mono text-[var(--tx3)] uppercase tracking-[2px] mb-3">
               How These Deals Compare to Your Portfolio
@@ -413,132 +443,93 @@ export default function ScoutPage() {
             <div className="bg-[var(--s1)] border border-[var(--bdr)] rounded-[14px] overflow-hidden mb-6">
               <div className="px-5 py-3.5 border-b border-[var(--bdr)] flex items-center justify-between">
                 <h4 className="text-[13px] font-medium text-[var(--tx)]">Deal vs Portfolio Comparison</h4>
-                <span className="text-[11px] text-[var(--tx3)]">Your avg across 7 assets</span>
+                <span className="text-[11px] text-[var(--tx3)]">Your avg across {portfolioMetrics.assetCount} assets</span>
               </div>
               {/* Portfolio Row */}
-              <div className="grid grid-cols-5 gap-[1px] bg-[var(--bdr)]">
+              <div className="grid grid-cols-4 gap-[1px] bg-[var(--bdr)]">
                 <div className="bg-[var(--s1)] px-3 py-2.5 text-center">
-                  <div className="text-[8px] font-mono font-medium text-[var(--tx3)] uppercase tracking-wider mb-1">
-                    Your Portfolio
-                  </div>
+                  <div className="text-[8px] font-mono font-medium text-[var(--tx3)] uppercase tracking-wider mb-1">Your Portfolio</div>
                   <div className="text-[10px] font-medium text-[var(--tx3)]">Cap Rate</div>
-                  <div className="text-[16px] font-serif text-[var(--tx)]">{portfolioMetrics.capRate.toFixed(1)}%</div>
+                  <div className="text-[16px] font-serif text-[var(--tx)]">{portfolioMetrics.capRate != null ? `${portfolioMetrics.capRate.toFixed(1)}%` : "—"}</div>
                 </div>
                 <div className="bg-[var(--s1)] px-3 py-2.5 text-center">
-                  <div className="text-[8px] font-mono font-medium text-[var(--tx3)] uppercase tracking-wider mb-1">
-                    Your Portfolio
-                  </div>
-                  <div className="text-[10px] font-medium text-[var(--tx3)]">IRR</div>
-                  <div className="text-[16px] font-serif text-[var(--tx)]">{portfolioMetrics.irr.toFixed(1)}%</div>
-                </div>
-                <div className="bg-[var(--s1)] px-3 py-2.5 text-center">
-                  <div className="text-[8px] font-mono font-medium text-[var(--tx3)] uppercase tracking-wider mb-1">
-                    Your Portfolio
-                  </div>
+                  <div className="text-[8px] font-mono font-medium text-[var(--tx3)] uppercase tracking-wider mb-1">Your Portfolio</div>
                   <div className="text-[10px] font-medium text-[var(--tx3)]">Cost/sqft</div>
-                  <div className="text-[16px] font-serif text-[var(--tx)]">${portfolioMetrics.costPerSqft}</div>
+                  <div className="text-[16px] font-serif text-[var(--tx)]">{portfolioMetrics.costPerSqft != null ? `${portfolioMetrics.currency === "GBP" ? "£" : "$"}${Math.round(portfolioMetrics.costPerSqft)}` : "—"}</div>
                 </div>
                 <div className="bg-[var(--s1)] px-3 py-2.5 text-center">
-                  <div className="text-[8px] font-mono font-medium text-[var(--tx3)] uppercase tracking-wider mb-1">
-                    Your Portfolio
-                  </div>
+                  <div className="text-[8px] font-mono font-medium text-[var(--tx3)] uppercase tracking-wider mb-1">Your Portfolio</div>
                   <div className="text-[10px] font-medium text-[var(--tx3)]">WAULT</div>
-                  <div className="text-[16px] font-serif text-[var(--tx)]">{portfolioMetrics.wault.toFixed(1)} yrs</div>
+                  <div className="text-[16px] font-serif text-[var(--tx)]">{portfolioMetrics.wault != null ? `${portfolioMetrics.wault.toFixed(1)} yrs` : "—"}</div>
                 </div>
                 <div className="bg-[var(--s1)] px-3 py-2.5 text-center">
-                  <div className="text-[8px] font-mono font-medium text-[var(--tx3)] uppercase tracking-wider mb-1">
-                    Your Portfolio
-                  </div>
+                  <div className="text-[8px] font-mono font-medium text-[var(--tx3)] uppercase tracking-wider mb-1">Your Portfolio</div>
                   <div className="text-[10px] font-medium text-[var(--tx3)]">Avg Deal</div>
-                  <div className="text-[16px] font-serif text-[var(--tx)]">${(portfolioMetrics.avgDealSize / 1_000_000).toFixed(1)}M</div>
+                  <div className="text-[16px] font-serif text-[var(--tx)]">{portfolioMetrics.avgDealSize != null ? `${portfolioMetrics.currency === "GBP" ? "£" : "$"}${(portfolioMetrics.avgDealSize / 1_000_000).toFixed(1)}M` : "—"}</div>
                 </div>
               </div>
               {/* Deal Average Row */}
-              <div className="grid grid-cols-5 gap-[1px] bg-[var(--bdr)]">
+              <div className="grid grid-cols-4 gap-[1px] bg-[var(--bdr)]">
                 <div className="bg-[var(--s2)] px-3 py-2.5 text-center">
-                  <div className={`text-[8px] font-mono font-medium uppercase tracking-wider mb-1 ${
-                    dealMetrics.capRate > portfolioMetrics.capRate ? "text-[var(--grn)]" : "text-[var(--tx3)]"
-                  }`}>
+                  <div className={`text-[8px] font-mono font-medium uppercase tracking-wider mb-1 ${portfolioMetrics.capRate != null && dealMetrics.capRate > portfolioMetrics.capRate ? "text-[var(--grn)]" : "text-[var(--tx3)]"}`}>
                     Deal Avg
                   </div>
-                  <div className={`text-[16px] font-serif ${
-                    dealMetrics.capRate > portfolioMetrics.capRate ? "text-[var(--grn)]" : "text-[var(--tx)]"
-                  }`}>
+                  <div className={`text-[16px] font-serif ${portfolioMetrics.capRate != null && dealMetrics.capRate > portfolioMetrics.capRate ? "text-[var(--grn)]" : "text-[var(--tx)]"}`}>
                     {dealMetrics.capRate.toFixed(1)}%
                   </div>
-                  <div className={`text-[9px] font-light ${
-                    dealMetrics.capRate > portfolioMetrics.capRate ? "text-[var(--grn)]" : "text-[var(--red)]"
-                  }`}>
-                    {dealMetrics.capRate > portfolioMetrics.capRate ? "+" : ""}
-                    {(dealMetrics.capRate - portfolioMetrics.capRate).toFixed(1)}% {dealMetrics.capRate > portfolioMetrics.capRate ? "above" : "below"}
-                  </div>
+                  {portfolioMetrics.capRate != null && (
+                    <div className={`text-[9px] font-light ${dealMetrics.capRate > portfolioMetrics.capRate ? "text-[var(--grn)]" : "text-[var(--red)]"}`}>
+                      {dealMetrics.capRate > portfolioMetrics.capRate ? "+" : ""}{(dealMetrics.capRate - portfolioMetrics.capRate).toFixed(1)}% {dealMetrics.capRate > portfolioMetrics.capRate ? "above" : "below"}
+                    </div>
+                  )}
                 </div>
                 <div className="bg-[var(--s2)] px-3 py-2.5 text-center">
-                  <div className={`text-[8px] font-mono font-medium uppercase tracking-wider mb-1 ${
-                    dealMetrics.irr > portfolioMetrics.irr ? "text-[var(--grn)]" : "text-[var(--tx3)]"
-                  }`}>
+                  <div className={`text-[8px] font-mono font-medium uppercase tracking-wider mb-1 ${portfolioMetrics.costPerSqft != null && dealMetrics.costPerSqft < portfolioMetrics.costPerSqft ? "text-[var(--grn)]" : "text-[var(--tx3)]"}`}>
                     Deal Avg
                   </div>
-                  <div className={`text-[16px] font-serif ${
-                    dealMetrics.irr > portfolioMetrics.irr ? "text-[var(--grn)]" : "text-[var(--tx)]"
-                  }`}>
-                    {dealMetrics.irr.toFixed(1)}%
+                  <div className={`text-[16px] font-serif ${portfolioMetrics.costPerSqft != null && dealMetrics.costPerSqft < portfolioMetrics.costPerSqft ? "text-[var(--grn)]" : "text-[var(--tx)]"}`}>
+                    {dealMetrics.costPerSqft > 0 ? `${portfolioMetrics.currency === "GBP" ? "£" : "$"}${Math.round(dealMetrics.costPerSqft)}` : "—"}
                   </div>
-                  <div className={`text-[9px] font-light ${
-                    dealMetrics.irr > portfolioMetrics.irr ? "text-[var(--grn)]" : "text-[var(--red)]"
-                  }`}>
-                    {dealMetrics.irr > portfolioMetrics.irr ? "+" : ""}
-                    {(dealMetrics.irr - portfolioMetrics.irr).toFixed(1)}% {dealMetrics.irr > portfolioMetrics.irr ? "above" : "below"}
-                  </div>
+                  {portfolioMetrics.costPerSqft != null && dealMetrics.costPerSqft > 0 && (
+                    <div className={`text-[9px] font-light ${dealMetrics.costPerSqft < portfolioMetrics.costPerSqft ? "text-[var(--grn)]" : "text-[var(--red)]"}`}>
+                      {((dealMetrics.costPerSqft - portfolioMetrics.costPerSqft) / portfolioMetrics.costPerSqft * 100).toFixed(0)}% {dealMetrics.costPerSqft < portfolioMetrics.costPerSqft ? "cheaper" : "higher"}
+                    </div>
+                  )}
                 </div>
                 <div className="bg-[var(--s2)] px-3 py-2.5 text-center">
-                  <div className={`text-[8px] font-mono font-medium uppercase tracking-wider mb-1 ${
-                    dealMetrics.costPerSqft < portfolioMetrics.costPerSqft ? "text-[var(--grn)]" : "text-[var(--tx3)]"
-                  }`}>
-                    Deal Avg
-                  </div>
-                  <div className={`text-[16px] font-serif ${
-                    dealMetrics.costPerSqft < portfolioMetrics.costPerSqft ? "text-[var(--grn)]" : "text-[var(--tx)]"
-                  }`}>
-                    ${Math.round(dealMetrics.costPerSqft)}
-                  </div>
-                  <div className={`text-[9px] font-light ${
-                    dealMetrics.costPerSqft < portfolioMetrics.costPerSqft ? "text-[var(--grn)]" : "text-[var(--red)]"
-                  }`}>
-                    {((dealMetrics.costPerSqft - portfolioMetrics.costPerSqft) / portfolioMetrics.costPerSqft * 100).toFixed(0)}% {dealMetrics.costPerSqft < portfolioMetrics.costPerSqft ? "cheaper" : "higher"}
-                  </div>
-                </div>
-                <div className="bg-[var(--s2)] px-3 py-2.5 text-center">
-                  <div className="text-[8px] font-mono font-medium text-[var(--tx3)] uppercase tracking-wider mb-1">
-                    Deal Avg
-                  </div>
+                  <div className="text-[8px] font-mono font-medium text-[var(--tx3)] uppercase tracking-wider mb-1">Deal Avg</div>
                   <div className="text-[16px] font-serif text-[var(--tx)]">
                     {dealMetrics.wault > 0 ? `${dealMetrics.wault.toFixed(1)} yrs` : "—"}
                   </div>
-                  {dealMetrics.wault > 0 && (
-                    <div className={`text-[9px] font-light ${
-                      Math.abs(dealMetrics.wault - portfolioMetrics.wault) < 0.5 ? "text-[var(--tx3)]" : dealMetrics.wault < portfolioMetrics.wault ? "text-[var(--amb)]" : "text-[var(--grn)]"
-                    }`}>
+                  {dealMetrics.wault > 0 && portfolioMetrics.wault != null && (
+                    <div className={`text-[9px] font-light ${Math.abs(dealMetrics.wault - portfolioMetrics.wault) < 0.5 ? "text-[var(--tx3)]" : dealMetrics.wault < portfolioMetrics.wault ? "text-[var(--amb)]" : "text-[var(--grn)]"}`}>
                       {(dealMetrics.wault - portfolioMetrics.wault).toFixed(1)} yrs {dealMetrics.wault < portfolioMetrics.wault ? "shorter" : "longer"}
                     </div>
                   )}
                 </div>
                 <div className="bg-[var(--s2)] px-3 py-2.5 text-center">
-                  <div className="text-[8px] font-mono font-medium text-[var(--tx3)] uppercase tracking-wider mb-1">
-                    Deal Avg
-                  </div>
+                  <div className="text-[8px] font-mono font-medium text-[var(--tx3)] uppercase tracking-wider mb-1">Deal Avg</div>
                   <div className="text-[16px] font-serif text-[var(--tx)]">
-                    ${(dealMetrics.avgDealSize / 1_000_000).toFixed(1)}M
+                    {dealMetrics.avgDealSize > 0 ? `${portfolioMetrics.currency === "GBP" ? "£" : "$"}${(dealMetrics.avgDealSize / 1_000_000).toFixed(1)}M` : "—"}
                   </div>
-                  <div className={`text-[9px] font-light ${
-                    dealMetrics.avgDealSize < portfolioMetrics.avgDealSize ? "text-[var(--grn)]" : "text-[var(--amb)]"
-                  }`}>
-                    {((dealMetrics.avgDealSize - portfolioMetrics.avgDealSize) / portfolioMetrics.avgDealSize * 100).toFixed(0)}% {dealMetrics.avgDealSize < portfolioMetrics.avgDealSize ? "below" : "above"}
-                  </div>
+                  {portfolioMetrics.avgDealSize != null && dealMetrics.avgDealSize > 0 && (
+                    <div className={`text-[9px] font-light ${dealMetrics.avgDealSize < portfolioMetrics.avgDealSize ? "text-[var(--grn)]" : "text-[var(--amb)]"}`}>
+                      {((dealMetrics.avgDealSize - portfolioMetrics.avgDealSize) / portfolioMetrics.avgDealSize * 100).toFixed(0)}% {dealMetrics.avgDealSize < portfolioMetrics.avgDealSize ? "below" : "above"}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           </div>
+        )}
+
+        {/* Compare Drawer */}
+        {showCompareDrawer && compareIds.size > 0 && (
+          <CompareDrawer
+            deals={deals.filter((d) => compareIds.has(d.id))}
+            onRemove={(id) => setCompareIds((prev) => { const n = new Set(prev); n.delete(id); return n; })}
+            onClose={() => setShowCompareDrawer(false)}
+          />
         )}
 
       </div>
@@ -547,7 +538,13 @@ export default function ScoutPage() {
 }
 
 // ── Deal Card Component ───────────────────────────────────────────────
-function DealCard({ deal, onExpressInterest, onViewDCF }: { deal: ScoutDeal; onExpressInterest: (deal: ScoutDeal) => void; onViewDCF: (deal: ScoutDeal) => void }) {
+function DealCard({ deal, isCompared, onCompare, onExpressInterest, onViewDCF }: {
+  deal: ScoutDeal;
+  isCompared: boolean;
+  onCompare: (deal: ScoutDeal) => void;
+  onExpressInterest: (deal: ScoutDeal) => void;
+  onViewDCF: (deal: ScoutDeal) => void;
+}) {
   const hasAuction = !!deal.auctionDate;
   const auctionDate = hasAuction ? new Date(deal.auctionDate!) : null;
   const auctionFormatted = auctionDate
@@ -811,9 +808,14 @@ function DealCard({ deal, onExpressInterest, onViewDCF }: { deal: ScoutDeal; onE
           Add to pipeline →
         </button>
         <button
-          className="px-4 py-2 bg-transparent text-[var(--tx2)] border border-[var(--bdr)] rounded-lg text-[11px] font-medium hover:border-[var(--tx3)] hover:text-[var(--tx)] transition-all"
+          onClick={() => onCompare(deal)}
+          className={`px-4 py-2 rounded-lg text-[11px] font-medium transition-all ${
+            isCompared
+              ? "bg-[var(--acc)] text-white border border-[var(--acc)]"
+              : "bg-transparent text-[var(--tx2)] border border-[var(--bdr)] hover:border-[var(--tx3)] hover:text-[var(--tx)]"
+          }`}
         >
-          Compare →
+          {isCompared ? "✓ Comparing" : "Compare →"}
         </button>
         <button
           onClick={() => onExpressInterest(deal)}
@@ -826,6 +828,66 @@ function DealCard({ deal, onExpressInterest, onViewDCF }: { deal: ScoutDeal; onE
         >
           Pass
         </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Compare Drawer ────────────────────────────────────────────────────
+function CompareDrawer({ deals, onRemove, onClose }: {
+  deals: ScoutDeal[];
+  onRemove: (id: string) => void;
+  onClose: () => void;
+}) {
+  const rows: { label: string; getValue: (d: ScoutDeal) => string }[] = [
+    { label: "Asset Type", getValue: (d) => d.assetType },
+    { label: "Price", getValue: (d) => fmtPrice(d.askingPrice ?? d.guidePrice, d.currency) },
+    { label: "Sqft", getValue: (d) => fmtNum(d.sqft) ?? "—" },
+    { label: "Cap Rate", getValue: (d) => fmtPercent(d.capRate) ?? "—" },
+    { label: "NOI", getValue: (d) => d.noi ? fmtPrice(d.noi, d.currency) : "—" },
+    { label: "WAULT", getValue: (d) => d.wault ? `${d.wault.toFixed(1)} yrs` : "—" },
+    { label: "Days on Market", getValue: (d) => d.daysOnMarket != null ? `${d.daysOnMarket}d` : "—" },
+    { label: "Source", getValue: (d) => d.sourceTag },
+    { label: "Match Score", getValue: (d) => d.matchScore != null ? `${d.matchScore}%` : "—" },
+  ];
+
+  return (
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-[var(--s1)] border-t border-[var(--bdr)] shadow-2xl" style={{ maxHeight: "50vh", overflowY: "auto" }}>
+      <div className="px-5 py-3 border-b border-[var(--bdr)] flex items-center justify-between sticky top-0 bg-[var(--s1)]">
+        <span className="text-[12px] font-medium text-[var(--tx)]">Comparing {deals.length} deal{deals.length !== 1 ? "s" : ""}</span>
+        <button onClick={onClose} className="text-[11px] text-[var(--tx3)] hover:text-[var(--tx)] transition-colors">
+          Close ✕
+        </button>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-[11px]">
+          <thead>
+            <tr className="border-b border-[var(--bdr)]">
+              <th className="px-4 py-2.5 text-left text-[9px] font-mono font-medium text-[var(--tx3)] uppercase tracking-wider w-24">Metric</th>
+              {deals.map((d) => (
+                <th key={d.id} className="px-4 py-2.5 text-left min-w-[180px]">
+                  <div className="text-[12px] font-medium text-[var(--tx)] truncate max-w-[200px]">{d.address}</div>
+                  <button
+                    onClick={() => onRemove(d.id)}
+                    className="text-[9px] text-[var(--tx3)] hover:text-[var(--red)] transition-colors mt-0.5"
+                  >
+                    Remove
+                  </button>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.label} className="border-b border-[var(--bdr-lt)] last:border-b-0 hover:bg-[var(--s2)] transition-colors">
+                <td className="px-4 py-2 text-[9px] font-mono font-medium text-[var(--tx3)] uppercase tracking-wider">{row.label}</td>
+                {deals.map((d) => (
+                  <td key={d.id} className="px-4 py-2 text-[12px] text-[var(--tx)]">{row.getValue(d)}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
