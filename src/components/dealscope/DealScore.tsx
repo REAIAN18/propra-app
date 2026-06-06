@@ -1,13 +1,28 @@
 "use client";
 
+import { Skeleton } from "./ui/Skeleton";
+
 interface DealScoreProps {
   score: number;
   maxScore?: number;
   label?: string;
   sublabel?: string;
+  isLoading?: boolean;
 }
 
-export function DealScore({ score, maxScore = 100, label = "Deal score", sublabel }: DealScoreProps) {
+export function DealScore({ score, maxScore = 100, label = "Deal score", sublabel, isLoading = false }: DealScoreProps) {
+  if (isLoading) {
+    return (
+      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <Skeleton height={42} width={42} borderRadius="50%" />
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          <Skeleton height={10} width={60} />
+          <Skeleton height={8} width={40} />
+        </div>
+      </div>
+    );
+  }
+
   const pct = Math.min(100, Math.max(0, (score / maxScore) * 100));
   const color = pct >= 70 ? "#2dd4a8" : pct >= 40 ? "#eab020" : "#f06060";
   const glow = pct >= 70

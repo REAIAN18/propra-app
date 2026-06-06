@@ -1,11 +1,14 @@
 "use client";
 
+import { Skeleton } from "./ui/Skeleton";
+
 export interface MetricCardProps {
   label: string;
   value: string;
   subtitle?: string;
   color?: "default" | "green" | "amber" | "red";
   mono?: boolean;
+  isLoading?: boolean;
 }
 
 const VALUE_COLORS = {
@@ -21,6 +24,7 @@ export function MetricCard({
   subtitle,
   color = "default",
   mono = true,
+  isLoading = false,
 }: MetricCardProps) {
   return (
     <div
@@ -35,37 +39,46 @@ export function MetricCard({
         minWidth: 0,
       }}
     >
-      <div
-        style={{
-          fontSize: 10,
-          fontWeight: 600,
-          color: "#a0a0ab",
-          textTransform: "uppercase",
-          letterSpacing: "0.7px",
-        }}
-      >
-        {label}
-      </div>
-      <div
-        style={{
-          fontSize: 22,
-          fontWeight: 700,
-          color: VALUE_COLORS[color],
-          fontFamily: mono ? "var(--mono, 'JetBrains Mono', monospace)" : "inherit",
-          lineHeight: 1.2,
-        }}
-      >
-        {value}
-      </div>
-      {subtitle && (
-        <div
-          style={{
-            fontSize: 11,
-            color: "#71717a",
-          }}
-        >
-          {subtitle}
-        </div>
+      {isLoading ? (
+        <>
+          <Skeleton height={10} width="55%" borderRadius={3} />
+          <Skeleton height={22} width="70%" borderRadius={4} style={{ marginTop: 4 }} />
+        </>
+      ) : (
+        <>
+          <div
+            style={{
+              fontSize: 10,
+              fontWeight: 600,
+              color: "#a0a0ab",
+              textTransform: "uppercase",
+              letterSpacing: "0.7px",
+            }}
+          >
+            {label}
+          </div>
+          <div
+            style={{
+              fontSize: 22,
+              fontWeight: 700,
+              color: VALUE_COLORS[color],
+              fontFamily: mono ? "var(--mono, 'JetBrains Mono', monospace)" : "inherit",
+              lineHeight: 1.2,
+            }}
+          >
+            {value}
+          </div>
+          {subtitle && (
+            <div
+              style={{
+                fontSize: 11,
+                color: "#71717a",
+              }}
+            >
+              {subtitle}
+            </div>
+          )}
+        </>
       )}
     </div>
   );

@@ -1,0 +1,11 @@
+@keyframes shimmer {
+  from { background-position: -400px 0; }
+  to   { background-position:  400px 0; }
+}
+
+.skel {
+  background: linear-gradient(90deg, var(--s2) 25%, var(--s3) 50%, var(--s2) 75%);
+  background-size: 400px 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: 6px;
+}

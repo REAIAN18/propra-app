@@ -1,5 +1,7 @@
 "use client";
 
+import { Skeleton } from "./ui/Skeleton";
+
 export interface ValuationScenario {
   label: string;
   valueLow: number;
@@ -11,6 +13,7 @@ export interface ValuationScenario {
 
 interface MultipleValuationsProps {
   scenarios: ValuationScenario[];
+  isLoading?: boolean;
 }
 
 function fmtCurrency(n: number): string {
@@ -25,7 +28,22 @@ const CONFIDENCE_COLOR: Record<string, string> = {
   low:    "#f06060",
 };
 
-export function MultipleValuations({ scenarios }: MultipleValuationsProps) {
+export function MultipleValuations({ scenarios, isLoading = false }: MultipleValuationsProps) {
+  if (isLoading) {
+    return (
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
+        {[1, 2, 3].map(i => (
+          <div key={i} style={{ background: "var(--s1)", border: "1px solid var(--s2)", borderRadius: 12, padding: 16, display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+            <Skeleton height={10} width="55%" borderRadius={3} />
+            <Skeleton height={22} width="70%" borderRadius={4} />
+            <Skeleton height={9} width="80%" borderRadius={3} />
+            <Skeleton height={9} width="50%" borderRadius={3} />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   if (!scenarios || scenarios.length === 0) return null;
 
   return (
